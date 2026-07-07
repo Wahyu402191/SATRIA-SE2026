@@ -43,10 +43,6 @@ python app.py
 
 Buka browser di `http://localhost:5000`
 
-### 4. Foto gedung BPS (opsional)
-
-Taruh file foto dengan nama `bps-bangkalan.jpg` di folder `static/img/` agar tampil di header.
-
 ## Teknologi
 
 - Python 3, Flask
