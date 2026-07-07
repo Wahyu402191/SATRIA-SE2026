@@ -48,9 +48,3 @@ Thumbs.db
 # Excel exports
 *.xlsx
 *.xls
-
-# Data scraping (file JSON lokal, jangan push)
-data/*.json
-
-# Foto lokal
-static/img/
