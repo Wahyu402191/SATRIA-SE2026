@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SATRIA SE2026 — BPS Kabupaten Bangkalan{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary:       #1a3a5c;
+            --primary-light: #2e5f8a;
+            --primary-dark:  #0f2238;
+            --accent:        #c8973a;
+            --accent-light:  #e8b96a;
+            --accent-pale:   #fdf6e8;
+            --success:       #2d7a4f;
+            --danger:        #9b2335;
+            --neutral:       #5a6a7a;
+            --bg:            #f0f3f7;
+            --bg-card:       #ffffff;
+            --border:        #dce3ea;
+            --text:          #1e2d3d;
+            --text-muted:    #6b7c8d;
+            --shadow-sm:     0 1px 4px rgba(0,0,0,.07);
+            --shadow-md:     0 4px 16px rgba(0,0,0,.10);
+            --shadow-lg:     0 8px 32px rgba(0,0,0,.13);
+            --radius:        8px;
+            --radius-lg:     14px;
+            --nav-h:         64px;
+        }
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            font-size: 14px;
+            overflow-x: hidden;
+        }
+
+        /* ─── INSTITUTIONAL HEADER ─── */
+        .inst-header {
+            background: var(--primary-dark);
+            border-bottom: 3px solid var(--accent);
+            overflow: hidden;
+            position: relative;
+        }
+        .inst-header::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .inst-inner {
+            max-width: 1280px; margin: 0 auto;
+            padding: 0 32px;
+            display: flex; align-items: stretch;
+            min-height: 88px;
+            position: relative; z-index: 1;
+        }
+        .inst-photo-wrap {
+            width: 160px; flex-shrink: 0;
+            position: relative; overflow: hidden;
+            background: var(--primary);
+        }
+        .inst-photo-wrap img {
+            width: 100%; height: 100%;
+            object-fit: cover; object-position: center;
+            opacity: .85;
+            transition: opacity .3s;
+        }
+        .inst-photo-wrap:hover img { opacity: 1; }
+        .inst-photo-placeholder {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 6px; padding: 12px; text-align: center;
+            color: rgba(255,255,255,.35);
+        }
+        .inst-photo-placeholder svg { width: 32px; height: 32px; fill: currentColor; }
+        .inst-photo-placeholder span { font-size: 10px; line-height: 1.4; }
+        .inst-body {
+            flex: 1; padding: 20px 28px;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        .inst-eyebrow {
+            font-size: 10px; font-weight: 700; letter-spacing: 2px;
+            text-transform: uppercase; color: var(--accent);
+            margin-bottom: 6px;
+        }
+        .inst-title {
+            font-size: 20px; font-weight: 800;
+            color: #fff; line-height: 1.25;
+            letter-spacing: -.3px;
+        }
+        .inst-subtitle {
+            font-size: 12px; color: rgba(255,255,255,.6);
+            margin-top: 5px; font-weight: 400; letter-spacing: .2px;
+        }
+        .inst-meta {
+            margin-top: 10px;
+            display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+        }
+        .inst-meta-item {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 11px; color: rgba(255,255,255,.5);
+        }
+        .inst-meta-item::before {
+            content: '';
+            width: 4px; height: 4px; border-radius: 50%;
+            background: var(--accent); flex-shrink: 0;
+        }
+        .inst-badge {
+            margin-left: auto; align-self: center;
+            padding: 8px 20px;
+            border: 1px solid rgba(200,151,58,.4);
+            border-radius: var(--radius-lg);
+            background: rgba(200,151,58,.08);
+            text-align: center;
+        }
+        .inst-badge-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,.4); }
+        .inst-badge-year  { font-size: 24px; font-weight: 800; color: var(--accent); line-height: 1; margin-top: 2px; }
+        .inst-badge-sub   { font-size: 9px; color: rgba(255,255,255,.4); letter-spacing: .5px; }
+
+        /* ─── NAVBAR ─── */
+        .navbar {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 900;
+            box-shadow: 0 2px 12px rgba(26,58,92,.08);
+            height: var(--nav-h);
+        }
+        .navbar-inner {
+            max-width: 1280px; margin: 0 auto;
+            padding: 0 32px;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 100%;
+        }
+        .navbar-brand {
+            display: flex; align-items: center; gap: 12px;
+            text-decoration: none;
+        }
+        .brand-mark {
+            width: 38px; height: 38px; flex-shrink: 0;
+            background: linear-gradient(145deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 3px 10px rgba(26,58,92,.35);
+            transition: transform .25s, box-shadow .25s;
+        }
+        .navbar-brand:hover .brand-mark {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(26,58,92,.40);
+        }
+        .brand-mark svg { width: 20px; height: 20px; fill: #fff; }
+        .brand-text-main {
+            font-size: 16px; font-weight: 800;
+            color: var(--primary); letter-spacing: -.4px;
+        }
+        .brand-text-sub {
+            font-size: 10px; color: var(--text-muted);
+            font-weight: 500; letter-spacing: .3px;
+            margin-top: 1px;
+        }
+        /* Nav links */
+        .nav-links { display: flex; align-items: center; gap: 2px; list-style: none; }
+        .nav-links li { position: relative; }
+        .nav-links a {
+            display: flex; align-items: center; gap: 5px;
+            text-decoration: none; color: var(--text-muted);
+            padding: 8px 13px; border-radius: var(--radius);
+            font-size: 13px; font-weight: 500;
+            transition: color .2s, background .2s;
+            white-space: nowrap;
+        }
+        .nav-links a svg { width: 14px; height: 14px; flex-shrink: 0; transition: transform .2s; }
+        .nav-links a:hover { color: var(--primary); background: #eef3f9; }
+        .nav-links a:hover svg { transform: translateY(-1px); }
+        .nav-links a.active {
+            color: var(--primary); font-weight: 600;
+            background: #e4eef8;
+        }
+        .nav-links a.active::after {
+            content: '';
+            position: absolute; bottom: -1px; left: 13px; right: 13px;
+            height: 2px; background: var(--primary);
+            border-radius: 2px 2px 0 0;
+        }
+        .nav-divider { width: 1px; height: 20px; background: var(--border); margin: 0 6px; }
+        .btn-nav-cta {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--primary); color: #fff;
+            padding: 8px 18px; border-radius: var(--radius);
+            font-size: 12px; font-weight: 700; letter-spacing: .3px;
+            text-decoration: none; border: none; cursor: pointer;
+            transition: all .25s;
+            box-shadow: 0 2px 8px rgba(26,58,92,.30);
+        }
+        .btn-nav-cta:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 16px rgba(26,58,92,.35);
+        }
+        .btn-nav-cta svg { width: 14px; height: 14px; fill: rgba(255,255,255,.8); }
+
+        /* ─── LAYOUT ─── */
+        .container { max-width: 1280px; margin: 0 auto; padding: 32px 32px; }
+
+        /* ─── CARDS with hover lift ─── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 28px 32px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow .25s, transform .25s;
+            position: relative; overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0; transition: opacity .25s;
+        }
+        .card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .card:hover::before { opacity: 1; }
+        .card-title { font-size: 17px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+        .card-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 22px; }
+        .card h2 { font-size: 17px; font-weight: 700; color: var(--primary); margin-bottom: 18px; }
+
+        /* ─── BUTTONS ─── */
+        .btn {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 10px 22px; border: none; border-radius: var(--radius);
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            text-decoration: none;
+            transition: all .22s;
+            background: var(--primary); color: #fff;
+            box-shadow: 0 2px 6px rgba(26,58,92,.20);
+            position: relative; overflow: hidden;
+        }
+        .btn::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: rgba(255,255,255,0);
+            transition: background .2s;
+        }
+        .btn:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 5px 14px rgba(26,58,92,.28); }
+        .btn:hover::after { background: rgba(255,255,255,.04); }
+        .btn:active { transform: translateY(0); box-shadow: 0 2px 6px rgba(26,58,92,.20); }
+        .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-accent { background: var(--accent); color: #fff; box-shadow: 0 2px 6px rgba(200,151,58,.30); }
+        .btn-accent:hover { background: #b8832a; box-shadow: 0 5px 14px rgba(200,151,58,.35); }
+        .btn-success { background: var(--success); color: #fff; box-shadow: 0 2px 6px rgba(45,122,79,.25); }
+        .btn-success:hover { background: #246040; box-shadow: 0 5px 14px rgba(45,122,79,.30); }
+        .btn-ghost { background: transparent; color: var(--primary); border: 1.5px solid var(--border); box-shadow: none; }
+        .btn-ghost:hover { background: var(--bg); border-color: var(--primary-light); box-shadow: var(--shadow-sm); }
+        .btn-sm { padding: 7px 15px; font-size: 12px; }
+        .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+        /* ─── FORMS ─── */
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px; color: var(--text); }
+        input[type="text"], input[type="number"], select, textarea {
+            width: 100%; padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius); font-size: 14px;
+            font-family: inherit; color: var(--text);
+            background: var(--bg-card);
+            transition: border-color .2s, box-shadow .2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(46,95,138,.11);
+        }
+        .form-hint { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+        .checkbox-row { display: flex; align-items: center; gap: 8px; }
+        .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); }
+
+        /* ─── ALERTS ─── */
+        .alert {
+            padding: 13px 18px; border-radius: var(--radius);
+            font-size: 13px; margin-bottom: 16px;
+            border-left: 4px solid; display: none;
+        }
+        .alert-error   { background:#fdf0f1; color:var(--danger);  border-color:var(--danger); }
+        .alert-success { background:#edf7f2; color:var(--success); border-color:var(--success); }
+        .alert-info    { background:#e8f0f8; color:var(--primary); border-color:var(--primary-light); }
+        .alert-warning { background:var(--accent-pale); color:#7a5a0a; border-color:var(--accent); }
+
+        /* ─── SPINNER ─── */
+        .spinner {
+            width: 36px; height: 36px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin .75s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading { display: none; text-align: center; padding: 40px; }
+        .loading p { margin-top: 14px; color: var(--text-muted); font-size: 13px; }
+
+        /* ─── PROGRESS ─── */
+        .progress-wrap { width: 340px; margin: 16px auto 0; }
+        .progress-track {
+            background: var(--bg); border-radius: 99px; height: 8px;
+            overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.06);
+        }
+        .progress-fill {
+            height: 100%; width: 0%; border-radius: 99px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width .35s ease;
+            position: relative;
+        }
+        .progress-fill::after {
+            content: '';
+            position: absolute; top: 0; right: 0; bottom: 0; width: 20px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.3));
+            animation: shimmer 1.2s infinite;
+        }
+        @keyframes shimmer { from { opacity: 0; } 50% { opacity: 1; } to { opacity: 0; } }
+        .progress-label { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 7px; }
+
+        /* ─── BADGE ─── */
+        .badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; border-radius: 99px;
+            font-size: 11px; font-weight: 600;
+        }
+        .badge-success { background: #edf7f2; color: var(--success); }
+        .badge-danger  { background: #fdf0f1; color: var(--danger); }
+        .badge-neutral { background: #f0f2f5; color: var(--neutral); }
+
+        /* ─── FOOTER ─── */
+        footer {
+            background: var(--primary-dark);
+            border-top: 3px solid var(--accent);
+            color: rgba(255,255,255,.55);
+            padding: 32px;
+            font-size: 12px;
+            margin-top: 56px;
+            position: relative; overflow: hidden;
+        }
+        footer::before {
+            content: '';
+            position: absolute; bottom: -40px; right: -40px;
+            width: 180px; height: 180px;
+            border: 2px solid rgba(200,151,58,.08);
+            border-radius: 50%;
+        }
+        .footer-inner {
+            max-width: 1280px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 24px; flex-wrap: wrap;
+        }
+        .footer-brand strong { color: var(--accent); font-size: 15px; font-weight: 800; display: block; margin-bottom: 4px; }
+        .footer-meta { display: flex; gap: 20px; }
+        .footer-meta-item { font-size: 11px; color: rgba(255,255,255,.4); }
+        .footer-meta-item span { color: rgba(255,255,255,.65); font-weight: 500; }
+
+        /* ─── MODAL ─── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(10,20,35,.65); backdrop-filter: blur(4px);
+            z-index: 9000; overflow-y: auto; padding: 32px 16px;
+        }
+        .modal-box {
+            background: var(--bg-card); border-radius: var(--radius-lg);
+            width: 740px; max-width: 100%; margin: 0 auto;
+            box-shadow: var(--shadow-lg); overflow: hidden;
+            animation: modalIn .25s ease;
+        }
+        @keyframes modalIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            padding: 22px 28px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 2px solid var(--accent);
+        }
+        .modal-header h2 { color: #fff; font-size: 16px; font-weight: 700; }
+        .modal-header p  { color: rgba(255,255,255,.6); font-size: 12px; margin-top: 2px; }
+        .modal-close {
+            background: rgba(255,255,255,.12); border: none;
+            color: #fff; width: 32px; height: 32px; border-radius: 50%;
+            cursor: pointer; font-size: 20px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            transition: background .2s, transform .2s;
+        }
+        .modal-close:hover { background: rgba(255,255,255,.25); transform: rotate(90deg); }
+        .modal-body { padding: 28px; }
+
+        /* ─── PAGE ENTRY ANIMATION ─── */
+        .container > * { animation: fadeUp .35s ease both; }
+        .container > *:nth-child(1) { animation-delay: .05s; }
+        .container > *:nth-child(2) { animation-delay: .10s; }
+        .container > *:nth-child(3) { animation-delay: .15s; }
+        .container > *:nth-child(4) { animation-delay: .20s; }
+        @keyframes fadeUp { from { opacity:0; transform: translateY(14px); } to { opacity:1; transform: translateY(0); } }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 900px) {
+            .inst-inner { flex-direction: column; min-height: auto; }
+            .inst-photo-wrap { width: 100%; height: 120px; }
+            .inst-badge { margin: 0 auto; margin-top: 12px; }
+        }
+        @media (max-width: 768px) {
+            .navbar-inner { flex-direction: column; height: auto; padding: 12px 16px; gap: 10px; }
+            .nav-links { flex-wrap: wrap; gap: 4px; }
+            .container { padding: 16px; }
+            .card { padding: 18px 20px; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- ─── INSTITUTIONAL HEADER ─── -->
+    <header class="inst-header">
+        <div class="inst-inner">
+            <!-- Foto gedung BPS — taruh file "bps-bangkalan.jpg" di folder static/img/ -->
+            <div class="inst-photo-wrap">
+                {% if config.get('STATIC_FOLDER') %}
+                <img src="{{ url_for('static', filename='img/bps-bangkalan.jpg') }}"
+                     alt="Gedung BPS Kabupaten Bangkalan"
+                     onerror="this.parentElement.innerHTML='<div class=\'inst-photo-placeholder\'><svg viewBox=\'0 0 24 24\'><path d=\'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-6 2.5-3 2.5 3 3.5-4.5L17 17H12z\'/></svg><span>Foto Gedung BPS Bangkalan</span></div>'">
+                {% else %}
+                <img src="/static/img/bps-bangkalan.jpg"
+                     alt="Gedung BPS Kabupaten Bangkalan"
+                     onerror="this.parentElement.innerHTML='<div class=\'inst-photo-placeholder\'><svg viewBox=\'0 0 24 24\'><path d=\'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-6 2.5-3 2.5 3 3.5-4.5L17 17H12z\'/></svg><span>Foto Gedung BPS Bangkalan</span></div>'">
+                {% endif %}
+            </div>
+            <!-- Teks institusi -->
+            <div class="inst-body">
+                <div class="inst-eyebrow">Badan Pusat Statistik</div>
+                <div class="inst-title">Kabupaten Bangkalan</div>
+                <div class="inst-subtitle">Jalan Halim Perdanakusuma No. 5, Kelurahan Mlajah, Kecamatan Bangkalan, Kabupaten Bangkalan, Jawa Timur 69116</div>
+                <div class="inst-meta">
+                    <div class="inst-meta-item">Sensus Ekonomi 2026</div>
+                    <div class="inst-meta-item">Analisis Sentimen Media Sosial</div>
+                    <div class="inst-meta-item">Badan Pusat Statistik</div>
+                </div>
+            </div>
+            <!-- Badge tahun -->
+            <div class="inst-badge">
+                <div class="inst-badge-label">Sensus Ekonomi</div>
+                <div class="inst-badge-year">2026</div>
+                <div class="inst-badge-sub">BPS Bangkalan</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ─── MAIN NAVIGATION ─── -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="navbar-brand">
+                <div class="brand-mark">
+                    <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h12v2H3v-2zm0 4h18v2H3v-2zm0 4h12v2H3v-2z"/></svg>
+                </div>
+                <div>
+                    <div class="brand-text-main">SATRIA SE2026</div>
+                    <div class="brand-text-sub">Scraping &amp; Sentiment Analysis Tracker</div>
+                </div>
+            </a>
+
+            <ul class="nav-links">
+                <li>
+                    <a href="/" class="{% if request.path == '/' %}active{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                        Beranda
+                    </a>
+                </li>
+                <li>
+                    <a href="/analysis" class="{% if request.path == '/analysis' %}active{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+                        Analisis
+                    </a>
+                </li>
+                <li>
+                    <a href="/comments" class="{% if request.path == '/comments' %}active{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                        Komentar
+                    </a>
+                </li>
+                <li>
+                    <a href="/comparison" class="{% if request.path == '/comparison' %}active{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3v18h18V3H3zm8 16H5v-6h6v6zm0-8H5V5h6v6zm8 8h-6v-6h6v6zm0-8h-6V5h6v6z"/></svg>
+                        Perbandingan
+                    </a>
+                </li>
+                <li>
+                    <a href="/about" class="{% if request.path == '/about' %}active{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        Tentang
+                    </a>
+                </li>
+                <li>
+                    <a href="/trend" class="{% if request.path == '/trend' %}active{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+                        Trend
+                    </a>
+                </li>
+                <li class="nav-divider"></li>
+                <li>
+                    <button class="btn-nav-cta" onclick="showQuickAnalysis()">
+                        <svg viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+                        Analisis Cepat
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- ─── QUICK ANALYSIS MODAL ─── -->
+    <div class="modal-overlay" id="quick-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div>
+                    <h2>Analisis Komentar Cepat</h2>
+                    <p>Uji teks secara langsung menggunakan 4 metode Machine Learning</p>
+                </div>
+                <button class="modal-close" onclick="closeQuickAnalysis()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="quick-history-section" style="display:none; margin-bottom:20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <span style="font-size:13px; font-weight:600; color:var(--primary);">Riwayat Analisis</span>
+                        <button onclick="clearAllHistory()" class="btn btn-sm" style="background:var(--danger);">Hapus Semua</button>
+                    </div>
+                    <div id="quick-history-list" style="max-height:150px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius); padding:10px; background:var(--bg);"></div>
+                </div>
+                <textarea id="quick-comment-input"
+                    placeholder="Ketik atau tempel komentar di sini untuk dianalisis..."
+                    style="height:90px; resize:vertical; margin-bottom:14px;"></textarea>
+                <div style="display:flex; gap:10px; margin-bottom:16px;">
+                    <button onclick="analyzeQuickComment()" id="quick-analyze-btn" class="btn" style="flex:1;">Analisis</button>
+                    <button onclick="saveCurrentResult()" id="quick-save-btn" class="btn btn-success" style="flex:1; display:none;">Simpan Hasil</button>
+                </div>
+                <div id="quick-loading" style="display:none; text-align:center; padding:20px;">
+                    <div class="spinner"></div>
+                    <p style="margin-top:12px; color:var(--text-muted); font-size:13px;">Menganalisis sentimen...</p>
+                </div>
+                <div id="quick-results" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <span style="font-size:14px; font-weight:600; color:var(--primary);">Hasil Analisis</span>
+                        <span id="quick-result-time" style="font-size:11px; color:var(--text-muted);"></span>
+                    </div>
+                    <div id="quick-results-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let analysisHistory = [];
+        let currentAnalysis = null;
+        window.addEventListener('DOMContentLoaded', function () {
+            const saved = localStorage.getItem('quickAnalysisHistory');
+            if (saved) {
+                try { analysisHistory = JSON.parse(saved); } catch(e) { analysisHistory = []; }
+                if (analysisHistory.length > 0) renderHistory();
+            }
+        });
+        function showQuickAnalysis() {
+            document.getElementById('quick-modal').style.display = 'block';
+            setTimeout(() => document.getElementById('quick-comment-input').focus(), 100);
+            if (analysisHistory.length > 0) { document.getElementById('quick-history-section').style.display = 'block'; renderHistory(); }
+        }
+        function closeQuickAnalysis() { document.getElementById('quick-modal').style.display = 'none'; }
+        document.getElementById('quick-modal').addEventListener('click', function(e) { if (e.target === this) closeQuickAnalysis(); });
+        function clearAllHistory() {
+            if (!confirm('Hapus semua riwayat analisis?')) return;
+            analysisHistory = []; localStorage.removeItem('quickAnalysisHistory');
+            document.getElementById('quick-history-section').style.display = 'none';
+        }
+        function deleteHistoryItem(i) {
+            analysisHistory.splice(i,1); localStorage.setItem('quickAnalysisHistory', JSON.stringify(analysisHistory));
+            renderHistory();
+            if (!analysisHistory.length) document.getElementById('quick-history-section').style.display = 'none';
+        }
+        function loadHistoryItem(i) {
+            const item = analysisHistory[i]; currentAnalysis = item;
+            document.getElementById('quick-comment-input').value = item.original;
+            displayQuickResults(item); document.getElementById('quick-save-btn').style.display = 'none';
+        }
+        function renderHistory() {
+            const el = document.getElementById('quick-history-list');
+            if (!analysisHistory.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:12px;">Belum ada riwayat.</p>'; return; }
+            el.innerHTML = analysisHistory.map((item,i) => {
+                const preview = item.original.substring(0,55) + (item.original.length > 55 ? '…' : '');
+                const s = Object.values(item.sentiments)[0]?.label || '';
+                const cls = s.includes('Positif') ? 'badge-success' : s.includes('Negatif') ? 'badge-danger' : 'badge-neutral';
+                return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-card);border-radius:var(--radius);margin-bottom:6px;cursor:pointer;border:1px solid var(--border);transition:box-shadow .15s;" onmouseover="this.style.boxShadow='var(--shadow-sm)'" onmouseout="this.style.boxShadow='none'" onclick="loadHistoryItem(${i})">
+                    <div style="flex:1"><div style="font-size:11px;color:var(--text-muted);">${item.timestamp||''}</div><div style="font-size:12px;color:var(--text);">${preview}</div></div>
+                    <span class="badge ${cls}">${s}</span>
+                    <button onclick="deleteHistoryItem(${i});event.stopPropagation();" class="btn btn-sm" style="background:var(--danger);padding:4px 8px;font-size:11px;">Hapus</button>
+                </div>`;
+            }).join('');
+            document.getElementById('quick-history-section').style.display = 'block';
+        }
+        function saveCurrentResult() {
+            if (!currentAnalysis) return;
+            currentAnalysis.timestamp = new Date().toLocaleString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+            analysisHistory = analysisHistory.filter(x => x.original !== currentAnalysis.original);
+            analysisHistory.unshift(currentAnalysis);
+            if (analysisHistory.length > 20) analysisHistory = analysisHistory.slice(0,20);
+            localStorage.setItem('quickAnalysisHistory', JSON.stringify(analysisHistory));
+            renderHistory(); document.getElementById('quick-save-btn').style.display = 'none';
+            alert('Hasil berhasil disimpan.');
+        }
+        async function analyzeQuickComment() {
+            const comment = document.getElementById('quick-comment-input').value.trim();
+            if (!comment) { alert('Masukkan teks komentar terlebih dahulu.'); return; }
+            const btn = document.getElementById('quick-analyze-btn');
+            btn.disabled = true; btn.textContent = 'Menganalisis...';
+            document.getElementById('quick-loading').style.display = 'block';
+            document.getElementById('quick-results').style.display = 'none';
+            document.getElementById('quick-save-btn').style.display = 'none';
+            try {
+                const res = await fetch('/analyze_single', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({comment}) });
+                const data = await res.json();
+                if (data.success) { currentAnalysis = data.results; displayQuickResults(data.results); document.getElementById('quick-save-btn').style.display = 'block'; }
+                else { alert('Error: ' + data.error); }
+            } catch(e) { alert('Terjadi kesalahan: ' + e); }
+            finally { btn.disabled = false; btn.textContent = 'Analisis'; document.getElementById('quick-loading').style.display = 'none'; }
+        }
+        function displayQuickResults(data) {
+            const rc = document.getElementById('quick-results-content');
+            document.getElementById('quick-result-time').textContent = data.timestamp || new Date().toLocaleString('id-ID');
+            let html = `<div style="background:var(--bg);padding:14px 16px;border-radius:var(--radius);margin-bottom:14px;font-size:13px;border:1px solid var(--border);">
+                <div><strong style="color:var(--primary);">Teks Asli:</strong><br><span>${data.original}</span></div>
+                <div style="margin-top:8px;"><strong style="color:var(--primary);">Teks Terproses:</strong><br><span style="color:var(--text-muted);font-style:italic;">${data.preprocessed||'-'}</span></div>
+            </div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">`;
+            for (const [,r] of Object.entries(data.sentiments)) {
+                const isPos = r.label.toLowerCase().includes('positif');
+                const isNeg = r.label.toLowerCase().includes('negatif');
+                const color = isPos ? 'var(--success)' : isNeg ? 'var(--danger)' : 'var(--neutral)';
+                html += `<div style="border:1.5px solid ${color};border-radius:var(--radius);padding:16px;text-align:center;background:var(--bg-card);">
+                    <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;">${r.name}</div>
+                    <div style="font-size:22px;font-weight:800;color:${color};margin:10px 0;letter-spacing:-.3px;">${r.label}</div>
+                    <div style="font-size:11px;color:var(--text-muted);">${(r.score*100).toFixed(1)}% confidence</div>
+                </div>`;
+            }
+            html += '</div>';
+            rc.innerHTML = html;
+            document.getElementById('quick-results').style.display = 'block';
+        }
+    </script>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <strong>SATRIA SE2026</strong>
+                Scraping &amp; Sentiment Analysis Tracker for Economic Census 2026
+            </div>
+            <div class="footer-meta">
+                <div class="footer-meta-item">BPS <span>Kabupaten Bangkalan</span></div>
+                <div class="footer-meta-item">Metode ML <span>Naive Bayes · SVM · LSTM · IndoBERT</span></div>
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

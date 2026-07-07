@@ -1,0 +1,599 @@
+{% extends "base.html" %}
+{% block title %}Analisis Sentimen — SATRIA SE2026{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex; align-items: center; gap: 14px; margin-bottom: 24px;
+    }
+    .page-header-icon {
+        width: 48px; height: 48px; background: linear-gradient(135deg,var(--primary),var(--primary-light));
+        border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center;
+    }
+    .page-header-icon svg { width: 24px; height: 24px; fill: #fff; }
+    .page-header h1 { font-size: 20px; font-weight: 700; color: var(--primary); }
+    .page-header p  { font-size: 13px; color: var(--text-muted); }
+
+    /* Data source toggle */
+    .source-tabs { display: flex; gap: 4px; margin-bottom: 20px; }
+    .source-tab {
+        flex: 1; padding: 10px; text-align: center; border-radius: var(--radius);
+        border: 1.5px solid var(--border); cursor: pointer; font-size: 13px;
+        font-weight: 500; color: var(--text-muted); transition: all .2s;
+        background: var(--bg);
+    }
+    .source-tab.active { border-color: var(--primary); background: #e8f0f8; color: var(--primary); font-weight: 600; }
+
+    /* Method checkboxes */
+    .method-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 16px 0 24px; }
+    .method-card {
+        border: 1.5px solid var(--border); border-radius: var(--radius);
+        padding: 14px 16px; cursor: pointer; transition: all .2s;
+        display: flex; align-items: center; gap: 10px;
+    }
+    .method-card:hover { border-color: var(--primary-light); background: var(--bg); }
+    .method-card.selected { border-color: var(--primary); background: #e8f0f8; }
+    .method-card input[type="checkbox"] { accent-color: var(--primary); width: 16px; height: 16px; }
+    .method-card-body { flex: 1; }
+    .method-card-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .method-card-desc { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+    /* File list */
+    .file-list-wrap { max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+    .file-item {
+        padding: 14px 16px; cursor: pointer; border-bottom: 1px solid var(--border);
+        transition: background .15s; display: flex; align-items: center; gap: 12px;
+    }
+    .file-item:last-child { border-bottom: none; }
+    .file-item:hover { background: var(--bg); }
+    .file-item.selected { background: #e8f0f8; }
+    .file-item-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+    .file-item.selected .file-item-dot { background: var(--primary); }
+    .file-item-info { flex: 1; }
+    .file-item-title { font-size: 13px; font-weight: 500; color: var(--text); }
+    .file-item-meta  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Results */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .stat-card {
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-sm);
+    }
+    .stat-card-title {
+        font-size: 13px; font-weight: 700; color: var(--primary); text-transform: uppercase;
+        letter-spacing: .5px; margin-bottom: 16px; padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+    }
+    .bar-row { margin-bottom: 12px; }
+    .bar-meta { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+    .bar-label { color: var(--text); font-weight: 500; }
+    .bar-count { color: var(--text-muted); }
+    .bar-track { height: 7px; background: var(--bg); border-radius: 99px; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 99px; transition: width .6s ease; }
+    .fill-pos  { background: var(--success); }
+    .fill-neg  { background: var(--danger); }
+    .fill-neu  { background: var(--neutral); }
+
+    /* Accuracy cards */
+    .accuracy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 12px; }
+    .acc-card { background: var(--bg-card); border-radius: var(--radius); padding: 16px; text-align: center; border: 1.5px solid var(--border); }
+    .acc-pct { font-size: 28px; font-weight: 700; }
+    .acc-name { font-size: 11px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* Wordcloud */
+    .wc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+    .wc-box { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .wc-header { padding: 10px 14px; font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--border); }
+    .wc-header.pos { background: #edf7f2; color: var(--success); }
+    .wc-header.neg { background: #fdf0f1; color: var(--danger); }
+    .wc-body { padding: 12px; text-align: center; background: var(--bg); min-height: 120px; display: flex; align-items: center; justify-content: center; }
+    .wc-body img { width: 100%; border-radius: 4px; }
+
+    /* CM grid */
+    .cm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px; }
+    .cm-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .cm-card-title { padding: 12px 16px; background: var(--bg); border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--primary); }
+    .cm-card img { width: 100%; }
+
+    .section-heading {
+        font-size: 15px; font-weight: 700; color: var(--primary);
+        margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .section-heading::before {
+        content: '';
+        display: block; width: 3px; height: 18px; background: var(--accent); border-radius: 2px;
+    }
+
+    /* ── Extra visual effects ── */
+    .method-card { transition: all .2s; }
+    .method-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+    .method-card.selected { box-shadow: 0 0 0 3px rgba(26,58,92,.12); }
+
+    .acc-card { transition: transform .2s, box-shadow .2s; }
+    .acc-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+    .stat-card { transition: transform .2s, box-shadow .2s; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+    /* Animate bars on appear */
+    .bar-fill { width: 0 !important; transition: width .8s cubic-bezier(.4,0,.2,1) !important; }
+    .bars-animate .bar-fill { width: var(--target-w) !important; }
+
+    /* Toast notification */
+    .toast {
+        position: fixed; bottom: 32px; right: 32px; z-index: 9999;
+        background: var(--primary-dark); color: #fff;
+        padding: 14px 22px; border-radius: var(--radius-lg);
+        font-size: 13px; font-weight: 500;
+        box-shadow: var(--shadow-lg);
+        display: flex; align-items: center; gap: 10px;
+        transform: translateY(80px); opacity: 0;
+        transition: transform .35s cubic-bezier(.34,1.56,.64,1), opacity .35s;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink:0; }
+    .toast-success .toast-dot { background: #4caf87; }
+    .toast-error   .toast-dot { background: #e07070; }
+
+    /* Source tab animation */
+    .source-tab { transition: all .2s; }
+    .source-tab:hover:not(.active) { background: #f0f4fa; border-color: #b0c4d8; }
+
+    /* File item transition */
+    .file-item { transition: background .15s, transform .15s; }
+    .file-item:hover { transform: translateX(4px); }
+
+    /* Loading dots */
+    .loading-dots::after {
+        content: '';
+        animation: dots 1.2s steps(4, end) infinite;
+    }
+    @keyframes dots {
+        0%   { content: ''; }
+        25%  { content: '.'; }
+        50%  { content: '..'; }
+        75%  { content: '...'; }
+        100% { content: ''; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-icon">
+        <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h12v2H3v-2zm0 4h18v2H3v-2zm0 4h12v2H3v-2z"/></svg>
+    </div>
+    <div>
+        <h1>Analisis Sentimen</h1>
+        <p>Pilih sumber data dan metode, lalu jalankan analisis sentimen</p>
+    </div>
+</div>
+
+<!-- Data Source Card -->
+<div class="card">
+    <div class="card-title">Sumber Data Komentar</div>
+    <div class="card-sub">Gunakan data scraping terakhir atau pilih file yang pernah disimpan</div>
+
+    <div class="source-tabs">
+        <div class="source-tab active" id="tab-current" onclick="switchTab('current')">Data Scraping Terakhir</div>
+        <div class="source-tab" id="tab-saved" onclick="switchTab('saved')">Pilih dari File Tersimpan</div>
+    </div>
+
+    <div id="saved-files-section" style="display:none;">
+        <div class="file-list-wrap" id="file-list">
+            <div style="padding:20px; text-align:center; color:var(--text-muted);">Memuat daftar file...</div>
+        </div>
+    </div>
+
+    <div class="alert alert-info" id="info-message" style="display:none; margin-top:14px;"></div>
+</div>
+
+<!-- Method Selection -->
+<div class="card">
+    <div class="card-title">Pilih Metode Analisis</div>
+    <div class="card-sub">Pilih satu atau lebih metode Machine Learning untuk analisis sentimen</div>
+
+    <div class="method-grid">
+        <label class="method-card selected" id="card-nb">
+            <input type="checkbox" name="method" value="naive_bayes" checked onchange="toggleMethodCard(this,'card-nb')">
+            <div class="method-card-body">
+                <div class="method-card-name">Naive Bayes</div>
+                <div class="method-card-desc">Probabilistic classifier berbasis TF-IDF</div>
+            </div>
+        </label>
+        <label class="method-card selected" id="card-svm">
+            <input type="checkbox" name="method" value="svm" checked onchange="toggleMethodCard(this,'card-svm')">
+            <div class="method-card-body">
+                <div class="method-card-name">SVM</div>
+                <div class="method-card-desc">Support Vector Machine linear classification</div>
+            </div>
+        </label>
+        <label class="method-card selected" id="card-lstm">
+            <input type="checkbox" name="method" value="lstm" checked onchange="toggleMethodCard(this,'card-lstm')">
+            <div class="method-card-body">
+                <div class="method-card-name">LSTM</div>
+                <div class="method-card-desc">Sequence-aware deep learning model</div>
+            </div>
+        </label>
+        <label class="method-card selected" id="card-ib">
+            <input type="checkbox" name="method" value="indobert" checked onchange="toggleMethodCard(this,'card-ib')">
+            <div class="method-card-body">
+                <div class="method-card-name">IndoBERT</div>
+                <div class="method-card-desc">Transformer model Bahasa Indonesia</div>
+            </div>
+        </label>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" id="analyze-btn" onclick="startAnalysis()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span id="analyze-btn-text">Mulai Analisis</span>
+        </button>
+        <button class="btn btn-accent" id="export-btn" onclick="exportData()" style="display:none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export Excel
+        </button>
+        <button class="btn btn-ghost" id="pdf-btn" onclick="exportPDF()" style="display:none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Cetak Laporan PDF
+        </button>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
+
+<!-- Loading -->
+<div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>Menganalisis sentimen komentar<span class="loading-dots"></span></p>
+    <p style="font-size:11px; color:var(--text-muted); margin-top:4px;" id="analyze-status">Memproses preprocessing teks...</p>
+</div>
+
+<!-- Results -->
+<div id="results" style="display:none;">
+
+    <!-- Word Cloud -->
+    <div class="card" id="wordcloud-section">
+        <div class="section-heading">Word Cloud Sentimen</div>
+        <div id="wordcloud-container">
+            <div class="wc-grid">
+                <div class="wc-box"><div class="wc-header pos">Komentar Positif</div><div class="wc-body"><p style="color:var(--text-muted);font-size:12px;">Memuat...</p></div></div>
+                <div class="wc-box"><div class="wc-header neg">Komentar Negatif</div><div class="wc-body"><p style="color:var(--text-muted);font-size:12px;">Memuat...</p></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="card">
+        <div class="section-heading">Distribusi Sentimen per Metode</div>
+        <div class="stats-grid" id="stats-grid"></div>
+    </div>
+
+</div>
+
+<script>
+let selectedFile = null;
+let activeTab = 'current';
+
+// ── Toast ──────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type='') {
+    const t = document.getElementById('toast');
+    const m = document.getElementById('toast-msg');
+    t.className = 'toast' + (type ? ' toast-'+type : '');
+    m.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ── Tabs ───────────────────────────────────────────────────
+function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('tab-current').classList.toggle('active', tab === 'current');
+    document.getElementById('tab-saved').classList.toggle('active', tab === 'saved');
+    const sf = document.getElementById('saved-files-section');
+    if (tab === 'saved') { sf.style.display = 'block'; loadSavedFiles(); }
+    else { sf.style.display = 'none'; selectedFile = null; }
+}
+
+function toggleMethodCard(cb, cardId) {
+    document.getElementById(cardId).classList.toggle('selected', cb.checked);
+}
+
+// ── File list ──────────────────────────────────────────────
+async function loadSavedFiles() {
+    const fl = document.getElementById('file-list');
+    fl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);">Memuat...</div>';
+    try {
+        const res  = await fetch('/saved_files');
+        const data = await res.json();
+        if (!data.files.length) {
+            fl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);">Belum ada file tersimpan.</div>';
+            return;
+        }
+        fl.innerHTML = data.files.map(f => `
+            <div class="file-item" id="fi-${f.filename}" onclick="selectFile('${f.filename}')">
+                <div class="file-item-dot"></div>
+                <div class="file-item-info">
+                    <div class="file-item-title">${f.video_title}</div>
+                    <div class="file-item-meta">${f.total_comments.toLocaleString('id-ID')} komentar &nbsp;|&nbsp; ${new Date(f.scraped_at).toLocaleString('id-ID')}</div>
+                </div>
+            </div>`).join('');
+    } catch(e) {
+        fl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger);">Gagal memuat file.</div>';
+    }
+}
+
+function selectFile(filename) {
+    document.querySelectorAll('.file-item').forEach(el => el.classList.remove('selected'));
+    const el = document.getElementById('fi-' + filename);
+    if (el) el.classList.add('selected');
+    selectedFile = filename;
+    const inf = document.getElementById('info-message');
+    inf.textContent = 'File dipilih: ' + filename;
+    inf.style.display = 'block';
+}
+
+// ── Analyze ────────────────────────────────────────────────
+async function startAnalysis() {
+    const methods = Array.from(document.querySelectorAll('input[name="method"]:checked')).map(c => c.value);
+    if (!methods.length) { showToast('Pilih minimal satu metode analisis.', 'error'); return; }
+
+    const btn = document.getElementById('analyze-btn');
+    const statusEl = document.getElementById('analyze-status');
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('stats-grid').innerHTML = '';
+    btn.disabled = true;
+    document.getElementById('analyze-btn-text').textContent = 'Menganalisis...';
+
+    // Cycle status messages
+    const msgs = [
+        'Memproses preprocessing teks...',
+        'Menghitung skor leksikon...',
+        'Menjalankan model Naive Bayes...',
+        'Menjalankan model SVM...',
+        'Menjalankan LSTM & IndoBERT...',
+        'Menghitung confusion matrix...',
+        'Menyiapkan hasil...',
+    ];
+    let mi = 0;
+    const msgTimer = setInterval(() => { statusEl.textContent = msgs[mi++ % msgs.length]; }, 1800);
+
+    try {
+        let comments;
+        if (activeTab === 'saved') {
+            if (!selectedFile) { showToast('Pilih file terlebih dahulu.', 'error'); return; }
+            const fr = await fetch('/load_file/' + selectedFile);
+            const fd = await fr.json();
+            if (!fd.success) throw new Error('Gagal memuat file');
+            comments = fd.data.comments;
+        } else {
+            const dr = await fetch('/get_scraped_data');
+            const dd = await dr.json();
+            if (!dd.success) {
+                showToast('Belum ada data. Lakukan scraping terlebih dahulu.', 'error');
+                setTimeout(() => window.location.href='/', 1500);
+                return;
+            }
+            comments = dd.data.comments;
+        }
+
+        statusEl.textContent = `Menganalisis ${comments.length.toLocaleString('id-ID')} komentar...`;
+
+        const ar = await fetch('/analyze', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({comments, methods})
+        });
+        const result = await ar.json();
+        if (!result.success) throw new Error(result.error || 'Gagal analisis');
+
+        displayResults(result);
+        document.getElementById('export-btn').style.display = 'inline-flex';
+        document.getElementById('pdf-btn').style.display = 'inline-flex';
+        showToast('Analisis selesai. ' + comments.length.toLocaleString('id-ID') + ' komentar diproses.', 'success');
+
+        // Load wordcloud async
+        loadWordclouds();
+
+    } catch(err) {
+        showToast('Error: ' + err.message, 'error');
+    } finally {
+        clearInterval(msgTimer);
+        document.getElementById('loading').style.display = 'none';
+        btn.disabled = false;
+        document.getElementById('analyze-btn-text').textContent = 'Mulai Analisis';
+    }
+}
+
+// ── Wordclouds ─────────────────────────────────────────────
+async function loadWordclouds() {
+    try {
+        const wc = document.getElementById('wordcloud-container');
+        const res = await fetch('/generate_wordcloud', { method:'POST', headers:{'Content-Type':'application/json'} });
+        const data = await res.json();
+        if (!data.success) {
+            wc.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:12px;">Word cloud tidak tersedia.</p>';
+            return;
+        }
+        wc.innerHTML = `<div class="wc-grid">
+            <div class="wc-box">
+                <div class="wc-header pos">Komentar Positif (${data.positive_count})</div>
+                <div class="wc-body">${data.wordcloud_positive
+                    ? `<img src="${data.wordcloud_positive}" alt="Positive Word Cloud" style="animation:fadeUp .5s ease;">`
+                    : '<p style="color:var(--text-muted);font-size:12px;">Tidak ada komentar positif</p>'}</div>
+            </div>
+            <div class="wc-box">
+                <div class="wc-header neg">Komentar Negatif (${data.negative_count})</div>
+                <div class="wc-body">${data.wordcloud_negative
+                    ? `<img src="${data.wordcloud_negative}" alt="Negative Word Cloud" style="animation:fadeUp .5s ease;">`
+                    : '<p style="color:var(--text-muted);font-size:12px;">Tidak ada komentar negatif</p>'}</div>
+            </div>
+        </div>`;
+    } catch(e) { console.error(e); }
+}
+
+// ── Display results ────────────────────────────────────────
+function displayResults(data) {
+    const grid = document.getElementById('stats-grid');
+    grid.innerHTML = '';
+    document.getElementById('acc-section')?.remove();
+    document.getElementById('cm-section')?.remove();
+
+    // Accuracy section
+    if (data.accuracy) {
+        const accDiv = document.createElement('div');
+        accDiv.id = 'acc-section';
+        accDiv.className = 'card';
+        accDiv.style.marginBottom = '20px';
+        let html = '<div class="section-heading">Tingkat Kesepakatan Metode (Agreement Rate)</div>';
+        html += '<p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Dihitung berdasarkan kesepakatan dengan majority vote dari seluruh metode yang dipilih.</p>';
+        html += '<div class="accuracy-grid">';
+        for (const [m, pct] of Object.entries(data.accuracy)) {
+            const col = pct >= 80 ? 'var(--success)' : pct >= 60 ? 'var(--accent)' : 'var(--danger)';
+            const name = m.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+            html += `<div class="acc-card" style="border-color:${col};">
+                <div class="acc-pct" style="color:${col};" data-target="${pct}">0%</div>
+                <div class="acc-name">${name}</div>
+            </div>`;
+        }
+        html += '</div>';
+        accDiv.innerHTML = html;
+        document.getElementById('results').prepend(accDiv);
+
+        // Animate accuracy numbers
+        requestAnimationFrame(() => {
+            accDiv.querySelectorAll('[data-target]').forEach(el => {
+                const target = parseFloat(el.dataset.target);
+                let start = null;
+                function step(ts) {
+                    if (!start) start = ts;
+                    const p = Math.min((ts - start) / 700, 1);
+                    const ease = 1 - Math.pow(1 - p, 3);
+                    el.textContent = (ease * target).toFixed(1) + '%';
+                    if (p < 1) requestAnimationFrame(step);
+                }
+                requestAnimationFrame(step);
+            });
+        });
+    }
+
+    // Confusion matrices
+    if (data.confusion_matrices) {
+        const cmDiv = document.createElement('div');
+        cmDiv.id = 'cm-section';
+        cmDiv.className = 'card';
+        cmDiv.style.marginBottom = '20px';
+        let html = '<div class="section-heading">Confusion Matrix</div><div class="cm-grid">';
+        for (const [m, img] of Object.entries(data.confusion_matrices)) {
+            const name = m.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+            html += `<div class="cm-card"><div class="cm-card-title">${name}</div>
+                <img src="data:image/png;base64,${img}" alt="CM ${name}" style="animation:fadeUp .4s ease;"></div>`;
+        }
+        html += '</div>';
+        cmDiv.innerHTML = html;
+        const ref = document.getElementById('acc-section');
+        if (ref) ref.after(cmDiv);
+        else document.getElementById('results').prepend(cmDiv);
+    }
+
+    // Stat bars with animation
+    for (const [method, stats] of Object.entries(data.summary)) {
+        const total = stats.positive + stats.negative + stats.neutral;
+        if (!total) continue;
+        const pp = (stats.positive / total * 100).toFixed(1);
+        const np = (stats.negative / total * 100).toFixed(1);
+        const ep = (stats.neutral  / total * 100).toFixed(1);
+
+        const card = document.createElement('div');
+        card.className = 'stat-card';
+        card.innerHTML = `
+            <div class="stat-card-title">${method}</div>
+            <div class="bar-row">
+                <div class="bar-meta"><span class="bar-label">Positif</span><span class="bar-count">${stats.positive} (${pp}%)</span></div>
+                <div class="bar-track"><div class="bar-fill fill-pos" style="--target-w:${pp}%; width:0%"></div></div>
+            </div>
+            <div class="bar-row">
+                <div class="bar-meta"><span class="bar-label">Negatif</span><span class="bar-count">${stats.negative} (${np}%)</span></div>
+                <div class="bar-track"><div class="bar-fill fill-neg" style="--target-w:${np}%; width:0%"></div></div>
+            </div>
+            <div class="bar-row" style="margin-bottom:0">
+                <div class="bar-meta"><span class="bar-label">Netral</span><span class="bar-count">${stats.neutral} (${ep}%)</span></div>
+                <div class="bar-track"><div class="bar-fill fill-neu" style="--target-w:${ep}%; width:0%"></div></div>
+            </div>`;
+        grid.appendChild(card);
+    }
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({behavior:'smooth'});
+
+    // Trigger bar animations after paint
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            document.querySelectorAll('.bar-fill').forEach(b => {
+                b.style.transition = 'width .9s cubic-bezier(.4,0,.2,1)';
+                b.style.width = b.style.getPropertyValue('--target-w') ||
+                    getComputedStyle(b).getPropertyValue('--target-w');
+            });
+        });
+    });
+}
+
+// ── Export PDF ─────────────────────────────────────────────
+async function exportPDF() {
+    const btn = document.getElementById('pdf-btn');
+    btn.disabled = true;
+    showToast('Menyiapkan laporan...');
+    try {
+        const res = await fetch('/export_pdf');
+        if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+        const html = await res.text();
+        const win = window.open('', '_blank');
+        win.document.write(html);
+        win.document.close();
+        // Trigger print dialog setelah render
+        win.onload = () => { win.focus(); win.print(); };
+        showToast('Jendela cetak dibuka. Pilih "Save as PDF" untuk menyimpan.', 'success');
+    } catch(err) {
+        showToast('Gagal membuat PDF: ' + err.message, 'error');
+    } finally {
+        btn.disabled = false;
+    }
+}
+async function exportData() {
+    const btn = document.getElementById('export-btn');
+    btn.disabled = true;
+    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Menyiapkan...`;
+    showToast('Menyiapkan file Excel...');
+
+    try {
+        const res = await fetch('/export');
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Gagal export');
+        }
+        // Trigger download
+        const blob = await res.blob();
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        // Get filename from Content-Disposition header if available
+        const cd   = res.headers.get('Content-Disposition') || '';
+        const match = cd.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        a.download = match ? match[1].replace(/['"]/g,'') : 'SATRIA_SE2026.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('File Excel berhasil diunduh.', 'success');
+    } catch(err) {
+        showToast('Export gagal: ' + err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Excel`;
+    }
+}
+</script>
+{% endblock %}

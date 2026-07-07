@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+{% block title %}Komentar — SATRIA SE2026{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
+    .page-header-icon { width:48px; height:48px; background:linear-gradient(135deg,var(--primary),var(--primary-light)); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center; }
+    .page-header-icon svg { width:24px; height:24px; fill:#fff; }
+    .page-header h1 { font-size:20px; font-weight:700; color:var(--primary); }
+    .page-header p  { font-size:13px; color:var(--text-muted); }
+
+    /* toolbar */
+    .toolbar { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+    .search-wrap { position:relative; flex:1; min-width:180px; }
+    .search-wrap input { padding-left:36px; }
+    .search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); width:15px; height:15px; stroke:var(--text-muted); fill:none; stroke-width:2; }
+
+    /* filter chips */
+    .filter-chips { display:flex; gap:6px; flex-wrap:wrap; }
+    .chip {
+        padding:5px 14px; border-radius:99px; font-size:12px; font-weight:600;
+        border:1.5px solid var(--border); background:var(--bg-card); color:var(--text-muted);
+        cursor:pointer; transition:all .2s; user-select:none;
+    }
+    .chip:hover { border-color:var(--primary); color:var(--primary); }
+    .chip.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .chip.pos.active { background:var(--success); border-color:var(--success); }
+    .chip.neg.active { background:var(--danger); border-color:var(--danger); }
+    .chip.neu.active { background:var(--neutral); border-color:var(--neutral); }
+
+    /* sort select */
+    .sort-select {
+        padding:7px 12px; border:1.5px solid var(--border); border-radius:var(--radius);
+        font-size:12px; font-weight:500; color:var(--text); background:var(--bg-card);
+        cursor:pointer; min-width:140px;
+    }
+    .sort-select:focus { outline:none; border-color:var(--primary-light); }
+
+    /* comment card */
+    .comment-card {
+        border:1px solid var(--border); border-radius:var(--radius-lg);
+        margin-bottom:8px; overflow:hidden; transition:box-shadow .2s, transform .2s;
+    }
+    .comment-card:hover { box-shadow:var(--shadow-md); transform:translateY(-1px); }
+    .comment-header {
+        display:flex; align-items:center; gap:10px;
+        padding:10px 16px; background:var(--bg); border-bottom:1px solid var(--border);
+    }
+    .comment-avatar {
+        width:30px; height:30px; border-radius:50%;
+        background:linear-gradient(135deg,var(--primary),var(--primary-light));
+        color:#fff; display:flex; align-items:center; justify-content:center;
+        font-size:12px; font-weight:700; flex-shrink:0; text-transform:uppercase;
+    }
+    .comment-author { font-size:13px; font-weight:600; color:var(--primary); flex:1; }
+    .comment-meta   { font-size:11px; color:var(--text-muted); display:flex; gap:12px; }
+    .comment-body { padding:10px 16px; font-size:13px; color:var(--text); line-height:1.65; }
+    .comment-footer {
+        padding:7px 16px; border-top:1px solid var(--border);
+        display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px;
+    }
+    .sentiment-badges { display:flex; gap:5px; flex-wrap:wrap; }
+    .s-badge { font-size:10px; font-weight:700; padding:2px 9px; border-radius:99px; }
+    .s-pos { background:#edf7f2; color:var(--success); }
+    .s-neg { background:#fdf0f1; color:var(--danger); }
+    .s-neu { background:#f0f2f5; color:var(--neutral); }
+    .btn-preprocess {
+        font-size:11px; padding:5px 12px; border-radius:99px;
+        background:transparent; border:1.5px solid var(--primary-light);
+        color:var(--primary); cursor:pointer; font-weight:600; transition:all .2s;
+    }
+    .btn-preprocess:hover { background:var(--primary); color:#fff; }
+
+    /* preprocessing modal */
+    .pp-overlay { display:none; position:fixed; inset:0; background:rgba(10,20,35,.6); backdrop-filter:blur(3px); z-index:9500; overflow-y:auto; padding:24px; }
+    .pp-box { background:var(--bg-card); border-radius:var(--radius-lg); width:860px; max-width:100%; margin:0 auto; box-shadow:var(--shadow-lg); overflow:hidden; animation:modalIn .25s ease; }
+    .pp-header { background:linear-gradient(135deg,var(--primary-dark),var(--primary)); padding:18px 24px; display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid var(--accent); }
+    .pp-header h2 { color:#fff; font-size:16px; font-weight:700; }
+    .pp-header p  { color:rgba(255,255,255,.65); font-size:12px; margin-top:2px; }
+    .pp-close { background:rgba(255,255,255,.15); border:none; color:#fff; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:18px; font-weight:700; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+    .pp-close:hover { background:rgba(255,255,255,.28); transform:rotate(90deg); }
+    .pp-body { padding:24px; max-height:75vh; overflow-y:auto; }
+
+    .pp-step { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:13px 16px; margin-bottom:6px; }
+    .pp-step.highlight { background:#fdf6e8; border-color:var(--accent); }
+    .pp-step.final     { background:#edf7f2; border-color:var(--success); }
+    .pp-step-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:7px; }
+    .pp-step-title { font-size:11px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:.6px; }
+    .pp-step-badge { font-size:10px; font-weight:600; padding:2px 8px; border-radius:99px; background:var(--primary); color:#fff; }
+    .pp-step-content { font-size:12px; color:var(--text); line-height:1.6; padding:9px 12px; background:var(--bg-card); border-radius:5px; border-left:3px solid var(--primary-light); word-break:break-word; }
+    .pp-arrow { text-align:center; color:var(--border); font-size:16px; margin:2px 0; }
+
+    .empty-state { text-align:center; padding:60px 24px; color:var(--text-muted); }
+    .empty-state p { font-size:14px; }
+    .empty-state a { color:var(--primary); font-weight:600; text-decoration:none; }
+    .count-badge { background:var(--primary); color:#fff; font-size:11px; font-weight:700; padding:2px 9px; border-radius:99px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-icon">
+        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+    </div>
+    <div>
+        <h1>Semua Komentar</h1>
+        <p>Filter, sort, dan analisis detail setiap komentar yang telah diambil</p>
+    </div>
+</div>
+
+<div class="card">
+    <!-- Toolbar baris 1: search + count + sort -->
+    <div class="toolbar">
+        <div class="search-wrap">
+            <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="search-input" placeholder="Cari komentar atau nama pengguna..." oninput="applyFilters()">
+        </div>
+        <select class="sort-select" id="sort-select" onchange="applyFilters()">
+            <option value="default">Urutan Asli</option>
+            <option value="likes_desc">Likes Terbanyak</option>
+            <option value="likes_asc">Likes Tersedikit</option>
+            <option value="text_asc">Teks A-Z</option>
+            <option value="text_desc">Teks Z-A</option>
+        </select>
+        <span id="comment-count" class="count-badge">0</span>
+    </div>
+    <!-- Toolbar baris 2: filter chips -->
+    <div class="filter-chips" id="filter-chips" style="margin-bottom:16px;">
+        <div class="chip active" data-filter="all"    onclick="setFilter('all',this)">Semua</div>
+        <div class="chip pos"  data-filter="positif"  onclick="setFilter('positif',this)">Positif</div>
+        <div class="chip neg"  data-filter="negatif"  onclick="setFilter('negatif',this)">Negatif</div>
+        <div class="chip neu"  data-filter="netral"   onclick="setFilter('netral',this)">Netral</div>
+        <div class="chip"      data-filter="no_label" onclick="setFilter('no_label',this)">Belum Dianalisis</div>
+    </div>
+
+    <div id="comments-list"></div>
+</div>
+
+<!-- Preprocessing Modal -->
+<div class="pp-overlay" id="pp-modal">
+    <div class="pp-box">
+        <div class="pp-header">
+            <div>
+                <h2>Detail Preprocessing Teks</h2>
+                <p id="pp-author">12 langkah pemrosesan NLP</p>
+            </div>
+            <button class="pp-close" onclick="closePP()">&times;</button>
+        </div>
+        <div class="pp-body" id="pp-body">
+            <div style="text-align:center;padding:40px;"><div class="spinner"></div><p style="margin-top:14px;color:var(--text-muted);">Memproses teks...</p></div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allComments = [];
+let analysisMap = {};
+let activeFilter = 'all';
+
+async function loadComments() {
+    const el = document.getElementById('comments-list');
+    const res = await fetch('/get_scraped_data');
+    const data = await res.json();
+
+    if (!data.success) {
+        el.innerHTML = `<div class="empty-state"><p>Belum ada data. <a href="/">Lakukan scraping terlebih dahulu</a>.</p></div>`;
+        return;
+    }
+
+    allComments = data.data.comments;
+
+    // Load analysis if available
+    try {
+        const ar = await fetch('/get_analysis_results');
+        const ad = await ar.json();
+        if (ad.success) ad.results.comments.forEach((c,i) => { analysisMap[i] = c; });
+    } catch(e) {}
+
+    applyFilters();
+}
+
+function getSentiment(idx) {
+    const a = analysisMap[idx];
+    if (!a) return null;
+    return (a.naive_bayes_sentiment || a.svm_sentiment || a.lstm_sentiment || a.indobert_sentiment || null);
+}
+
+function setFilter(f, el) {
+    activeFilter = f;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    applyFilters();
+}
+
+function applyFilters() {
+    const q = document.getElementById('search-input').value.toLowerCase();
+    const sort = document.getElementById('sort-select').value;
+
+    // Map to index for sentiment lookup
+    let indexed = allComments.map((c, i) => ({ c, i }));
+
+    // Filter by sentiment
+    if (activeFilter !== 'all') {
+        indexed = indexed.filter(({i}) => {
+            const s = getSentiment(i);
+            if (activeFilter === 'no_label') return !s;
+            return s && s.toLowerCase().includes(activeFilter);
+        });
+    }
+
+    // Filter by search
+    if (q) {
+        indexed = indexed.filter(({c}) =>
+            c.text.toLowerCase().includes(q) || (c.author||'').toLowerCase().includes(q)
+        );
+    }
+
+    // Sort
+    if (sort === 'likes_desc')  indexed.sort((a,b) => parseInt(b.c.likes||0) - parseInt(a.c.likes||0));
+    if (sort === 'likes_asc')   indexed.sort((a,b) => parseInt(a.c.likes||0) - parseInt(b.c.likes||0));
+    if (sort === 'text_asc')    indexed.sort((a,b) => a.c.text.localeCompare(b.c.text, 'id'));
+    if (sort === 'text_desc')   indexed.sort((a,b) => b.c.text.localeCompare(a.c.text, 'id'));
+
+    document.getElementById('comment-count').textContent = indexed.length;
+    renderComments(indexed);
+}
+
+function sbClass(s) {
+    if (!s) return 's-neu';
+    if (s.toLowerCase().includes('positif')) return 's-pos';
+    if (s.toLowerCase().includes('negatif')) return 's-neg';
+    return 's-neu';
+}
+
+function renderComments(indexed) {
+    const el = document.getElementById('comments-list');
+    if (!indexed.length) {
+        el.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:12px;text-align:center;">Tidak ada komentar yang cocok.</p>';
+        return;
+    }
+
+    el.innerHTML = indexed.map(({c, i}) => {
+        const analysis = analysisMap[i];
+        let badges = '';
+        if (analysis) {
+            const map = {'NB':analysis.naive_bayes_sentiment,'SVM':analysis.svm_sentiment,'LSTM':analysis.lstm_sentiment,'BERT':analysis.indobert_sentiment};
+            badges = Object.entries(map).filter(([,v])=>v).map(([k,v])=>
+                `<span class="s-badge ${sbClass(v)}">${k}: ${v}</span>`).join('');
+        }
+        const av = (c.author||'?').charAt(0);
+        return `<div class="comment-card">
+            <div class="comment-header">
+                <div class="comment-avatar">${av}</div>
+                <div class="comment-author">${esc(c.author)}</div>
+                <div class="comment-meta">
+                    <span>${c.likes} likes</span>
+                    <span>${c.reply_count||0} replies</span>
+                    ${c.published_at ? `<span>${c.published_at.slice(0,10)}</span>` : ''}
+                </div>
+            </div>
+            <div class="comment-body">${esc(c.text)}</div>
+            <div class="comment-footer">
+                <div>
+                    <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px;">#${i+1}</div>
+                    <div class="sentiment-badges">${badges || '<span style="font-size:11px;color:var(--text-muted);">Belum dianalisis</span>'}</div>
+                </div>
+                <button class="btn-preprocess" onclick="showPP(${i})">Lihat Preprocessing</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Preprocessing Modal ────────────────────────────────────
+function showPP(index) {
+    const c = allComments[index];
+    document.getElementById('pp-author').textContent = `Komentar #${index+1} — @${c.author}`;
+    document.getElementById('pp-body').innerHTML = `<div style="text-align:center;padding:40px;"><div class="spinner"></div><p style="margin-top:14px;color:var(--text-muted);">Memproses...</p></div>`;
+    document.getElementById('pp-modal').style.display = 'block';
+
+    fetch('/preprocess_text', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({text: c.text})
+    })
+    .then(r=>r.json())
+    .then(d => { if(d.success) renderPP(d.steps); else document.getElementById('pp-body').innerHTML='<p style="color:var(--danger);padding:20px;">Gagal memproses.</p>'; })
+    .catch(()=>{ document.getElementById('pp-body').innerHTML='<p style="color:var(--danger);padding:20px;">Terjadi kesalahan.</p>'; });
+}
+
+function renderPP(s) {
+    function step(num, title, sub, content, cls='') {
+        const txt = Array.isArray(content) ? content.join(', ') : String(content||'');
+        return `<div class="pp-step ${cls}">
+            <div class="pp-step-head">
+                <span class="pp-step-title">${num}. ${title}</span>
+                <span class="pp-step-badge">${sub}</span>
+            </div>
+            <div class="pp-step-content">${esc(txt)}</div>
+        </div><div class="pp-arrow">↓</div>`;
+    }
+    let html = '';
+    html += step(1,'Original Text', s.original_words+' kata', s.original, 'highlight');
+    html += step(2,'Case Folding','lowercase', s.case_folding);
+    html += step(3,'Noise Removal','URL / @ / #', s.noise_removal||s.case_folding);
+    html += step(4,'Remove Numbers','digit cleaning', s.remove_numbers||s.noise_removal);
+    html += step(5,'Remove Punctuation','clean symbols', s.remove_punctuation||s.remove_numbers);
+    html += step(6,'Spelling Correction','normalisasi', s.spelling_correction||s.remove_punctuation);
+    html += step(7,'Tokenization', s.token_count+' token', s.tokenization);
+    html += step(8,'Normalization','slang → formal', s.normalization);
+    html += step(9,'Stopword Removal', s.tokens_after_stopword+' token', s.stopword_removal);
+    html += step(10,'Stemming','root words', s.stemming);
+    html += step(11,'Negation Handling','NOT_ prefix', s.negation_handling);
+
+    html = html.slice(0, html.lastIndexOf('<div class="pp-arrow">'));
+    html += `<div class="pp-arrow" style="color:var(--success);">✓</div>
+        <div class="pp-step final">
+            <div class="pp-step-head">
+                <span class="pp-step-title">12. Final Result</span>
+                <span class="pp-step-badge" style="background:var(--success);">${s.final_words} kata — Reduksi ${s.reduction_rate}%</span>
+            </div>
+            <div class="pp-step-content" style="border-left-color:var(--success);font-weight:600;">${esc(s.final)}</div>
+        </div>`;
+
+    document.getElementById('pp-body').innerHTML = html;
+}
+
+function closePP() { document.getElementById('pp-modal').style.display='none'; }
+document.getElementById('pp-modal').addEventListener('click', e => { if(e.target===e.currentTarget) closePP(); });
+
+loadComments();
+</script>
+{% endblock %}

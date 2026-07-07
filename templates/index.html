@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+{% block title %}Beranda — SATRIA SE2026{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        border-radius: var(--radius-lg);
+        padding: 36px 40px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+    .hero::before {
+        content: '';
+        position: absolute; right: -40px; top: -40px;
+        width: 220px; height: 220px;
+        background: rgba(200,151,58,.15);
+        border-radius: 50%;
+    }
+    .hero::after {
+        content: '';
+        position: absolute; right: 60px; bottom: -60px;
+        width: 160px; height: 160px;
+        background: rgba(200,151,58,.08);
+        border-radius: 50%;
+    }
+    .hero-icon {
+        width: 72px; height: 72px; flex-shrink: 0;
+        background: rgba(200,151,58,.25);
+        border: 2px solid rgba(200,151,58,.5);
+        border-radius: var(--radius-lg);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .hero-icon svg { width: 36px; height: 36px; fill: var(--accent-light); }
+    .hero-text h1 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .hero-text p  { font-size: 13px; color: rgba(255,255,255,.75); line-height: 1.7; }
+    .hero-badge {
+        margin-top: 14px;
+        display: inline-flex; align-items: center; gap: 8px;
+        background: rgba(200,151,58,.2); border: 1px solid rgba(200,151,58,.5);
+        color: var(--accent-light); font-size: 12px; font-weight: 500;
+        padding: 5px 14px; border-radius: 99px;
+    }
+    .hero-badge span { width: 7px; height: 7px; background: var(--accent-light); border-radius: 50%; display: inline-block; }
+
+    .stat-row {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;
+    }
+    .stat-item {
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: var(--radius-lg); padding: 20px 24px;
+        display: flex; align-items: center; gap: 14px;
+    }
+    .stat-icon {
+        width: 44px; height: 44px; border-radius: var(--radius);
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .stat-icon svg { width: 22px; height: 22px; }
+    .stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+    .stat-value { font-size: 18px; font-weight: 700; color: var(--primary); }
+
+    .api-banner {
+        background: #fdf6e8; border: 1.5px solid var(--accent);
+        border-radius: var(--radius-lg); padding: 16px 20px;
+        margin-bottom: 20px; display: none;
+    }
+    .api-banner p { font-size: 13px; color: #7a5a0a; }
+    .api-banner a { color: var(--primary-light); font-weight: 600; }
+
+    .scrape-form-card .card-title { font-size: 17px; }
+    .url-input-wrap { position: relative; }
+    .url-input-wrap input { padding-left: 42px; }
+    .url-input-wrap .url-icon {
+        position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+        width: 16px; height: 16px; fill: var(--text-muted);
+    }
+
+    .options-row { display: flex; gap: 16px; align-items: flex-end; }
+    .options-row .form-group:first-child { flex: 2; }
+    .options-row .form-group:last-child  { flex: 1; }
+
+    .step-list { display: flex; gap: 0; margin-bottom: 24px; overflow-x: auto; }
+    .step-item {
+        flex: 1; padding: 14px 16px; text-align: center;
+        border-top: 3px solid var(--border); font-size: 12px; color: var(--text-muted);
+        min-width: 100px;
+    }
+    .step-item.active { border-top-color: var(--primary); color: var(--primary); font-weight: 600; }
+    .step-item.done   { border-top-color: var(--success); color: var(--success); }
+    .step-num {
+        font-size: 18px; font-weight: 700; display: block; margin-bottom: 2px;
+    }
+
+    .result-info { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+    .result-info-item { background: var(--bg); border-radius: var(--radius); padding: 12px 16px; }
+    .result-info-item .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+    .result-info-item .value { font-size: 16px; font-weight: 600; color: var(--primary); margin-top: 2px; }
+
+    .action-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* ── Efek visual tambahan ── */
+    .hero { animation: heroIn .5s ease both; }
+    @keyframes heroIn { from { opacity:0; transform: translateY(18px); } to { opacity:1; transform: translateY(0); } }
+
+    /* Pulse dot di hero-badge */
+    .hero-badge span {
+        animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+        0%,100% { transform: scale(1); opacity:1; }
+        50%      { transform: scale(1.5); opacity:.6; }
+    }
+
+    /* Step progress glow on active */
+    .step-item.active .step-num {
+        color: var(--primary);
+        text-shadow: 0 0 12px rgba(26,58,92,.25);
+    }
+    .step-item.done .step-num {
+        color: var(--success);
+    }
+
+    /* Card input focus ring glow */
+    .scrape-form-card:focus-within {
+        box-shadow: 0 0 0 3px rgba(26,58,92,.08), var(--shadow-md);
+    }
+
+    /* Scrape button loading state */
+    .btn-loading { position: relative; pointer-events: none; }
+    .btn-loading::before {
+        content: '';
+        position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+        width: 14px; height: 14px;
+        border: 2px solid rgba(255,255,255,.4);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin .7s linear infinite;
+    }
+
+    /* Result info item hover */
+    .result-info-item {
+        transition: background .2s, transform .2s;
+        cursor: default;
+    }
+    .result-info-item:hover {
+        background: #e4eef8;
+        transform: translateY(-2px);
+    }
+
+    /* Stat row items */
+    .stat-item { transition: box-shadow .2s, transform .2s; }
+    .stat-item:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+    /* Step item transition */
+    .step-item { transition: border-color .4s, color .4s; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- API Key Check Banner -->
+<div class="api-banner" id="api-banner">
+    <p><strong>Perhatian:</strong> YouTube API Key belum dikonfigurasi atau tidak valid.
+    Scraping komentar memerlukan API Key YouTube Data v3 yang aktif.
+    Buka file <code>.env</code> dan isi <code>YOUTUBE_API_KEY=...</code>.
+    Panduan: <a href="https://console.cloud.google.com" target="_blank">Google Cloud Console</a></p>
+</div>
+
+<!-- Hero Banner -->
+<div class="hero">
+    <div class="hero-icon">
+        <!-- YouTube logo SVG resmi -->
+        <svg viewBox="0 0 24 24" fill="var(--accent-light)"><path d="M23.5 6.19a3.02 3.02 0 00-2.12-2.14C19.54 3.5 12 3.5 12 3.5s-7.54 0-9.38.55A3.02 3.02 0 00.5 6.19C0 8.04 0 12 0 12s0 3.96.5 5.81a3.02 3.02 0 002.12 2.14C4.46 20.5 12 20.5 12 20.5s7.54 0 9.38-.55a3.02 3.02 0 002.12-2.14C24 15.96 24 12 24 12s0-3.96-.5-5.81zM9.75 15.52V8.48L15.83 12l-6.08 3.52z"/></svg>
+    </div>
+    <div class="hero-text">
+        <h1>Scraping Komentar YouTube</h1>
+        <p>Ambil komentar dari video YouTube terkait Sensus Ekonomi 2026 untuk dianalisis sentimennya menggunakan 4 metode Machine Learning.</p>
+        <div class="hero-badge"><span></span> Mendukung hingga 100.000 komentar per video</div>
+    </div>
+</div>
+
+<!-- Step Guide -->
+<div class="step-list">
+    <div class="step-item active"><span class="step-num">1</span>Input URL</div>
+    <div class="step-item" id="step2"><span class="step-num">2</span>Scraping</div>
+    <div class="step-item" id="step3"><span class="step-num">3</span>Analisis</div>
+    <div class="step-item" id="step4"><span class="step-num">4</span>Hasil</div>
+</div>
+
+<!-- Scrape Form -->
+<div class="card scrape-form-card">
+    <div class="card-title">Input Video YouTube</div>
+    <div class="card-sub">Masukkan URL video YouTube yang akan diambil komentarnya</div>
+
+    <div class="alert alert-error" id="error-message"></div>
+    <div class="alert alert-warning" id="warning-message"></div>
+
+    <form id="scrape-form">
+        <div class="form-group">
+            <label for="video-url">URL Video YouTube</label>
+            <div class="url-input-wrap">
+                <svg class="url-icon" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <input type="text" id="video-url"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    autocomplete="off" required>
+            </div>
+            <div class="form-hint">Format yang didukung: youtube.com/watch?v=, youtu.be/, youtube.com/embed/</div>
+        </div>
+
+        <div class="options-row">
+            <div class="form-group">
+                <label for="max-comments">Jumlah Komentar yang Diambil</label>
+                <input type="number" id="max-comments" value="100" min="1" max="100000">
+                <div class="form-hint">Maks. 100.000 komentar. Lebih banyak = lebih lama prosesnya.</div>
+            </div>
+            <div class="form-group" style="padding-bottom:18px;">
+                <div class="checkbox-row">
+                    <input type="checkbox" id="include-replies">
+                    <label for="include-replies" style="margin:0; cursor:pointer; font-weight:400;">Sertakan replies</label>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn" id="scrape-btn">
+            <svg id="scrape-btn-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span id="scrape-btn-text">Mulai Scraping</span>
+        </button>
+    </form>
+</div>
+
+<!-- Loading Progress -->
+<div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p id="loading-text">Menghubungi YouTube API...</p>
+    <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="progress-bar"></div></div>
+        <div class="progress-label" id="progress-text">Mempersiapkan...</div>
+    </div>
+</div>
+
+<!-- Result -->
+<div class="card" id="result-section" style="display:none;">
+    <div class="card-title">Hasil Scraping</div>
+    <div class="card-sub">Data berhasil diambil dan disimpan</div>
+    <div class="alert alert-success" id="save-message" style="display:none;"></div>
+    <div class="result-info" id="video-info"></div>
+    <div class="action-row">
+        <a href="/analysis" class="btn btn-success">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Analisis Sentimen
+        </a>
+        <a href="/comments" class="btn btn-ghost">Lihat Semua Komentar</a>
+    </div>
+</div>
+
+<script>
+let progressInterval = null;
+
+async function updateProgress() {
+    try {
+        const res = await fetch('/progress');
+        const d = await res.json();
+        const bar   = document.getElementById('progress-bar');
+        const label = document.getElementById('progress-text');
+        const txt   = document.getElementById('loading-text');
+        if (d.total > 0) {
+            const pct = Math.min(100, (d.current / d.total) * 100);
+            bar.style.width = pct + '%';
+            label.textContent = d.available > 0
+                ? `${d.current.toLocaleString('id-ID')} / ${d.total.toLocaleString('id-ID')} komentar`
+                : `${d.current.toLocaleString('id-ID')} / ${d.total.toLocaleString('id-ID')} komentar`;
+            txt.textContent = d.message || 'Mengambil data...';
+        }
+        if (d.status === 'completed' || d.status === 'error') {
+            clearInterval(progressInterval); progressInterval = null;
+        }
+    } catch(e) {}
+}
+
+document.getElementById('scrape-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const url = document.getElementById('video-url').value.trim();
+    if (!url) { showAlert('error', 'URL video tidak boleh kosong.'); return; }
+
+    hideAlerts();
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('result-section').style.display = 'none';
+
+    // Button loading state
+    const btn = document.getElementById('scrape-btn');
+    btn.disabled = true;
+    btn.classList.add('btn-loading');
+    document.getElementById('scrape-btn-text').textContent = 'Mengambil Data...';
+    document.getElementById('scrape-btn-icon').style.display = 'none';
+
+    // Animate steps
+    document.getElementById('step2').classList.add('active');
+    document.getElementById('progress-bar').style.width = '0%';
+    document.getElementById('progress-text').textContent = 'Menginisialisasi...';
+
+    progressInterval = setInterval(updateProgress, 500);
+
+    try {
+        const res = await fetch('/scrape', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                video_url: url,
+                max_comments: parseInt(document.getElementById('max-comments').value) || 100,
+                include_replies: document.getElementById('include-replies').checked
+            })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gagal melakukan scraping');
+
+        if (data.warning) showAlert('warning', data.warning);
+
+        // Populate result info dengan animasi counter
+        const vi = data.video_info || {};
+        const infoEl = document.getElementById('video-info');
+        infoEl.innerHTML = `
+            <div class="result-info-item"><div class="label">Judul Video</div><div class="value" style="font-size:13px;">${vi.title || '-'}</div></div>
+            <div class="result-info-item"><div class="label">Channel</div><div class="value" style="font-size:13px;">${vi.channel || '-'}</div></div>
+            <div class="result-info-item"><div class="label">Komentar Diambil</div><div class="value" id="count-scraped">0</div></div>
+            <div class="result-info-item"><div class="label">Total Komentar Video</div><div class="value" id="count-total">0</div></div>
+        `;
+
+        // Animated number counter
+        animateCounter('count-scraped', data.total_comments);
+        animateCounter('count-total', parseInt(data.available_comments||0));
+
+        const saveMsg = document.getElementById('save-message');
+        saveMsg.textContent = 'Data tersimpan: ' + data.saved_filename;
+        saveMsg.style.display = 'block';
+
+        document.getElementById('result-section').style.display = 'block';
+        document.getElementById('step2').classList.add('done');
+        document.getElementById('step3').classList.add('active');
+        document.getElementById('result-section').scrollIntoView({behavior:'smooth'});
+
+    } catch(err) {
+        let msg = err.message || 'Terjadi kesalahan.';
+        if (msg.toLowerCase().includes('api') || msg.toLowerCase().includes('key') || msg.toLowerCase().includes('quota')) {
+            document.getElementById('api-banner').style.display = 'block';
+        }
+        showAlert('error', msg);
+        document.getElementById('step2').classList.remove('active');
+    } finally {
+        if (progressInterval) { clearInterval(progressInterval); progressInterval = null; }
+        document.getElementById('loading').style.display = 'none';
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
+        document.getElementById('scrape-btn-text').textContent = 'Mulai Scraping';
+        document.getElementById('scrape-btn-icon').style.display = '';
+    }
+});
+
+// Animated number counter
+function animateCounter(elId, target) {
+    const el = document.getElementById(elId);
+    if (!el || target === 0) { if(el) el.textContent = '0'; return; }
+    const duration = 900;
+    const start = performance.now();
+    function step(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3); // cubic ease-out
+        el.textContent = Math.round(ease * target).toLocaleString('id-ID');
+        if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+}
+
+function showAlert(type, msg) {
+    const el = document.getElementById(type === 'error' ? 'error-message' : 'warning-message');
+    el.textContent = msg;
+    el.style.display = 'block';
+    el.style.animation = 'none';
+    requestAnimationFrame(() => { el.style.animation = 'fadeUp .3s ease'; });
+}
+function hideAlerts() {
+    document.getElementById('error-message').style.display = 'none';
+    document.getElementById('warning-message').style.display = 'none';
+}
+</script>
+{% endblock %}

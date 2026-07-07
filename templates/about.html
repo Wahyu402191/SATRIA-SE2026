@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Tentang — SATRIA SE2026{% endblock %}
+
+{% block extra_css %}
+<style>
+    .about-hero {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        border-radius: var(--radius-lg); padding: 36px 40px; margin-bottom: 24px;
+        color: #fff; position: relative; overflow: hidden;
+    }
+    .about-hero::before { content:''; position:absolute; right:-30px; top:-30px; width:180px; height:180px; background:rgba(200,151,58,.15); border-radius:50%; }
+    .about-hero h1 { font-size:22px; font-weight:700; margin-bottom:8px; }
+    .about-hero p  { font-size:13px; color:rgba(255,255,255,.8); line-height:1.7; max-width:640px; }
+    .about-hero .version-badge {
+        display:inline-flex; align-items:center; gap:6px; margin-top:14px;
+        background:rgba(200,151,58,.2); border:1px solid rgba(200,151,58,.4);
+        color:var(--accent-light); font-size:12px; padding:5px 14px; border-radius:99px;
+    }
+
+    .section-heading { font-size:15px; font-weight:700; color:var(--primary); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .section-heading::before { content:''; display:block; width:3px; height:18px; background:var(--accent); border-radius:2px; }
+
+    /* Methods Grid */
+    .methods-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
+    .method-tile {
+        border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px;
+        background:var(--bg-card); transition: box-shadow .2s;
+    }
+    .method-tile:hover { box-shadow:var(--shadow-md); }
+    .method-tile-num {
+        width:36px; height:36px; border-radius:var(--radius);
+        background:var(--primary); color:#fff;
+        display:flex; align-items:center; justify-content:center;
+        font-size:14px; font-weight:700; margin-bottom:12px;
+    }
+    .method-tile h3 { font-size:14px; font-weight:700; color:var(--primary); margin-bottom:4px; }
+    .method-tile p  { font-size:12px; color:var(--text-muted); line-height:1.6; }
+
+    /* Pipeline */
+    .pipeline { display:flex; flex-direction:column; gap:0; }
+    .pipe-step { display:flex; align-items:flex-start; gap:14px; padding:12px 0; border-bottom:1px solid var(--border); }
+    .pipe-step:last-child { border-bottom:none; }
+    .pipe-num { width:28px; height:28px; border-radius:50%; background:var(--primary); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+    .pipe-label { font-size:13px; font-weight:600; color:var(--text); }
+    .pipe-desc  { font-size:12px; color:var(--text-muted); }
+
+    /* Feature list */
+    .feature-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+    .feature-item { display:flex; align-items:flex-start; gap:10px; padding:14px; background:var(--bg); border-radius:var(--radius); }
+    .feature-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); margin-top:4px; flex-shrink:0; }
+    .feature-text { font-size:13px; color:var(--text); }
+
+    /* Lexicon stats */
+    .lex-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; }
+    .lex-item { background:var(--bg); border-radius:var(--radius); padding:14px; text-align:center; }
+    .lex-num   { font-size:22px; font-weight:700; color:var(--primary); }
+    .lex-label { font-size:11px; color:var(--text-muted); margin-top:2px; }
+
+    .api-guide { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; }
+    .api-guide ol { padding-left:18px; margin-top:10px; }
+    .api-guide ol li { font-size:13px; color:var(--text); margin-bottom:8px; line-height:1.6; }
+    .api-guide a { color:var(--primary-light); font-weight:600; text-decoration:none; }
+    code { background:var(--bg); border:1px solid var(--border); padding:2px 7px; border-radius:4px; font-size:12px; font-family:monospace; color:var(--primary); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="about-hero">
+    <h1>SATRIA SE2026</h1>
+    <p>Scraping and Sentiment Analysis Tracker for Economic Census 2026 — Sistem analisis sentimen komentar media sosial YouTube untuk mendukung program Sensus Ekonomi BPS Kabupaten Bangkalan.</p>
+    <div class="version-badge"><span style="width:7px;height:7px;background:var(--accent-light);border-radius:50%;display:inline-block;"></span> Versi 1.0 &nbsp;|&nbsp; BPS Kabupaten Bangkalan &nbsp;|&nbsp; 2026</div>
+</div>
+
+<!-- Methods -->
+<div class="card">
+    <div class="section-heading">Metode Analisis Sentimen</div>
+    <div class="methods-grid">
+        <div class="method-tile">
+            <div class="method-tile-num">1</div>
+            <h3>Naive Bayes</h3>
+            <p>Probabilistic classifier berbasis TF-IDF dengan trigram features. Training menggunakan 1.200 sampel dari lexicon Indonesia dengan alpha 0.5 (Laplace smoothing).</p>
+        </div>
+        <div class="method-tile">
+            <div class="method-tile-num">2</div>
+            <h3>Support Vector Machine</h3>
+            <p>Linear SVM dengan parameter C=1.5 dan class weight balanced. Efektif untuk klasifikasi teks dengan dimensi fitur tinggi.</p>
+        </div>
+        <div class="method-tile">
+            <div class="method-tile-num">3</div>
+            <h3>LSTM</h3>
+            <p>Long Short-Term Memory dengan context window dan weighted sequence scoring. Mempertimbangkan urutan kata dan konteks kalimat.</p>
+        </div>
+        <div class="method-tile">
+            <div class="method-tile-num">4</div>
+            <h3>IndoBERT</h3>
+            <p>Simulasi bidirectional transformer untuk Bahasa Indonesia. Menggunakan attention mechanism dan negation handling kontekstual.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Preprocessing Pipeline -->
+<div class="card">
+    <div class="section-heading">Pipeline Preprocessing Teks (12 Langkah)</div>
+    <div class="pipeline">
+        <div class="pipe-step"><div class="pipe-num">1</div><div><div class="pipe-label">Original Text</div><div class="pipe-desc">Teks komentar mentah dari YouTube</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">2</div><div><div class="pipe-label">Case Folding</div><div class="pipe-desc">Konversi semua karakter menjadi huruf kecil</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">3</div><div><div class="pipe-label">Noise Removal</div><div class="pipe-desc">Menghapus URL, @mention, #hashtag</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">4</div><div><div class="pipe-label">Remove Numbers</div><div class="pipe-desc">Menghapus karakter angka</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">5</div><div><div class="pipe-label">Remove Punctuation</div><div class="pipe-desc">Menghapus tanda baca dan simbol</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">6</div><div><div class="pipe-label">Spelling Correction</div><div class="pipe-desc">Normalisasi typo dan singkatan umum</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">7</div><div><div class="pipe-label">Tokenization</div><div class="pipe-desc">Pemecahan teks menjadi token kata</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">8</div><div><div class="pipe-label">Normalization</div><div class="pipe-desc">Konversi kata gaul ke kata formal (bgt → banget → dst.)</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">9</div><div><div class="pipe-label">Stopword Removal</div><div class="pipe-desc">Menghapus kata-kata umum tidak bermakna (758 stopword)</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">10</div><div><div class="pipe-label">Stemming</div><div class="pipe-desc">Pengurangan kata ke bentuk dasar menggunakan Sastrawi</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">11</div><div><div class="pipe-label">Negation Handling</div><div class="pipe-desc">Penambahan prefix NOT_ pada kata setelah negasi</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">12</div><div><div class="pipe-label">Final Result</div><div class="pipe-desc">Teks terproses siap dianalisis, rata-rata reduksi ~85%</div></div></div>
+    </div>
+</div>
+
+<!-- Lexicon -->
+<div class="card">
+    <div class="section-heading">Database Leksikon (22.278 kata)</div>
+    <div class="lex-grid">
+        <div class="lex-item"><div class="lex-num" style="color:var(--success);">7.213</div><div class="lex-label">Kata Positif</div></div>
+        <div class="lex-item"><div class="lex-num" style="color:var(--danger);">13.214</div><div class="lex-label">Kata Negatif</div></div>
+        <div class="lex-item"><div class="lex-num">1.729</div><div class="lex-label">Sentiwords</div></div>
+        <div class="lex-item"><div class="lex-num">3.600+</div><div class="lex-label">Kata Kolokial</div></div>
+        <div class="lex-item"><div class="lex-num">92</div><div class="lex-label">Idiom</div></div>
+        <div class="lex-item"><div class="lex-num">758</div><div class="lex-label">Stopword</div></div>
+    </div>
+</div>
+
+<!-- Features -->
+<div class="card">
+    <div class="section-heading">Fitur Sistem</div>
+    <div class="feature-list">
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Scraping komentar YouTube via API v3 (maks. 100.000 komentar)</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Analisis sentimen 4 metode ML secara paralel</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Word cloud visualisasi sentimen positif dan negatif</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Confusion matrix dan agreement rate antar metode</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Detail 12 langkah preprocessing per komentar</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Export hasil ke format Excel (.xlsx)</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Simpan dan muat ulang data scraping (JSON)</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Analisis cepat komentar tunggal</div></div>
+    </div>
+</div>
+
+<!-- Tech Stack -->
+<div class="card">
+    <div class="section-heading">Teknologi yang Digunakan</div>
+    <div class="feature-list">
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Backend:</strong> Python 3, Flask</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>ML:</strong> scikit-learn (Naive Bayes, SVM)</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>NLP:</strong> Sastrawi, NLTK</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Visualisasi:</strong> matplotlib, seaborn, WordCloud</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Data:</strong> pandas, numpy, openpyxl</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>API:</strong> YouTube Data API v3</div></div>
+    </div>
+</div>
+
+{% endblock %}

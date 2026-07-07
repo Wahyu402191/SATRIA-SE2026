@@ -1,0 +1,37 @@
+# Web Framework
+Flask
+gunicorn
+Werkzeug
+Jinja2
+itsdangerous
+click
+blinker
+
+# Scraping & HTTP
+beautifulsoup4
+requests
+lxml
+soupsieve
+urllib3
+
+# Analisis Sentimen & NLP
+nltk
+Sastrawi
+textblob
+vaderSentiment
+
+# Data Science & Analisis
+pandas
+numpy
+scikit-learn
+scipy
+joblib
+matplotlib
+seaborn
+wordcloud
+
+# Excel export
+openpyxl
+
+# Lain-lain
+python-dotenv

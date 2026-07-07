@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}Perbandingan Metode — SATRIA SE2026{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
+    .page-header-icon { width:48px; height:48px; background:linear-gradient(135deg,var(--primary),var(--primary-light)); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center; }
+    .page-header-icon svg { width:24px; height:24px; fill:#fff; }
+    .page-header h1 { font-size:20px; font-weight:700; color:var(--primary); }
+    .page-header p  { font-size:13px; color:var(--text-muted); }
+
+    .section-heading { font-size:15px; font-weight:700; color:var(--primary); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .section-heading::before { content:''; display:block; width:3px; height:18px; background:var(--accent); border-radius:2px; }
+
+    /* Summary Cards */
+    .method-summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-bottom:24px; }
+    .ms-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; }
+    .ms-card-name { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--primary); margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+    .ms-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; font-size:13px; }
+    .ms-dot { width:9px; height:9px; border-radius:50%; margin-right:8px; display:inline-block; }
+    .ms-row-label { display:flex; align-items:center; color:var(--text); }
+    .ms-pct { font-weight:600; }
+    .ms-total { margin-top:12px; padding-top:10px; border-top:1px solid var(--border); font-size:12px; color:var(--text-muted); }
+
+    /* Comparison Table */
+    .comp-table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    thead tr { background:var(--primary); }
+    thead th { padding:12px 14px; color:#fff; font-weight:600; text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.5px; white-space:nowrap; }
+    thead th:first-child { border-radius:var(--radius) 0 0 0; }
+    thead th:last-child  { border-radius:0 var(--radius) 0 0; }
+    tbody tr { border-bottom:1px solid var(--border); }
+    tbody tr:hover { background:var(--bg); }
+    tbody tr:last-child { border-bottom:none; }
+    tbody td { padding:11px 14px; color:var(--text); vertical-align:middle; }
+    tbody td:first-child { font-weight:600; color:var(--primary); }
+
+    .pct-bar-wrap { display:flex; align-items:center; gap:8px; }
+    .pct-bar { flex:1; height:6px; background:var(--bg); border-radius:99px; overflow:hidden; }
+    .pct-fill { height:100%; border-radius:99px; }
+    .pct-val { font-size:12px; font-weight:600; width:38px; text-align:right; }
+
+    /* Majority Agreement */
+    .agree-card { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px 20px; margin-bottom:16px; display:flex; align-items:center; gap:16px; }
+    .agree-pct { font-size:32px; font-weight:700; }
+    .agree-label { font-size:13px; color:var(--text-muted); }
+    .agree-method { font-size:14px; font-weight:600; color:var(--primary); }
+
+    .empty-state { text-align:center; padding:60px 24px; color:var(--text-muted); }
+    .empty-state a { color:var(--primary); font-weight:600; text-decoration:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-icon">
+        <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h12v2H3v-2zm0 4h18v2H3v-2zm0 4h12v2H3v-2z"/></svg>
+    </div>
+    <div>
+        <h1>Perbandingan Metode Analisis</h1>
+        <p>Komparasi hasil analisis sentimen dari 4 metode Machine Learning</p>
+    </div>
+</div>
+
+<div id="no-data" style="display:none;">
+    <div class="card empty-state">
+        <p>Belum ada hasil analisis. <a href="/analysis">Lakukan analisis terlebih dahulu</a>.</p>
+    </div>
+</div>
+
+<div id="comparison-content" style="display:none;">
+
+    <!-- Per-method summary -->
+    <div class="card">
+        <div class="section-heading">Ringkasan per Metode</div>
+        <div class="method-summary-grid" id="summary-grid"></div>
+    </div>
+
+    <!-- Agreement / Accuracy -->
+    <div class="card" id="accuracy-card" style="display:none;">
+        <div class="section-heading">Tingkat Kesepakatan (Agreement Rate)</div>
+        <div id="accuracy-grid"></div>
+    </div>
+
+    <!-- Full comparison table -->
+    <div class="card">
+        <div class="section-heading">Tabel Distribusi Sentimen</div>
+        <div class="comp-table-wrap">
+            <table id="comp-table"></table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+async function loadComparison() {
+    const res  = await fetch('/get_analysis_results');
+    const data = await res.json();
+
+    if (!data.success) {
+        document.getElementById('no-data').style.display = 'block';
+        return;
+    }
+    document.getElementById('comparison-content').style.display = 'block';
+    const summary = data.results.summary;
+    const accuracy= data.results.accuracy;
+
+    // Summary grid
+    const sg = document.getElementById('summary-grid');
+    for (const [method, stats] of Object.entries(summary)) {
+        const total = stats.positive + stats.negative + stats.neutral;
+        if (!total) continue;
+        const pp = (stats.positive/total*100).toFixed(1);
+        const np = (stats.negative/total*100).toFixed(1);
+        const ep = (stats.neutral /total*100).toFixed(1);
+        sg.innerHTML += `<div class="ms-card">
+            <div class="ms-card-name">${method}</div>
+            <div class="ms-row">
+                <span class="ms-row-label"><span class="ms-dot" style="background:var(--success)"></span>Positif</span>
+                <span class="ms-pct" style="color:var(--success);">${pp}%</span>
+            </div>
+            <div class="ms-row">
+                <span class="ms-row-label"><span class="ms-dot" style="background:var(--danger)"></span>Negatif</span>
+                <span class="ms-pct" style="color:var(--danger);">${np}%</span>
+            </div>
+            <div class="ms-row" style="margin-bottom:0">
+                <span class="ms-row-label"><span class="ms-dot" style="background:var(--neutral)"></span>Netral</span>
+                <span class="ms-pct" style="color:var(--neutral);">${ep}%</span>
+            </div>
+            <div class="ms-total">Total: ${total} komentar</div>
+        </div>`;
+    }
+
+    // Accuracy
+    if (accuracy && Object.keys(accuracy).length) {
+        const ag = document.getElementById('accuracy-grid');
+        document.getElementById('accuracy-card').style.display = 'block';
+        for (const [m, pct] of Object.entries(accuracy)) {
+            const col = pct>=80?'var(--success)':pct>=60?'var(--accent)':'var(--danger)';
+            const name = m.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+            ag.innerHTML += `<div class="agree-card">
+                <div class="agree-pct" style="color:${col};">${pct}%</div>
+                <div><div class="agree-method">${name}</div><div class="agree-label">Kesepakatan dengan majority vote</div></div>
+            </div>`;
+        }
+    }
+
+    // Full table
+    const methods = Object.keys(summary);
+    const total0 = Object.values(summary)[0];
+    const total = total0 ? total0.positive + total0.negative + total0.neutral : 0;
+
+    let thead = '<thead><tr><th>Metode</th><th>Positif</th><th>Negatif</th><th>Netral</th><th>Total</th></tr></thead>';
+    let tbody = '<tbody>';
+    for (const [m, s] of Object.entries(summary)) {
+        const t = s.positive + s.negative + s.neutral;
+        if (!t) continue;
+        const pp = (s.positive/t*100).toFixed(1);
+        const np = (s.negative/t*100).toFixed(1);
+        const ep = (s.neutral /t*100).toFixed(1);
+        tbody += `<tr>
+            <td>${m}</td>
+            <td><div class="pct-bar-wrap">
+                <div class="pct-bar"><div class="pct-fill" style="width:${pp}%;background:var(--success);"></div></div>
+                <span class="pct-val" style="color:var(--success);">${s.positive}</span>
+            </div></td>
+            <td><div class="pct-bar-wrap">
+                <div class="pct-bar"><div class="pct-fill" style="width:${np}%;background:var(--danger);"></div></div>
+                <span class="pct-val" style="color:var(--danger);">${s.negative}</span>
+            </div></td>
+            <td><div class="pct-bar-wrap">
+                <div class="pct-bar"><div class="pct-fill" style="width:${ep}%;background:var(--neutral);"></div></div>
+                <span class="pct-val" style="color:var(--neutral);">${s.neutral}</span>
+            </div></td>
+            <td>${t}</td>
+        </tr>`;
+    }
+    tbody += '</tbody>';
+    document.getElementById('comp-table').innerHTML = thead + tbody;
+}
+loadComparison();
+</script>
+{% endblock %}

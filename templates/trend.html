@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}Trend Kata — SATRIA SE2026{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
+    .page-header-icon { width:48px; height:48px; background:linear-gradient(135deg,var(--primary),var(--primary-light)); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center; }
+    .page-header-icon svg { width:24px; height:24px; fill:#fff; }
+    .page-header h1 { font-size:20px; font-weight:700; color:var(--primary); }
+    .page-header p  { font-size:13px; color:var(--text-muted); }
+    .section-heading { font-size:15px; font-weight:700; color:var(--primary); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .section-heading::before { content:''; display:block; width:3px; height:18px; background:var(--accent); border-radius:2px; }
+    .chart-wrap { position:relative; width:100%; }
+    canvas { width:100% !important; }
+    .legend-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; margin-top:16px; }
+    .legend-item { display:flex; align-items:center; gap:8px; font-size:12px; }
+    .legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+    .top-words-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin-top:4px; }
+    .word-chip {
+        background:var(--bg); border:1.5px solid var(--border); border-radius:var(--radius);
+        padding:14px 16px; text-align:center; transition:all .2s;
+    }
+    .word-chip:hover { border-color:var(--primary); background:#e8f0f8; transform:translateY(-2px); box-shadow:var(--shadow-sm); }
+    .word-chip-word { font-size:14px; font-weight:700; color:var(--primary); }
+    .word-chip-count { font-size:11px; color:var(--text-muted); margin-top:3px; }
+    .empty-state { text-align:center; padding:60px 24px; color:var(--text-muted); }
+    .empty-state a { color:var(--primary); font-weight:600; text-decoration:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-icon">
+        <svg viewBox="0 0 24 24"><path d="M3.5 18.5l6-6 4 4L22 6.92"/></svg>
+    </div>
+    <div>
+        <h1>Trend Kata per Waktu</h1>
+        <p>Visualisasi kata paling sering muncul dalam komentar, dikelompokkan per bulan</p>
+    </div>
+</div>
+
+<div class="card" id="no-data" style="display:none;">
+    <div class="empty-state">
+        <p>Belum ada data scraping. <a href="/">Lakukan scraping komentar terlebih dahulu</a>, lalu kembali ke halaman ini.</p>
+    </div>
+</div>
+
+<div id="main-content" style="display:none;">
+
+    <!-- Top Words -->
+    <div class="card">
+        <div class="section-heading">Kata Paling Sering Muncul</div>
+        <div class="top-words-grid" id="top-words-grid"></div>
+    </div>
+
+    <!-- Line Chart -->
+    <div class="card">
+        <div class="section-heading">Trend Frekuensi Kata per Bulan</div>
+        <div class="chart-wrap">
+            <canvas id="trend-chart" height="320"></canvas>
+        </div>
+        <div class="legend-grid" id="chart-legend"></div>
+    </div>
+
+    <!-- Bar Chart per Word -->
+    <div class="card">
+        <div class="section-heading">Distribusi Total per Kata</div>
+        <div class="chart-wrap">
+            <canvas id="bar-chart" height="240"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+const PALETTE = [
+    '#1a3a5c','#c8973a','#2d7a4f','#9b2335','#2e5f8a',
+    '#e8b96a','#4caf87','#d45c6a','#5a6a7a','#8e6b2a'
+];
+
+let trendChart = null, barChart = null;
+
+async function loadTrend() {
+    try {
+        const res = await fetch('/word_trend');
+        const data = await res.json();
+
+        if (data.error || !data.months || !data.months.length) {
+            document.getElementById('no-data').style.display = 'block';
+            return;
+        }
+        document.getElementById('main-content').style.display = 'block';
+
+        const { months, words, data: series } = data;
+
+        // Top words chips — calculate totals
+        const totals = {};
+        words.forEach(w => { totals[w] = (series[w]||[]).reduce((a,b)=>a+b,0); });
+        const sorted = [...words].sort((a,b)=>totals[b]-totals[a]);
+
+        const topGrid = document.getElementById('top-words-grid');
+        topGrid.innerHTML = sorted.map((w,i) => `
+            <div class="word-chip" style="border-top:3px solid ${PALETTE[i%PALETTE.length]};">
+                <div class="word-chip-word">${w}</div>
+                <div class="word-chip-count">${totals[w]} kemunculan</div>
+            </div>`).join('');
+
+        // Format month labels
+        const labels = months.map(m => {
+            const [y,mo] = m.split('-');
+            const names = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+            return `${names[parseInt(mo)-1]} ${y}`;
+        });
+
+        // Line Chart
+        const lineCtx = document.getElementById('trend-chart').getContext('2d');
+        if (trendChart) trendChart.destroy();
+        trendChart = new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: words.map((w,i) => ({
+                    label: w,
+                    data: series[w]||[],
+                    borderColor: PALETTE[i%PALETTE.length],
+                    backgroundColor: PALETTE[i%PALETTE.length] + '18',
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.35,
+                    fill: false
+                }))
+            },
+            options: {
+                responsive: true,
+                interaction: { mode:'index', intersect:false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0f2238',
+                        titleColor: '#e8b96a',
+                        bodyColor: 'rgba(255,255,255,.8)',
+                        padding: 12,
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(0,0,0,.04)' },
+                        ticks: { font:{ size:11 }, color:'#6b7c8d' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,.04)' },
+                        ticks: { font:{ size:11 }, color:'#6b7c8d', precision:0 }
+                    }
+                }
+            }
+        });
+
+        // Custom legend
+        document.getElementById('chart-legend').innerHTML = words.map((w,i)=>`
+            <div class="legend-item">
+                <div class="legend-dot" style="background:${PALETTE[i%PALETTE.length]};"></div>
+                <span>${w}</span>
+            </div>`).join('');
+
+        // Bar chart (total per word)
+        const barCtx = document.getElementById('bar-chart').getContext('2d');
+        if (barChart) barChart.destroy();
+        barChart = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: sorted,
+                datasets: [{
+                    label: 'Total Kemunculan',
+                    data: sorted.map(w=>totals[w]),
+                    backgroundColor: sorted.map((_,i)=>PALETTE[i%PALETTE.length]+'cc'),
+                    borderColor:    sorted.map((_,i)=>PALETTE[i%PALETTE.length]),
+                    borderWidth: 1.5,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display:false },
+                    tooltip: {
+                        backgroundColor: '#0f2238',
+                        titleColor: '#e8b96a',
+                        bodyColor: 'rgba(255,255,255,.8)',
+                        padding: 10, cornerRadius: 8
+                    }
+                },
+                scales: {
+                    x: { grid:{ display:false }, ticks:{ font:{size:12}, color:'#1e2d3d', fontWeight:'700' } },
+                    y: { beginAtZero:true, grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{size:11}, color:'#6b7c8d', precision:0 } }
+                }
+            }
+        });
+
+    } catch(e) {
+        console.error(e);
+        document.getElementById('no-data').style.display = 'block';
+    }
+}
+
+loadTrend();
+</script>
+{% endblock %}
