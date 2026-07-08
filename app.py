@@ -575,7 +575,7 @@ def word_trend():
         return jsonify({'error': str(e)}), 500
 
 
-
+@app.route('/analyze_single', methods=['POST'])
 def analyze_single():
     """Analyze single comment input from user"""
     try:
