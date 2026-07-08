@@ -122,8 +122,15 @@ def scrape_comments():
         if got_less and available_comments > 0:
             warning_message = f'Video ini hanya memiliki {len(comments_data)} komentar dari {max_comments} yang diminta. Semua komentar yang tersedia sudah diambil.'
         
-        # Save to file
-        filename = storage.save_comments(video_id, video_info, comments_data)
+        # Save to database (and backup JSON)
+        filename = storage.save_comments(
+            video_id, 
+            video_info, 
+            comments_data,
+            video_url=video_url,
+            include_replies=include_replies,
+            requested_comments=max_comments
+        )
         
         # Store in app_data
         app_data['scraped_data'] = {
@@ -187,6 +194,12 @@ def analyze():
         
         # Analyze sentiment (FAST - no wordcloud yet)
         results = analyzer.analyze_multiple_methods(comments, selected_methods)
+        
+        # Save analysis results to database
+        if 'scraped_data' in app_data and app_data['scraped_data']:
+            video_id = app_data['scraped_data'].get('video_id')
+            if video_id:
+                storage.save_analysis_results(video_id, results.get('comments', []), selected_methods)
         
         # Generate confusion matrix images if multiple methods
         confusion_matrix_images = {}
@@ -719,6 +732,44 @@ def preprocess_text():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/get_dashboard_stats', methods=['GET'])
+def get_dashboard_stats():
+    """Get dashboard statistics from database"""
+    try:
+        from db_config import execute_query
+        
+        # Get total videos
+        video_count = execute_query("SELECT COUNT(*) as count FROM videos", fetch=True)
+        total_videos = video_count[0]['count'] if video_count else 0
+        
+        # Get total comments
+        comment_count = execute_query("SELECT COUNT(*) as count FROM comments", fetch=True)
+        total_comments = comment_count[0]['count'] if comment_count else 0
+        
+        # Get total analyzed (unique comment_id in analysis_results)
+        analyzed_count = execute_query(
+            "SELECT COUNT(DISTINCT comment_id) as count FROM analysis_results", 
+            fetch=True
+        )
+        total_analyzed = analyzed_count[0]['count'] if analyzed_count else 0
+        
+        return jsonify({
+            'success': True,
+            'total_videos': total_videos,
+            'total_comments': total_comments,
+            'total_analyzed': total_analyzed
+        })
+        
+    except Exception as e:
+        # Return zeros if database not available
+        return jsonify({
+            'success': False,
+            'total_videos': 0,
+            'total_comments': 0,
+            'total_analyzed': 0,
+            'error': str(e)
+        })
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))

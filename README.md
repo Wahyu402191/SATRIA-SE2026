@@ -1,51 +1,65 @@
 # SATRIA SE2026
 
-Scraping and Sentiment Analysis Tracker for Economic Census 2026 — BPS Kabupaten Bangkalan.
+**Scraping and Sentiment Analysis Tracker for Economic Census 2026**  
+Badan Pusat Statistik Kabupaten Bangkalan
 
-Aplikasi web berbasis Flask untuk mengambil komentar dari video YouTube dan menganalisis sentimennya menggunakan 4 metode Machine Learning (Naive Bayes, SVM, LSTM, IndoBERT).
+Aplikasi web untuk scraping komentar YouTube dan analisis sentimen menggunakan 4 metode Machine Learning (Naive Bayes, SVM, LSTM, IndoBERT) dengan database MySQL.
 
-## Fitur
+## Fitur Utama
 
-- Scraping komentar YouTube via YouTube Data API v3 (hingga 100.000 komentar)
-- Analisis sentimen 4 metode ML: Naive Bayes, SVM, LSTM, IndoBERT
+- Scraping komentar YouTube (hingga 100.000 komentar per video)
+- Analisis sentimen dengan 4 metode ML
+- **Database MySQL** untuk penyimpanan data permanen
+- **Dashboard statistik** real-time dari database
 - Filter dan sort komentar berdasarkan sentimen
-- Visualisasi word cloud dan confusion matrix
-- Trend kata per waktu (chart per bulan)
-- Export hasil ke Excel (.xlsx) dan cetak laporan PDF
-- Detail 12 langkah preprocessing teks (NLP)
+- Export hasil ke Excel dan PDF
+- Visualisasi wordcloud, confusion matrix, dan trend kata
+- UI modern dengan animasi elegan
 
 ## Cara Menjalankan
 
-### 1. Install dependencies
-
-```
+### 1. Install Dependencies
+```bash
 pip install -r requirements.txt
 ```
 
-### 2. Konfigurasi API Key
+### 2. Setup Database MySQL
+**⚠️ Panduan lengkap ada di file `INSTALL.md`**
 
-Buat file `.env` di folder project dan isi dengan:
+Singkatnya:
+1. Start MySQL di XAMPP
+2. Import file `database.sql` via phpMyAdmin
+3. Check konfigurasi di file `.env`
 
+### 3. Konfigurasi API Key
+
+Edit file `.env` dan pastikan terisi:
+```env
+YOUTUBE_API_KEY=your_youtube_api_key_here
+MYSQL_HOST=localhost
+MYSQL_USER=root
+MYSQL_PASSWORD=
+MYSQL_DATABASE=satria_se2026
 ```
-YOUTUBE_API_KEY=api_key_youtube_anda
-SECRET_KEY=secret_key_bebas
-PORT=5000
-FLASK_DEBUG=true
-```
 
-Dapatkan YouTube API Key di: https://console.cloud.google.com (aktifkan YouTube Data API v3)
+Dapatkan YouTube API Key di: https://console.cloud.google.com
 
-### 3. Jalankan server
-
-```
+### 4. Jalankan Aplikasi
+```bash
 python app.py
 ```
 
-Buka browser di `http://localhost:5000`
+Buka browser: `http://localhost:5000`
 
 ## Teknologi
 
-- Python 3, Flask
-- scikit-learn (Naive Bayes, SVM), Sastrawi, NLTK
-- pandas, matplotlib, WordCloud
-- YouTube Data API v3
+- **Backend:** Python 3, Flask
+- **Database:** MySQL (via XAMPP)
+- **ML:** scikit-learn (Naive Bayes, SVM), LSTM, IndoBERT
+- **NLP:** Sastrawi, NLTK, TextBlob
+- **Visualisasi:** matplotlib, WordCloud, Chart.js
+- **Export:** openpyxl (Excel), HTML to PDF
+
+---
+
+📖 **Troubleshooting & Panduan Detail:** Lihat file `INSTALL.md`

@@ -3,6 +3,119 @@
 
 {% block extra_css %}
 <style>
+    /* ═══════════════════════════════════════════════════════════════════════
+       Dashboard Statistics & Modern UI
+       ═══════════════════════════════════════════════════════════════════ */
+    
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px 22px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: all .3s;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--primary);
+        transform: scaleY(0);
+        transition: transform .3s;
+    }
+    
+    .stat-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-3px);
+        border-color: var(--primary);
+    }
+    
+    .stat-card:hover::before {
+        transform: scaleY(1);
+    }
+    
+    .stat-icon-wrap {
+        width: 56px;
+        height: 56px;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        position: relative;
+    }
+    
+    .stat-icon-wrap::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: var(--radius-lg);
+        background: inherit;
+        opacity: .15;
+        z-index: 0;
+    }
+    
+    .stat-icon-wrap svg {
+        width: 26px;
+        height: 26px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stat-icon-wrap.blue { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+    .stat-icon-wrap.green { background: linear-gradient(135deg, #059669, #10b981); }
+    .stat-icon-wrap.purple { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
+    .stat-icon-wrap.orange { background: linear-gradient(135deg, #ea580c, #f97316); }
+    
+    .stat-content {
+        flex: 1;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        margin-bottom: 4px;
+        font-weight: 500;
+    }
+    
+    .stat-value {
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--primary);
+        line-height: 1;
+    }
+    
+    .stat-change {
+        font-size: 11px;
+        color: var(--success);
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+    
+    .stat-change svg {
+        width: 12px;
+        height: 12px;
+    }
+
     .hero {
         background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
         border-radius: var(--radius-lg);
@@ -61,8 +174,6 @@
         display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .stat-icon svg { width: 22px; height: 22px; }
-    .stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
-    .stat-value { font-size: 18px; font-weight: 700; color: var(--primary); }
 
     .api-banner {
         background: #fdf6e8; border: 1.5px solid var(--accent);
@@ -77,7 +188,7 @@
     .url-input-wrap input { padding-left: 42px; }
     .url-input-wrap .url-icon {
         position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-        width: 16px; height: 16px; fill: var(--text-muted);
+        width: 16px; height: 16px; stroke: var(--text-muted);
     }
 
     .options-row { display: flex; gap: 16px; align-items: flex-end; }
@@ -152,9 +263,17 @@
         transform: translateY(-2px);
     }
 
-    /* Stat row items */
-    .stat-item { transition: box-shadow .2s, transform .2s; }
-    .stat-item:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    /* Stat card animation */
+    .stat-card { animation: slideUp .6s ease both; }
+    .stat-card:nth-child(1) { animation-delay: .05s; }
+    .stat-card:nth-child(2) { animation-delay: .1s; }
+    .stat-card:nth-child(3) { animation-delay: .15s; }
+    .stat-card:nth-child(4) { animation-delay: .2s; }
+    
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
     /* Step item transition */
     .step-item { transition: border-color .4s, color .4s; }
@@ -169,6 +288,84 @@
     Scraping komentar memerlukan API Key YouTube Data v3 yang aktif.
     Buka file <code>.env</code> dan isi <code>YOUTUBE_API_KEY=...</code>.
     Panduan: <a href="https://console.cloud.google.com" target="_blank">Google Cloud Console</a></p>
+</div>
+
+<!-- Dashboard Statistics -->
+<div class="dashboard-stats" id="dashboard-stats">
+    <div class="stat-card">
+        <div class="stat-icon-wrap blue">
+            <svg fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Total Video</div>
+            <div class="stat-value" id="stat-videos">0</div>
+            <div class="stat-change">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                </svg>
+                Terakhir discrape
+            </div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon-wrap green">
+            <svg fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Total Komentar</div>
+            <div class="stat-value" id="stat-comments">0</div>
+            <div class="stat-change">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                </svg>
+                Tersimpan di database
+            </div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon-wrap purple">
+            <svg fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Analisis</div>
+            <div class="stat-value" id="stat-analyzed">0</div>
+            <div class="stat-change">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                </svg>
+                Hasil tersimpan
+            </div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon-wrap orange">
+            <svg fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Metode ML</div>
+            <div class="stat-value">4</div>
+            <div class="stat-change">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                NB, SVM, LSTM, IndoBERT
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Hero Banner -->
@@ -204,7 +401,10 @@
         <div class="form-group">
             <label for="video-url">URL Video YouTube</label>
             <div class="url-input-wrap">
-                <svg class="url-icon" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <svg class="url-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
                 <input type="text" id="video-url"
                     placeholder="https://www.youtube.com/watch?v=..."
                     autocomplete="off" required>
@@ -260,6 +460,26 @@
 
 <script>
 let progressInterval = null;
+
+// Load dashboard statistics on page load
+async function loadDashboardStats() {
+    try {
+        const res = await fetch('/get_dashboard_stats');
+        const data = await res.json();
+        
+        if (data.success) {
+            // Animated counter for statistics
+            animateCounter('stat-videos', data.total_videos || 0);
+            animateCounter('stat-comments', data.total_comments || 0);
+            animateCounter('stat-analyzed', data.total_analyzed || 0);
+        }
+    } catch (e) {
+        console.log('Stats not available yet');
+    }
+}
+
+// Load stats on page load
+document.addEventListener('DOMContentLoaded', loadDashboardStats);
 
 async function updateProgress() {
     try {

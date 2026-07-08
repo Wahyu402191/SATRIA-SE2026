@@ -33,5 +33,9 @@ wordcloud
 # Excel export
 openpyxl
 
+# MySQL Database
+mysql-connector-python
+pymysql
+
 # Lain-lain
 python-dotenv
