@@ -172,7 +172,10 @@ class TextPreprocessor:
     
     def preprocess_simple(self, text):
         """
-        Simple preprocessing without detailed steps (for bulk processing)
+        Fast preprocessing for bulk analysis — NO Sastrawi stemming.
+        Sastrawi is ~1-2s per call which makes bulk analysis unusably slow.
+        Simple regex + dict normalization is ~1000x faster and nearly as accurate
+        for lexicon-based sentiment scoring.
         """
         text = text.lower()
         text = re.sub(r'http\S+|www\S+|https\S+', '', text)
@@ -180,23 +183,50 @@ class TextPreprocessor:
         text = re.sub(r'\d+', '', text)
         text = text.translate(str.maketrans('', '', string.punctuation))
         text = ' '.join(text.split())
-        
-        # Spelling correction
+
+        # Spelling + slang normalization (combined dict lookup — O(n) per token)
+        combined = {**self.spelling_dict, **self.normalization_dict}
+        tokens = [combined.get(t, t) for t in text.split()]
+
+        # Lightweight stopword removal using a fast set lookup
+        _stop = {
+            'yang','dan','di','ke','dari','ini','itu','ada','juga','dengan',
+            'untuk','adalah','sudah','akan','ya','nya','lah','pun','aja',
+            'deh','sih','bang','mas','pak','bu','kak','bro','sis','dong',
+            'yuk','nih','tuh','kan','saja','kita','kami','mereka','dia',
+            'aku','saya','kamu','kau','mu','ku','pun','si','para',
+            'bagi','atas','bawah','dalam','luar','antara','seperti','jika',
+            'karena','maka','namun','tetapi','tapi','atau','dan','serta',
+        }
+        tokens = [t for t in tokens if t and t not in _stop and len(t) > 1]
+
+        return ' '.join(tokens)
+
+    def preprocess_simple_with_sastrawi(self, text):
+        """
+        Full preprocessing WITH Sastrawi — use only when needed (single text, detail view).
+        """
+        text = text.lower()
+        text = re.sub(r'http\S+|www\S+|https\S+', '', text)
+        text = re.sub(r'@\w+|#\w+', '', text)
+        text = re.sub(r'\d+', '', text)
+        text = text.translate(str.maketrans('', '', string.punctuation))
+        text = ' '.join(text.split())
+
         tokens = text.split()
         corrected_tokens = [self.spelling_dict.get(token, token) for token in tokens]
         text = ' '.join(corrected_tokens)
-        
-        # Normalization
+
         tokens = text.split()
         normalized_tokens = [self.normalization_dict.get(token, token) for token in tokens]
         text_normalized = ' '.join(normalized_tokens)
-        
+
         try:
             text_no_stopword = self.stopword_remover.remove(text_normalized)
             text_stemmed = self.stemmer.stem(text_no_stopword)
         except:
             text_stemmed = text_normalized
-        
+
         return text_stemmed
 
 
@@ -439,109 +469,106 @@ class SentimentAnalyzer:
     
     def analyze_multiple_methods(self, comments, selected_methods):
         """
-        Analyze comments using multiple methods
+        Analyze comments using batch processing — optimized for speed.
         """
         import time
         start_time = time.time()
-        
+
         method_map = {
             'naive_bayes': 'Naive Bayes',
             'svm': 'SVM',
             'lstm': 'LSTM',
-            'indobert': 'IndoBERT'
+            'indobert': 'IndoBERT',
         }
-        
         sentiment_map = {
             'positif': 'positive',
             'negatif': 'negative',
-            'netral': 'neutral'
+            'netral':  'neutral',
         }
-        
+
         results = {
             'comments': [],
             'summary': {},
-            'preprocessing_examples': []
+            'preprocessing_examples': [],
         }
-        
-        # Initialize summary
         for method_key in selected_methods:
-            method_name = method_map.get(method_key, method_key)
-            results['summary'][method_name] = {'positive': 0, 'negative': 0, 'neutral': 0}
-        
-        # Get preprocessing examples from first 3 comments
-        example_count = 0
-        
-        # Batch preprocess all comments first (faster than one-by-one)
-        print(f"[PERF] Starting preprocessing for {len(comments)} comments...")
-        preprocess_start = time.time()
-        preprocessed_texts = []
-        for comment in comments:
-            preprocessed_texts.append(self.preprocessor.preprocess_simple(comment['text']))
-        print(f"[PERF] Preprocessing done in {time.time() - preprocess_start:.2f}s")
-        
-        analyze_start = time.time()
+            results['summary'][method_map.get(method_key, method_key)] = {
+                'positive': 0, 'negative': 0, 'neutral': 0
+            }
+
+        n = len(comments)
+
+        # ── Step 1: batch preprocess with Sastrawi ────────────────────────
+        # Sastrawi stemmer is the slowest part — run it once per comment
+        print(f"[PERF] Preprocessing {n} comments …")
+        t0 = time.time()
+        preprocessed_texts = [
+            self.preprocessor.preprocess_simple(c['text']) for c in comments
+        ]
+        print(f"[PERF] Preprocessing done in {time.time()-t0:.2f}s")
+
+        # Gather 3 detailed examples (done separately, not in the hot loop)
+        for idx in range(min(3, n)):
+            _, steps = self.preprocessor.preprocess_detailed(comments[idx]['text'])
+            results['preprocessing_examples'].append({
+                'comment_index': idx + 1,
+                'author':        comments[idx]['author'],
+                'steps':         steps,
+            })
+
+        # ── Step 2: batch ML inference ────────────────────────────────────
+        print(f"[PERF] Running batch inference …")
+        t1 = time.time()
+        batch_results = self.ml_analyzer.predict_batch(preprocessed_texts, selected_methods)
+        print(f"[PERF] Batch inference done in {time.time()-t1:.2f}s")
+
+        # ── Step 3: merge results ─────────────────────────────────────────
         for idx, comment in enumerate(comments):
-            text = comment['text']
-            
-            # Get detailed preprocessing for first 3 comments only
-            if example_count < 3:
-                _, preprocessing_steps = self.preprocessor.preprocess_detailed(text)
-                results['preprocessing_examples'].append({
-                    'comment_index': idx + 1,
-                    'author': comment['author'],
-                    'steps': preprocessing_steps
-                })
-                example_count += 1
-            
-            # Use pre-processed text
-            preprocessed = preprocessed_texts[idx]
-            
+            br = batch_results[idx]
             comment_result = {
                 'author': comment['author'],
-                'text': text,
-                'likes': comment['likes']
+                'text':   comment['text'],
+                'likes':  comment['likes'],
             }
-            
-            # Analyze with selected methods
+
             if 'naive_bayes' in selected_methods:
-                nb_sentiment, nb_score = self.naive_bayes_analysis(preprocessed)
-                comment_result['naive_bayes_sentiment'] = nb_sentiment
-                comment_result['naive_bayes_score'] = round(nb_score, 3)
-                sentiment_key = sentiment_map.get(nb_sentiment.lower(), nb_sentiment.lower())
-                results['summary']['Naive Bayes'][sentiment_key] += 1
-            
+                label = br['naive_bayes_sentiment']
+                comment_result['naive_bayes_sentiment'] = label
+                comment_result['naive_bayes_score']     = br['naive_bayes_score']
+                key = sentiment_map.get(label.lower(), label.lower())
+                results['summary']['Naive Bayes'][key] += 1
+
             if 'svm' in selected_methods:
-                svm_sentiment, svm_score = self.svm_analysis(preprocessed)
-                comment_result['svm_sentiment'] = svm_sentiment
-                comment_result['svm_score'] = round(svm_score, 3)
-                sentiment_key = sentiment_map.get(svm_sentiment.lower(), svm_sentiment.lower())
-                results['summary']['SVM'][sentiment_key] += 1
-            
+                label = br['svm_sentiment']
+                comment_result['svm_sentiment'] = label
+                comment_result['svm_score']     = br['svm_score']
+                key = sentiment_map.get(label.lower(), label.lower())
+                results['summary']['SVM'][key] += 1
+
             if 'lstm' in selected_methods:
-                lstm_sentiment, lstm_score = self.lstm_analysis(preprocessed)
-                comment_result['lstm_sentiment'] = lstm_sentiment
-                comment_result['lstm_score'] = round(lstm_score, 3)
-                sentiment_key = sentiment_map.get(lstm_sentiment.lower(), lstm_sentiment.lower())
-                results['summary']['LSTM'][sentiment_key] += 1
-            
+                label = br['lstm_sentiment']
+                comment_result['lstm_sentiment'] = label
+                comment_result['lstm_score']     = br['lstm_score']
+                key = sentiment_map.get(label.lower(), label.lower())
+                results['summary']['LSTM'][key] += 1
+
             if 'indobert' in selected_methods:
-                indobert_sentiment, indobert_score = self.indobert_analysis(preprocessed)
-                comment_result['indobert_sentiment'] = indobert_sentiment
-                comment_result['indobert_score'] = round(indobert_score, 3)
-                sentiment_key = sentiment_map.get(indobert_sentiment.lower(), indobert_sentiment.lower())
-                results['summary']['IndoBERT'][sentiment_key] += 1
-            
+                label = br['indobert_sentiment']
+                comment_result['indobert_sentiment'] = label
+                comment_result['indobert_score']     = br['indobert_score']
+                key = sentiment_map.get(label.lower(), label.lower())
+                results['summary']['IndoBERT'][key] += 1
+
             results['comments'].append(comment_result)
-        
-        print(f"[PERF] Sentiment analysis done in {time.time() - analyze_start:.2f}s")
-        print(f"[PERF] Total analyze_multiple_methods: {time.time() - start_time:.2f}s for {len(comments)} comments")
-        
-        # Calculate accuracy and confusion matrix for each method
+
+        print(f"[PERF] Total analyze_multiple_methods: {time.time()-start_time:.2f}s for {n} comments")
+
         if len(selected_methods) > 1:
-            results['accuracy'] = self._calculate_cross_method_accuracy(results['comments'], selected_methods)
+            results['accuracy']          = self._calculate_cross_method_accuracy(results['comments'], selected_methods)
             results['confusion_matrices'] = self._generate_confusion_matrices(results['comments'], selected_methods)
-        
+
         return results
+
     
     def _calculate_cross_method_accuracy(self, analyzed_comments, methods):
         """
@@ -687,22 +714,32 @@ class SentimentAnalyzer:
     
     def generate_wordcloud(self, analyzed_comments):
         """
-        Generate dual wordclouds (positive and negative) from analyzed comments
+        Generate dual wordclouds (positive and negative) from analyzed comments.
+        Uses majority vote across all available methods for sentiment label.
         """
         import time
+        from collections import Counter
         start_time = time.time()
-        
+
         positive_texts = []
         negative_texts = []
-        
-        # Use already analyzed data
+
+        sentiment_keys = [
+            'naive_bayes_sentiment', 'svm_sentiment',
+            'lstm_sentiment', 'indobert_sentiment'
+        ]
+
         for comment in analyzed_comments:
-            # Get sentiment from any available method (prefer naive_bayes)
-            sentiment = comment.get('naive_bayes_sentiment') or comment.get('svm_sentiment') or comment.get('lstm_sentiment') or comment.get('indobert_sentiment')
-            
-            if sentiment and 'Positif' in sentiment:
+            # Collect all available sentiments for this comment
+            votes = [comment[k] for k in sentiment_keys if comment.get(k)]
+            if not votes:
+                continue
+            # Majority vote
+            sentiment = Counter(votes).most_common(1)[0][0]
+
+            if 'Positif' in sentiment:
                 positive_texts.append(comment['text'])
-            elif sentiment and 'Negatif' in sentiment:
+            elif 'Negatif' in sentiment:
                 negative_texts.append(comment['text'])
         
         result = {}

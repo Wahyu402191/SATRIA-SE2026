@@ -115,9 +115,12 @@
     .stat-card { transition: transform .2s, box-shadow .2s; }
     .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
 
-    /* Animate bars on appear */
-    .bar-fill { width: 0 !important; transition: width .8s cubic-bezier(.4,0,.2,1) !important; }
-    .bars-animate .bar-fill { width: var(--target-w) !important; }
+    /* Animate bars on appear — use JS to trigger, NOT !important override */
+    .bar-fill {
+        height: 100%; border-radius: 99px;
+        transition: width .9s cubic-bezier(.4,0,.2,1);
+    }
+    .bar-fill-init { width: 0% !important; }   /* only on init, removed by JS */
 
     /* Toast notification */
     .toast {
@@ -513,15 +516,15 @@ function displayResults(data) {
             <div class="stat-card-title">${method}</div>
             <div class="bar-row">
                 <div class="bar-meta"><span class="bar-label">Positif</span><span class="bar-count">${stats.positive} (${pp}%)</span></div>
-                <div class="bar-track"><div class="bar-fill fill-pos" style="--target-w:${pp}%; width:0%"></div></div>
+                <div class="bar-track"><div class="bar-fill fill-pos bar-fill-init" data-w="${pp}"></div></div>
             </div>
             <div class="bar-row">
                 <div class="bar-meta"><span class="bar-label">Negatif</span><span class="bar-count">${stats.negative} (${np}%)</span></div>
-                <div class="bar-track"><div class="bar-fill fill-neg" style="--target-w:${np}%; width:0%"></div></div>
+                <div class="bar-track"><div class="bar-fill fill-neg bar-fill-init" data-w="${np}"></div></div>
             </div>
             <div class="bar-row" style="margin-bottom:0">
                 <div class="bar-meta"><span class="bar-label">Netral</span><span class="bar-count">${stats.neutral} (${ep}%)</span></div>
-                <div class="bar-track"><div class="bar-fill fill-neu" style="--target-w:${ep}%; width:0%"></div></div>
+                <div class="bar-track"><div class="bar-fill fill-neu bar-fill-init" data-w="${ep}"></div></div>
             </div>`;
         grid.appendChild(card);
     }
@@ -529,13 +532,13 @@ function displayResults(data) {
     document.getElementById('results').style.display = 'block';
     document.getElementById('results').scrollIntoView({behavior:'smooth'});
 
-    // Trigger bar animations after paint
+    // Trigger bar animations — remove init class, set actual width
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-            document.querySelectorAll('.bar-fill').forEach(b => {
-                b.style.transition = 'width .9s cubic-bezier(.4,0,.2,1)';
-                b.style.width = b.style.getPropertyValue('--target-w') ||
-                    getComputedStyle(b).getPropertyValue('--target-w');
+            document.querySelectorAll('.bar-fill-init').forEach(b => {
+                const w = b.dataset.w + '%';
+                b.classList.remove('bar-fill-init');
+                b.style.width = w;
             });
         });
     });
