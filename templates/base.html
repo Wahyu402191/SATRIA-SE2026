@@ -198,20 +198,22 @@
         }
         .brand-mark {
             width: 42px; height: 42px; flex-shrink: 0;
-            background: transparent;
+            background: var(--primary-dark); /* Sama dengan warna header */
+            border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
-            transition: transform .25s, filter .25s;
-            filter: drop-shadow(0 3px 8px rgba(26,58,92,.25));
+            transition: transform .25s, box-shadow .25s;
+            box-shadow: 0 3px 10px rgba(27,79,114,.3);
         }
         .navbar-brand:hover .brand-mark {
             transform: translateY(-2px) scale(1.05);
-            filter: drop-shadow(0 6px 14px rgba(26,58,92,.35));
+            box-shadow: 0 6px 16px rgba(27,79,114,.4);
         }
         .brand-mark img {
             width: 100%; height: 100%;
-            object-fit: contain;
+            object-fit: cover;
+            border-radius: 8px;
         }
-        .brand-mark svg { width: 24px; height: 24px; fill: var(--primary); }
+        .brand-mark svg { width: 24px; height: 24px; fill: #fff; }
         .brand-text-main {
             font-size: 16px; font-weight: 800;
             color: var(--primary); letter-spacing: -.4px;
