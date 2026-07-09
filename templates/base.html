@@ -197,23 +197,23 @@
             text-decoration: none;
         }
         .brand-mark {
-            width: 42px; height: 42px; flex-shrink: 0;
-            background: var(--primary-dark); /* Sama dengan warna header */
-            border-radius: 8px;
+            width: 34px; height: 34px; flex-shrink: 0; /* ← ubah angka ini untuk resize */
+            background: transparent;                    /* transparan = support PNG logo */
             display: flex; align-items: center; justify-content: center;
-            transition: transform .25s, box-shadow .25s;
-            box-shadow: 0 3px 10px rgba(27,79,114,.3);
+            transition: transform .25s, filter .25s;
+            filter: drop-shadow(0 2px 6px rgba(27,79,114,.35));
         }
         .navbar-brand:hover .brand-mark {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 6px 16px rgba(27,79,114,.4);
+            transform: translateY(-2px) scale(1.06);
+            filter: drop-shadow(0 4px 12px rgba(27,79,114,.5));
         }
+        /* PNG/JPG logo image */
         .brand-mark img {
             width: 100%; height: 100%;
-            object-fit: cover;
-            border-radius: 8px;
+            object-fit: contain;   /* contain = tidak terpotong, proporsi terjaga */
+            border-radius: 0;      /* tidak ada border-radius → logo PNG transparan mulus */
         }
-        .brand-mark svg { width: 24px; height: 24px; fill: #fff; }
+        .brand-mark svg { width: 22px; height: 22px; fill: var(--primary); }
         .brand-text-main {
             font-size: 16px; font-weight: 800;
             color: var(--primary); letter-spacing: -.4px;
@@ -741,7 +741,7 @@
                      alt="Gedung BPS Kabupaten Bangkalan"
                      onerror="this.parentElement.innerHTML='<div class=\'inst-photo-placeholder\'><svg viewBox=\'0 0 24 24\'><path d=\'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-6 2.5-3 2.5 3 3.5-4.5L17 17H12z\'/></svg><span>Foto Gedung BPS Bangkalan</span></div>'">
                 {% else %}
-                <img src="/static/img/bps.png"
+                <img src="/static/img/bps-logo.png"
                      alt="Gedung BPS Kabupaten Bangkalan"
                      onerror="this.parentElement.innerHTML='<div class=\'inst-photo-placeholder\'><svg viewBox=\'0 0 24 24\'><path d=\'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-6 2.5-3 2.5 3 3.5-4.5L17 17H12z\'/></svg><span>Foto Gedung BPS Bangkalan</span></div>'">
                 {% endif %}
@@ -772,13 +772,13 @@
             <a href="/" class="navbar-brand">
                 <div class="brand-mark">
                     {% if config.get('STATIC_FOLDER') %}
-                    <img src="{{ url_for('static', filename='img/bps-bangkalan.jpg') }}" 
-                         alt="Logo BPS Bangkalan"
-                         onerror="this.outerHTML='<svg viewBox=\'0 0 24 24\' fill=\'currentColor\'><path d=\'M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h12v2H3v-2zm0 4h18v2H3v-2zm0 4h12v2H3v-2z\'/></svg>'">
+                    <img src="{{ url_for('static', filename='img/bps-logo.png') }}"
+                         alt="Logo BPS"
+                         onerror="this.src='{{ url_for('static', filename='img/bps-bangkalan.jpg') }}'">
                     {% else %}
-                    <img src="/static/img/bps-bangkalan.jpg" 
-                         alt="Logo BPS Bangkalan"
-                         onerror="this.outerHTML='<svg viewBox=\'0 0 24 24\' fill=\'currentColor\'><path d=\'M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h12v2H3v-2zm0 4h18v2H3v-2zm0 4h12v2H3v-2z\'/></svg>'">
+                    <img src="/static/img/bps-logo.png"
+                         alt="Logo BPS"
+                         onerror="this.src='/static/img/bps-bangkalan.jpg'">
                     {% endif %}
                 </div>
                 <div>
