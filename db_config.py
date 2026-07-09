@@ -126,7 +126,8 @@ def check_database_exists():
         cursor.execute("SHOW TABLES")
         tables = [table[0] for table in cursor.fetchall()]
         
-        required_tables = ['videos', 'comments', 'analysis_results', 'analysis_sessions']
+        # Only check core tables needed for application
+        required_tables = ['videos', 'comments', 'analysis_results']
         missing_tables = [t for t in required_tables if t not in tables]
         
         cursor.close()
@@ -137,15 +138,11 @@ def check_database_exists():
             print("[!] Please import database.sql file first")
             return False
         
-        print(f"[✓] All required tables exist: {', '.join(tables)}")
+        print(f"[✓] Core tables ready: {', '.join(required_tables)}")
         return True
         
     except Error as e:
         print(f"[✗] Database check error: {e}")
-        print("[!] Make sure:")
-        print("    1. MySQL server is running (XAMPP > Start MySQL)")
-        print("    2. Database 'satria_se2026' exists")
-        print("    3. Import database.sql via phpMyAdmin or MySQL CLI")
         return False
 
 

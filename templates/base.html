@@ -9,26 +9,35 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary:       #1a3a5c;
-            --primary-light: #2e5f8a;
-            --primary-dark:  #0f2238;
-            --accent:        #c8973a;
-            --accent-light:  #e8b96a;
-            --accent-pale:   #fdf6e8;
-            --success:       #2d7a4f;
-            --danger:        #9b2335;
-            --neutral:       #5a6a7a;
-            --bg:            #f0f3f7;
-            --bg-card:       #ffffff;
-            --border:        #dce3ea;
-            --text:          #1e2d3d;
-            --text-muted:    #6b7c8d;
-            --shadow-sm:     0 1px 4px rgba(0,0,0,.07);
-            --shadow-md:     0 4px 16px rgba(0,0,0,.10);
-            --shadow-lg:     0 8px 32px rgba(0,0,0,.13);
-            --radius:        8px;
+            /* Soft BPS Colors - Wave Gradients */
+            --primary:       #2874A6;  /* Soft Blue */
+            --primary-light: #5DADE2;
+            --primary-dark:  #1B4F72;
+            --accent:        #E67E22;  /* Soft Orange */
+            --accent-light:  #F39C12;
+            --accent-pale:   #FEF5E7;
+            --success:       #27AE60;  /* Soft Green */
+            --success-light: #52BE80;
+            --danger:        #E74C3C;
+            --neutral:       #95A5A6;
+            --bg:            #F8F9FA;
+            --bg-card:       #FFFFFF;
+            --border:        #E0E6ED;
+            --text:          #2C3E50;
+            --text-muted:    #7F8C8D;
+            --shadow-sm:     0 2px 8px rgba(41,128,185,.08);
+            --shadow-md:     0 4px 16px rgba(41,128,185,.12);
+            --shadow-lg:     0 8px 32px rgba(41,128,185,.16);
+            --radius:        10px;
             --radius-lg:     14px;
             --nav-h:         64px;
+            
+            /* Wave Gradient Variables */
+            --gradient-blue-green: linear-gradient(135deg, #2874A6 0%, #1ABC9C 50%, #27AE60 100%);
+            --gradient-blue-orange: linear-gradient(135deg, #2874A6 0%, #5DADE2 50%, #E67E22 100%);
+            --gradient-soft-blue: linear-gradient(135deg, #5DADE2 0%, #85C1E9 50%, #AED6F1 100%);
+            --gradient-soft-green: linear-gradient(135deg, #52BE80 0%, #7DCEA0 50%, #A9DFBF 100%);
+            --gradient-wave-cool: linear-gradient(120deg, #E3F2FD 0%, #E8F8F5 50%, #FEF9E7 100%);
         }
         *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
         html { scroll-behavior: smooth; }
@@ -114,15 +123,60 @@
         }
         .inst-badge {
             margin-left: auto; align-self: center;
-            padding: 8px 20px;
-            border: 1px solid rgba(200,151,58,.4);
+            padding: 12px 24px;
+            border: 2px solid rgba(230,126,34,.6);
             border-radius: var(--radius-lg);
-            background: rgba(200,151,58,.08);
+            /* Glassmorphism Effect */
+            background: linear-gradient(135deg, rgba(230,126,34,.25), rgba(243,156,18,.25));
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 24px rgba(230,126,34,.3), inset 0 1px 0 rgba(255,255,255,.2);
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-        .inst-badge-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,.4); }
-        .inst-badge-year  { font-size: 24px; font-weight: 800; color: var(--accent); line-height: 1; margin-top: 2px; }
-        .inst-badge-sub   { font-size: 9px; color: rgba(255,255,255,.4); letter-spacing: .5px; }
+        .inst-badge::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,.1), transparent);
+            transform: rotate(45deg);
+            animation: badgeShine 3s linear infinite;
+        }
+        @keyframes badgeShine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        .inst-badge-label { 
+            font-size: 10px; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            color: rgba(255,255,255,.9); 
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,.2);
+        }
+        .inst-badge-year  { 
+            font-size: 32px; 
+            font-weight: 900; 
+            background: linear-gradient(135deg, #FFF, #F39C12);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1; 
+            margin-top: 4px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,.3));
+            position: relative;
+            z-index: 1;
+        }
+        .inst-badge-sub   { 
+            font-size: 10px; 
+            color: rgba(255,255,255,.8); 
+            letter-spacing: 1px;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0,0,0,.2);
+        }
 
         /* ─── NAVBAR ─── */
         .navbar {
@@ -235,31 +289,72 @@
         /* ─── BUTTONS ─── */
         .btn {
             display: inline-flex; align-items: center; gap: 7px;
-            padding: 10px 22px; border: none; border-radius: var(--radius);
+            padding: 11px 24px; border: none; border-radius: var(--radius);
             font-size: 13px; font-weight: 600; cursor: pointer;
             text-decoration: none;
-            transition: all .22s;
-            background: var(--primary); color: #fff;
-            box-shadow: 0 2px 6px rgba(26,58,92,.20);
+            transition: all .3s ease;
+            /* Wave Gradient */
+            background: var(--gradient-blue-green);
+            background-size: 200% 200%;
+            animation: waveMove 8s ease infinite;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(40,116,166,.25);
             position: relative; overflow: hidden;
+        }
+        @keyframes waveMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         .btn::after {
             content: '';
             position: absolute; inset: 0;
-            background: rgba(255,255,255,0);
+            background: rgba(255,255,255,.08);
             transition: background .2s;
         }
-        .btn:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 5px 14px rgba(26,58,92,.28); }
-        .btn:hover::after { background: rgba(255,255,255,.04); }
-        .btn:active { transform: translateY(0); box-shadow: 0 2px 6px rgba(26,58,92,.20); }
-        .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
-        .btn-accent { background: var(--accent); color: #fff; box-shadow: 0 2px 6px rgba(200,151,58,.30); }
-        .btn-accent:hover { background: #b8832a; box-shadow: 0 5px 14px rgba(200,151,58,.35); }
-        .btn-success { background: var(--success); color: #fff; box-shadow: 0 2px 6px rgba(45,122,79,.25); }
-        .btn-success:hover { background: #246040; box-shadow: 0 5px 14px rgba(45,122,79,.30); }
-        .btn-ghost { background: transparent; color: var(--primary); border: 1.5px solid var(--border); box-shadow: none; }
-        .btn-ghost:hover { background: var(--bg); border-color: var(--primary-light); box-shadow: var(--shadow-sm); }
-        .btn-sm { padding: 7px 15px; font-size: 12px; }
+        .btn:hover { 
+            background: var(--gradient-blue-orange);
+            transform: translateY(-3px); 
+            box-shadow: 0 8px 20px rgba(40,116,166,.35);
+            animation: none;
+        }
+        .btn:hover::after { background: rgba(255,255,255,.15); }
+        .btn:active { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(40,116,166,.25); }
+        .btn:disabled { opacity: .6; cursor: not-allowed; transform: none; box-shadow: none; animation: none; }
+        
+        .btn-accent { 
+            background: linear-gradient(135deg, #E67E22, #F39C12, #E67E22);
+            background-size: 200% 200%;
+            box-shadow: 0 4px 12px rgba(230,126,34,.3);
+        }
+        .btn-accent:hover { 
+            background: linear-gradient(135deg, #D35400, #E67E22);
+            box-shadow: 0 8px 20px rgba(230,126,34,.4);
+        }
+        
+        .btn-success { 
+            background: var(--gradient-soft-green);
+            background-size: 200% 200%;
+            box-shadow: 0 4px 12px rgba(39,174,96,.25);
+        }
+        .btn-success:hover { 
+            background: linear-gradient(135deg, #27AE60, #2ECC71);
+            box-shadow: 0 8px 20px rgba(39,174,96,.35);
+        }
+        
+        .btn-ghost { 
+            background: transparent; 
+            color: var(--primary); 
+            border: 2px solid var(--border); 
+            box-shadow: none;
+            animation: none;
+        }
+        .btn-ghost:hover { 
+            background: var(--gradient-wave-cool); 
+            border-color: var(--primary); 
+            box-shadow: var(--shadow-sm); 
+        }
+        .btn-sm { padding: 8px 16px; font-size: 12px; }
         .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 
         /* ─── FORMS ─── */
