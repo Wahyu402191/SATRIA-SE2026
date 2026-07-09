@@ -3,39 +3,100 @@
 
 {% block extra_css %}
 <style>
-    .page-header { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
-    .page-header-icon { width:48px; height:48px; background:linear-gradient(135deg,var(--primary),var(--primary-light)); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center; }
-    .page-header-icon svg { width:24px; height:24px; fill:#fff; }
-    .page-header h1 { font-size:20px; font-weight:700; color:var(--primary); }
-    .page-header p  { font-size:13px; color:var(--text-muted); }
-    .section-heading { font-size:15px; font-weight:700; color:var(--primary); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
-    .section-heading::before { content:''; display:block; width:3px; height:18px; background:var(--accent); border-radius:2px; }
+    /* Enhanced Page Header */
+    .page-header {
+        display:flex; align-items:center; gap:18px; margin-bottom:28px;
+        padding:24px 28px; border-radius:var(--radius-lg);
+        background: var(--gradient-wave-cool);
+        border:1px solid var(--border);
+        position:relative; overflow:hidden;
+    }
+    .page-header::before {
+        content:''; position:absolute; inset:0;
+        background: radial-gradient(circle at 70% 30%, rgba(230,126,34,.08), transparent 60%);
+        animation: headerPulse 4.5s ease-in-out infinite alternate;
+    }
+    @keyframes headerPulse {
+        0%, 100% { opacity: .3; }
+        50% { opacity: .7; }
+    }
+    .page-header-icon {
+        width:56px; height:56px;
+        background:linear-gradient(135deg, var(--accent), var(--accent-light));
+        background-size:200% 200%;
+        animation:waveMove 7s ease infinite;
+        border-radius:var(--radius-lg);
+        display:flex; align-items:center; justify-content:center;
+        box-shadow:0 4px 16px rgba(230,126,34,.3);
+        position:relative; z-index:1;
+    }
+    .page-header-icon svg { width:28px; height:28px; stroke:#fff; stroke-width:2; fill:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,.2)); }
+    .page-header-content { flex:1; position:relative; z-index:1; }
+    .page-header h1 {
+        font-size:22px; font-weight:800; margin-bottom:6px;
+        background:linear-gradient(135deg, var(--accent), var(--primary));
+        -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;
+        background-clip:text;
+        letter-spacing:-.5px;
+    }
+    .page-header p { font-size:13px; color:var(--text-muted); line-height:1.6; }
+
+    /* Enhanced Section Heading */
+    .section-heading {
+        font-size:16px; font-weight:800; margin-bottom:18px;
+        display:flex; align-items:center; gap:10px;
+        background:var(--gradient-blue-orange);
+        -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;
+        background-clip:text;
+    }
+    .section-heading::before {
+        content:''; display:block; width:4px; height:22px;
+        background:var(--gradient-blue-green);
+        border-radius:3px;
+        box-shadow:0 2px 8px rgba(230,126,34,.3);
+    }
     .chart-wrap { position:relative; width:100%; }
     canvas { width:100% !important; }
     .legend-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; margin-top:16px; }
     .legend-item { display:flex; align-items:center; gap:8px; font-size:12px; }
     .legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
     .top-words-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin-top:4px; }
+    /* Word Chips - Enhanced */
     .word-chip {
-        background:var(--bg); border:1.5px solid var(--border); border-radius:var(--radius);
-        padding:14px 16px; text-align:center; transition:all .2s;
+        background:var(--bg); border:2px solid var(--border); border-radius:var(--radius-lg);
+        padding:16px 18px; text-align:center;
+        transition:all .3s cubic-bezier(.22,1,.36,1);
+        position:relative; overflow:hidden;
     }
-    .word-chip:hover { border-color:var(--primary); background:#e8f0f8; transform:translateY(-2px); box-shadow:var(--shadow-sm); }
-    .word-chip-word { font-size:14px; font-weight:700; color:var(--primary); }
-    .word-chip-count { font-size:11px; color:var(--text-muted); margin-top:3px; }
+    .word-chip::before {
+        content:''; position:absolute; top:0; left:0; right:0; height:2px;
+        background:var(--gradient-blue-green);
+        opacity:0; transition:opacity .3s;
+    }
+    .word-chip:hover {
+        border-color:var(--primary);
+        background:linear-gradient(135deg, #E3F2FD, #E8F8F5);
+        transform:translateY(-4px);
+        box-shadow:0 6px 20px rgba(40,116,166,.15);
+    }
+    .word-chip:hover::before { opacity:1; }
+    .word-chip-word { font-size:15px; font-weight:800; color:var(--primary); letter-spacing:-.3px; }
+    .word-chip-count { font-size:11px; color:var(--text-muted); margin-top:4px; font-weight:600; }
     .empty-state { text-align:center; padding:60px 24px; color:var(--text-muted); }
     .empty-state a { color:var(--primary); font-weight:600; text-decoration:none; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
+<div class="page-header reveal">
     <div class="page-header-icon">
         <svg viewBox="0 0 24 24"><path d="M3.5 18.5l6-6 4 4L22 6.92"/></svg>
     </div>
-    <div>
+    <div class="page-header-content">
         <h1>Trend Kata per Waktu</h1>
-        <p>Visualisasi kata paling sering muncul dalam komentar, dikelompokkan per bulan</p>
+        <p>Visualisasi kata paling sering muncul dalam komentar · Analisis distribusi frekuensi per bulan dengan grafik interaktif</p>
     </div>
 </div>
 

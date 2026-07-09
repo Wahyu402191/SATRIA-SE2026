@@ -3,19 +3,87 @@
 
 {% block extra_css %}
 <style>
-    .page-header { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
-    .page-header-icon { width:48px; height:48px; background:linear-gradient(135deg,var(--primary),var(--primary-light)); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center; }
-    .page-header-icon svg { width:24px; height:24px; fill:#fff; }
-    .page-header h1 { font-size:20px; font-weight:700; color:var(--primary); }
-    .page-header p  { font-size:13px; color:var(--text-muted); }
+    /* Enhanced Page Header */
+    .page-header {
+        display:flex; align-items:center; gap:18px; margin-bottom:28px;
+        padding:24px 28px; border-radius:var(--radius-lg);
+        background: var(--gradient-wave-cool);
+        border:1px solid var(--border);
+        position:relative; overflow:hidden;
+    }
+    .page-header::before {
+        content:''; position:absolute; inset:0;
+        background: radial-gradient(circle at 80% 50%, rgba(39,174,96,.08), transparent 60%);
+        animation: headerPulse 4s ease-in-out infinite alternate;
+    }
+    @keyframes headerPulse {
+        0%, 100% { opacity: .3; }
+        50% { opacity: .6; }
+    }
+    .page-header-icon {
+        width:56px; height:56px;
+        background:var(--gradient-soft-green);
+        background-size:200% 200%;
+        animation:waveMove 8s ease infinite;
+        border-radius:var(--radius-lg);
+        display:flex; align-items:center; justify-content:center;
+        box-shadow:0 4px 16px rgba(39,174,96,.25);
+        position:relative; z-index:1;
+    }
+    .page-header-icon svg { width:28px; height:28px; fill:#fff; filter:drop-shadow(0 2px 4px rgba(0,0,0,.2)); }
+    .page-header-content { flex:1; position:relative; z-index:1; }
+    .page-header h1 {
+        font-size:22px; font-weight:800; margin-bottom:6px;
+        background:linear-gradient(135deg, var(--primary), var(--success));
+        -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;
+        background-clip:text;
+        letter-spacing:-.5px;
+    }
+    .page-header p { font-size:13px; color:var(--text-muted); line-height:1.6; }
 
-    .section-heading { font-size:15px; font-weight:700; color:var(--primary); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
-    .section-heading::before { content:''; display:block; width:3px; height:18px; background:var(--accent); border-radius:2px; }
+    /* Enhanced Section Heading */
+    .section-heading {
+        font-size:16px; font-weight:800; margin-bottom:18px;
+        display:flex; align-items:center; gap:10px;
+        background:var(--gradient-blue-orange);
+        -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;
+        background-clip:text;
+    }
+    .section-heading::before {
+        content:''; display:block; width:4px; height:22px;
+        background:var(--gradient-blue-green);
+        border-radius:3px;
+        box-shadow:0 2px 8px rgba(230,126,34,.3);
+    }
 
-    /* Summary Cards */
-    .method-summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-bottom:24px; }
-    .ms-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; }
-    .ms-card-name { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--primary); margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+    /* Summary Cards - Enhanced */
+    .method-summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-bottom:28px; }
+    .ms-card {
+        background:var(--bg-card); border:2px solid var(--border); border-radius:var(--radius-lg);
+        padding:22px; transition:all .3s cubic-bezier(.22,1,.36,1);
+        position:relative; overflow:hidden;
+    }
+    .ms-card::before {
+        content:''; position:absolute; top:0; left:0; right:0; height:3px;
+        background:var(--gradient-blue-green);
+        opacity:0; transition:opacity .3s;
+    }
+    .ms-card:hover {
+        transform:translateY(-4px);
+        box-shadow:var(--shadow-md);
+        border-color:var(--primary-light);
+    }
+    .ms-card:hover::before { opacity:1; }
+    .ms-card-name {
+        font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.8px;
+        background:var(--gradient-blue-orange);
+        -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;
+        background-clip:text;
+        margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);
+    }
     .ms-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; font-size:13px; }
     .ms-dot { width:9px; height:9px; border-radius:50%; margin-right:8px; display:inline-block; }
     .ms-row-label { display:flex; align-items:center; color:var(--text); }
@@ -52,13 +120,13 @@
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
+<div class="page-header reveal">
     <div class="page-header-icon">
         <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h12v2H3v-2zm0 4h18v2H3v-2zm0 4h12v2H3v-2z"/></svg>
     </div>
-    <div>
+    <div class="page-header-content">
         <h1>Perbandingan Metode Analisis</h1>
-        <p>Komparasi hasil analisis sentimen dari 4 metode Machine Learning</p>
+        <p>Komparasi hasil analisis sentimen dari 4 metode Machine Learning · Naive Bayes, SVM, LSTM, dan IndoBERT</p>
     </div>
 </div>
 
