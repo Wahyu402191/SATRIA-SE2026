@@ -72,15 +72,23 @@
         .inst-photo-wrap {
             width: 160px; flex-shrink: 0;
             position: relative; overflow: hidden;
-            background: var(--primary);
+            background: var(--primary-dark); /* sama dengan header — kotak tidak terlihat */
+            display: flex; align-items: center; justify-content: center;
+            padding: 12px;
         }
         .inst-photo-wrap img {
-            width: 100%; height: 100%;
-            object-fit: cover; object-position: center;
-            opacity: .85;
-            transition: opacity .3s;
+            width: 100%; height: auto;
+            max-height: 100%;
+            object-fit: contain;       /* contain = proporsi logo terjaga, tidak terpotong */
+            object-position: center;
+            opacity: .95;
+            transition: opacity .3s, transform .3s;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,.25));
         }
-        .inst-photo-wrap:hover img { opacity: 1; }
+        .inst-photo-wrap:hover img {
+            opacity: 1;
+            transform: scale(1.04);
+        }
         .inst-photo-placeholder {
             width: 100%; height: 100%;
             display: flex; flex-direction: column;
@@ -734,16 +742,16 @@
     <!-- ─── INSTITUTIONAL HEADER ─── -->
     <header class="inst-header">
         <div class="inst-inner">
-            <!-- Foto gedung BPS — taruh file "bps-bangkalan.jpg" di folder static/img/ -->
+            <!-- Logo BPS — cek PNG dulu, fallback ke JPG -->
             <div class="inst-photo-wrap">
                 {% if config.get('STATIC_FOLDER') %}
-                <img src="{{ url_for('static', filename='img/bps-bangkalan.jpg') }}"
-                     alt="Gedung BPS Kabupaten Bangkalan"
-                     onerror="this.parentElement.innerHTML='<div class=\'inst-photo-placeholder\'><svg viewBox=\'0 0 24 24\'><path d=\'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-6 2.5-3 2.5 3 3.5-4.5L17 17H12z\'/></svg><span>Foto Gedung BPS Bangkalan</span></div>'">
+                <img src="{{ url_for('static', filename='img/bps-logo.png') }}"
+                     alt="Logo BPS Kabupaten Bangkalan"
+                     onerror="this.src='{{ url_for('static', filename='img/bps-bangkalan.jpg') }}'">
                 {% else %}
                 <img src="/static/img/bps-logo.png"
-                     alt="Gedung BPS Kabupaten Bangkalan"
-                     onerror="this.parentElement.innerHTML='<div class=\'inst-photo-placeholder\'><svg viewBox=\'0 0 24 24\'><path d=\'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-6 2.5-3 2.5 3 3.5-4.5L17 17H12z\'/></svg><span>Foto Gedung BPS Bangkalan</span></div>'">
+                     alt="Logo BPS Kabupaten Bangkalan"
+                     onerror="this.src='/static/img/bps-bangkalan.jpg'">
                 {% endif %}
             </div>
             <!-- Teks institusi -->
