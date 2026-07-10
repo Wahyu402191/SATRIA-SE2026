@@ -6,6 +6,7 @@ Jinja2
 itsdangerous
 click
 blinker
+livereload
 
 # Scraping & HTTP
 beautifulsoup4

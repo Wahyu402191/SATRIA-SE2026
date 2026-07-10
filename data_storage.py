@@ -24,7 +24,7 @@ class DataStorage:
         
         # Test database connection
         try:
-            from db_config import test_connection, check_database_exists
+            from db_config import test_connection, check_database_exists, ensure_analysis_results_history_schema
             if not test_connection():
                 print("[!] Warning: MySQL not connected. Using fallback JSON mode.")
                 self.use_mysql = False
@@ -32,6 +32,7 @@ class DataStorage:
                 print("[!] Warning: Database tables missing. Using fallback JSON mode.")
                 self.use_mysql = False
             else:
+                ensure_analysis_results_history_schema()
                 self.use_mysql = True
                 print("[✓] DataStorage initialized with MySQL backend")
         except Exception as e:
@@ -336,7 +337,7 @@ class DataStorage:
                 VALUES (%s, %s, %s, %s, %s)
             """
             
-            execute_query(session_query, (
+            session_id = execute_query(session_query, (
                 video_id,
                 ','.join(methods_used),
                 len(comments_with_sentiments),
@@ -347,12 +348,8 @@ class DataStorage:
             # ── Save Individual Analysis Results ───────────────────────────
             results_query = """
                 INSERT INTO analysis_results 
-                (comment_id, video_id, method_name, sentiment, confidence_score, analyzed_at)
-                VALUES (%s, %s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE
-                    sentiment = VALUES(sentiment),
-                    confidence_score = VALUES(confidence_score),
-                    analyzed_at = VALUES(analyzed_at)
+                (analysis_session_id, comment_id, video_id, method_name, sentiment, confidence_score, analyzed_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
             
             results_data = []
@@ -366,6 +363,7 @@ class DataStorage:
                     
                     if sentiment_key in comment:
                         results_data.append((
+                            session_id,
                             comment_id,
                             video_id,
                             method,

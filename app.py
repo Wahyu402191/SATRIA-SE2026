@@ -12,6 +12,11 @@ import time
 from queue import Queue
 import threading
 
+try:
+    from livereload import Server
+except ImportError:
+    Server = None
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -774,4 +779,11 @@ def get_dashboard_stats():
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     debug = os.getenv('FLASK_DEBUG', 'true').lower() == 'true'
-    app.run(host='0.0.0.0', port=port, debug=debug)
+    if debug and Server is not None:
+        server = Server(app.wsgi_app)
+        server.watch('*.py')
+        server.watch('templates/*.html')
+        server.watch('static/**/*')
+        server.serve(host='0.0.0.0', port=port, debug=True, restart_delay=1)
+    else:
+        app.run(host='0.0.0.0', port=port, debug=debug)

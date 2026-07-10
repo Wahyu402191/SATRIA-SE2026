@@ -146,6 +146,75 @@ def check_database_exists():
         return False
 
 
+def ensure_analysis_results_history_schema():
+    """Ensure analysis_results stores results per analysis session."""
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SHOW COLUMNS FROM analysis_results LIKE 'analysis_session_id'")
+        has_session_column = len(cursor.fetchall()) > 0
+
+        if not has_session_column:
+            cursor.execute(
+                "ALTER TABLE analysis_results ADD COLUMN analysis_session_id INT NULL AFTER id"
+            )
+
+        cursor.execute("SHOW INDEX FROM analysis_results WHERE Key_name = 'unique_analysis_session'")
+        has_new_unique = len(cursor.fetchall()) > 0
+
+        if not has_new_unique:
+            cursor.execute("SHOW INDEX FROM analysis_results WHERE Key_name = 'unique_analysis'")
+            has_old_unique = len(cursor.fetchall()) > 0
+
+            if has_old_unique:
+                cursor.execute("ALTER TABLE analysis_results DROP INDEX unique_analysis")
+
+            cursor.execute(
+                """
+                ALTER TABLE analysis_results
+                ADD UNIQUE KEY unique_analysis_session (analysis_session_id, comment_id, method_name)
+                """
+            )
+
+        cursor.execute("SHOW INDEX FROM analysis_results WHERE Key_name = 'idx_analysis_session_id'")
+        has_session_index = len(cursor.fetchall()) > 0
+        if not has_session_index:
+            cursor.execute(
+                "ALTER TABLE analysis_results ADD INDEX idx_analysis_session_id (analysis_session_id)"
+            )
+
+        conn.commit()
+        print("[✓] analysis_results history schema verified")
+        return True
+
+    except Error as e:
+        if conn:
+            conn.rollback()
+        print(f"[✗] Analysis results schema migration failed: {e}")
+        return False
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+def get_latest_analysis_session_id(video_id):
+    """Get latest analysis session id for a video, if available."""
+    query = """
+        SELECT id
+        FROM analysis_sessions
+        WHERE video_id = %s
+        ORDER BY completed_at DESC, id DESC
+        LIMIT 1
+    """
+    result = execute_query(query, (video_id,), fetch=True)
+    return result[0]['id'] if result else None
+
+
 # Test connection on import
 if __name__ != '__main__':
     try:
@@ -176,7 +245,19 @@ def get_comments_by_video(video_id, limit=None):
 
 def get_analysis_results(video_id, method_name=None):
     """Get analysis results for a video"""
+    session_id = get_latest_analysis_session_id(video_id)
+
     if method_name:
+        if session_id:
+            query = """
+                SELECT c.*, ar.sentiment, ar.confidence_score 
+                FROM comments c
+                JOIN analysis_results ar ON c.comment_id = ar.comment_id
+                WHERE ar.video_id = %s AND ar.method_name = %s AND ar.analysis_session_id = %s
+                ORDER BY c.published_at DESC
+            """
+            return execute_query(query, (video_id, method_name, session_id), fetch=True)
+
         query = """
             SELECT c.*, ar.sentiment, ar.confidence_score 
             FROM comments c
@@ -186,12 +267,31 @@ def get_analysis_results(video_id, method_name=None):
         """
         return execute_query(query, (video_id, method_name), fetch=True)
     else:
+        if session_id:
+            query = """
+                SELECT * FROM analysis_results 
+                WHERE video_id = %s AND analysis_session_id = %s
+            """
+            return execute_query(query, (video_id, session_id), fetch=True)
+
         query = "SELECT * FROM analysis_results WHERE video_id = %s"
         return execute_query(query, (video_id,), fetch=True)
 
 
 def get_sentiment_summary(video_id):
     """Get sentiment summary for a video"""
+    session_id = get_latest_analysis_session_id(video_id)
+
+    if session_id:
+        query = """
+            SELECT method_name, sentiment, COUNT(*) as count, 
+                   ROUND(AVG(confidence_score), 4) as avg_confidence
+            FROM analysis_results
+            WHERE video_id = %s AND analysis_session_id = %s
+            GROUP BY method_name, sentiment
+        """
+        return execute_query(query, (video_id, session_id), fetch=True)
+
     query = """
         SELECT method_name, sentiment, COUNT(*) as count, 
                ROUND(AVG(confidence_score), 4) as avg_confidence
