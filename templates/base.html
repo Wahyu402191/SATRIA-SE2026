@@ -744,15 +744,9 @@
         <div class="inst-inner">
             <!-- Logo BPS — cek PNG dulu, fallback ke JPG -->
             <div class="inst-photo-wrap">
-                {% if config.get('STATIC_FOLDER') %}
-                <img src="{{ url_for('static', filename='img/bps-logo.png') }}"
-                     alt="Logo BPS Kabupaten Bangkalan"
-                     onerror="this.src='{{ url_for('static', filename='img/bps-bangkalan.jpg') }}'">
-                {% else %}
                 <img src="/static/img/bps-logo.png"
                      alt="Logo BPS Kabupaten Bangkalan"
                      onerror="this.src='/static/img/bps-bangkalan.jpg'">
-                {% endif %}
             </div>
             <!-- Teks institusi -->
             <div class="inst-body">
@@ -779,15 +773,9 @@
         <div class="navbar-inner">
             <a href="/" class="navbar-brand">
                 <div class="brand-mark">
-                    {% if config.get('STATIC_FOLDER') %}
-                    <img src="{{ url_for('static', filename='img/bps-logo.png') }}"
-                         alt="Logo BPS"
-                         onerror="this.src='{{ url_for('static', filename='img/bps-bangkalan.jpg') }}'">
-                    {% else %}
                     <img src="/static/img/bps-logo.png"
                          alt="Logo BPS"
                          onerror="this.src='/static/img/bps-bangkalan.jpg'">
-                    {% endif %}
                 </div>
                 <div>
                     <div class="brand-text-main">SATRIA SE2026</div>
