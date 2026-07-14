@@ -1149,7 +1149,7 @@ function displayResults(data) {
         cmDiv.className = 'card';
         cmDiv.style.marginBottom = '20px';
         let html = '<div class="section-heading">Confusion Matrix</div>';
-        html += '<button class="section-info" type="button" data-title="Confusion Matrix" data-info="<p>Confusion Matrix menunjukkan performa prediksi model terhadap label acuan. Baris mewakili kelas yang diprediksi, sedangkan kolom mewakili label asli mayoritas.</p><p>Setiap angka adalah jumlah komentar pada kombinasi prediksi-aktual tersebut.</p><ul><li><strong>Diagonal utama</strong>: prediksi yang benar untuk Positif, Netral, dan Negatif.</li><li><strong>Non-diagonal</strong>: kesalahan model, misalnya prediksi Positif tetapi label asli Negatif.</li></ul><p>Semakin banyak angka di diagonal utama, semakin akurat model terhadap label acuan.</p>" title="Info">i</button>';
+        html += '<button class="section-info" type="button" data-title="Confusion Matrix" data-info="<p>Confusion Matrix menunjukkan performa prediksi model terhadap label acuan. Baris mewakili kelas yang diprediksi, sedangkan kolom mewakili label asli mayoritas.</p><p>Setiap angka adalah jumlah komentar pada kombinasi prediksi-aktual tersebut.</p><ul><ul><strong>Diagonal utama</strong>: prediksi yang benar untuk Positif, Netral, dan Negatif.</ul><ul><strong>Non-diagonal</strong>: kesalahan model, misalnya prediksi Positif tetapi label asli Negatif.</ul></ul><p>Semakin banyak angka di diagonal utama, semakin akurat model terhadap label acuan.</p>" title="Info">i</button>';
         html += '<div class="cm-scroll"><div class="cm-grid">';
         for (const [m, img] of Object.entries(data.confusion_matrices)) {
             const name = m.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
