@@ -88,6 +88,18 @@
     .ms-dot { width:9px; height:9px; border-radius:50%; margin-right:8px; display:inline-block; }
     .ms-row-label { display:flex; align-items:center; color:var(--text); }
     .ms-pct { font-weight:600; }
+    .ms-progress {
+        width:100%;
+        height:6px;
+        background:var(--bg);
+        border-radius:99px;
+        overflow:hidden;
+        margin-top:6px;
+    }
+    .ms-progress-fill {
+        height:100%;
+        border-radius:99px;
+    }
     .ms-total { margin-top:12px; padding-top:10px; border-top:1px solid var(--border); font-size:12px; color:var(--text-muted); }
 
     /* Comparison Table */
@@ -187,14 +199,17 @@ async function loadComparison() {
                 <span class="ms-row-label"><span class="ms-dot" style="background:var(--success)"></span>Positif</span>
                 <span class="ms-pct" style="color:var(--success);">${pp}%</span>
             </div>
+            <div class="ms-progress"><div class="ms-progress-fill" style="width:${pp}%; background:var(--success);"></div></div>
             <div class="ms-row">
                 <span class="ms-row-label"><span class="ms-dot" style="background:var(--danger)"></span>Negatif</span>
                 <span class="ms-pct" style="color:var(--danger);">${np}%</span>
             </div>
+            <div class="ms-progress"><div class="ms-progress-fill" style="width:${np}%; background:var(--danger);"></div></div>
             <div class="ms-row" style="margin-bottom:0">
                 <span class="ms-row-label"><span class="ms-dot" style="background:var(--neutral)"></span>Netral</span>
                 <span class="ms-pct" style="color:var(--neutral);">${ep}%</span>
             </div>
+            <div class="ms-progress"><div class="ms-progress-fill" style="width:${ep}%; background:var(--neutral);"></div></div>
             <div class="ms-total">Total: ${total} komentar</div>
         </div>`;
     }

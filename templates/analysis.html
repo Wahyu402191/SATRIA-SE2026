@@ -5,9 +5,9 @@
 <style>
     /* AI Brain Hero Banner */
     .analysis-hero {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--success) 100%);
+        background: linear-gradient(135deg, #105b93 0%, #1ba65b 100%);
         border-radius: var(--radius-lg);
-        padding: 24px 32px;
+        padding: 28px 30px;
         margin-bottom: 24px;
         position: relative;
         overflow: hidden;
@@ -20,14 +20,51 @@
     .analysis-hero::before {
         content: '';
         position: absolute;
-        right: -50px;
-        top: -50px;
-        width: 200px;
-        height: 200px;
-        background: rgba(255,255,255,.1);
-        border-radius: 50%;
+        inset: 0;
+        background: radial-gradient(circle at 20% 30%, rgba(255,255,255,.14), transparent 28%),
+                    radial-gradient(circle at 75% 25%, rgba(255,255,255,.08), transparent 18%);
+        pointer-events: none;
+        z-index: 0;
     }
     
+    .analysis-hero::after {
+        content: '';
+        position: absolute;
+        width: 320px;
+        height: 320px;
+        right: -120px;
+        bottom: -120px;
+        background: radial-gradient(circle, rgba(255,255,255,.2), transparent 55%);
+        filter: blur(10px);
+        animation: heroGlow 8s ease-in-out infinite;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .hero-dot {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.35);
+        box-shadow: 0 0 16px rgba(255,255,255,.18);
+        animation: floatDot 6s ease-in-out infinite;
+        pointer-events: none;
+    }
+    .hero-dot.dot-1 { top: 20%; left: 10%; animation-delay: 0s; }
+    .hero-dot.dot-2 { top: 56%; left: 88%; width: 22px; height: 22px; animation-delay: 1.4s; }
+    .hero-dot.dot-3 { top: 40%; left: 35%; width: 10px; height: 10px; animation-delay: 2.8s; }
+
+    @keyframes heroGlow {
+        0%, 100% { transform: scale(1); opacity: .9; }
+        50% { transform: scale(1.05); opacity: .7; }
+    }
+
+    @keyframes floatDot {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
     /* AI Brain SVG Illustration */
     .ai-brain-illustration {
         width: 100px;
@@ -38,7 +75,7 @@
     }
     
     .brain-pulse {
-        animation: brainPulse 2s ease-in-out infinite;
+        animation: brainPulse 2.2s ease-in-out infinite;
     }
     
     @keyframes brainPulse {
@@ -53,14 +90,114 @@
     }
     
     .analysis-hero-text h2 {
-        font-size: 18px;
+        font-size: 22px;
         font-weight: 700;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
     }
     
     .analysis-hero-text p {
+        font-size: 14px;
+        opacity: 0.95;
+        max-width: 520px;
+        line-height: 1.6;
+    }
+
+    .card {
+        position: relative;
+    }
+
+    .section-info {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+        display: inline-flex;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 1px solid rgba(16,91,147,.18);
+        color: #105b93;
+        font-size: 12px;
+        font-weight: 700;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform .2s, background .2s, box-shadow .2s, color .2s;
+        z-index: 2;
+    }
+    .section-info:hover {
+        transform: translateY(-1px) scale(1.05);
+        background: #f4f9ff;
+        box-shadow: 0 4px 12px rgba(16,91,147,.15);
+        color: #08375e;
+    }
+    .section-info:focus-visible {
+        outline: 2px solid rgba(255,255,255,.75);
+        outline-offset: 2px;
+    }
+
+    .section-info-overlay {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at top center, rgba(16,91,147,.25), rgba(10,20,35,.92));
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9998;
+        padding: 20px;
+        backdrop-filter: blur(6px);
+        animation: overlayFade .4s ease;
+    }
+    .section-info-box {
+        width: min(560px, 100%);
+        background: linear-gradient(180deg, rgba(255,255,255,.98), #f8fbff);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow: 0 24px 80px rgba(0,0,0,.22);
+        position: relative;
+        border: 1px solid rgba(16,91,147,.12);
+        overflow: hidden;
+        animation: cardFloat 1.8s ease-in-out infinite alternate;
+    }
+    .section-info-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+    .section-info-header h3 {
+        font-size: 16px;
+        margin: 0;
+        color: #103d75;
+    }
+    .section-info-close {
+        width: 34px;
+        height: 34px;
+        border: none;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #105b93, #1a8bcd);
+        color: #fff;
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: transform .2s, background .2s;
+    }
+    .section-info-close:hover { background: linear-gradient(135deg, #0c4c7a, #186da3); transform: scale(1.05); }
+    .section-info-body {
         font-size: 13px;
-        opacity: 0.9;
+        color: var(--text);
+        line-height: 1.75;
+    }
+
+    @keyframes overlayFade {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+    @keyframes cardFloat {
+        from { transform: translateY(0px); }
+        to   { transform: translateY(-6px); }
     }
     
     .page-header {
@@ -205,6 +342,16 @@
         background: linear-gradient(135deg, #00953D, var(--success));
     }
 
+    .btn.btn-danger {
+        background: linear-gradient(135deg, #E74C3C, #EC7063);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(231,76,60,.3);
+    }
+    .btn.btn-danger:hover {
+        background: linear-gradient(135deg, #C0392B, #E74C3C);
+        box-shadow: 0 8px 20px rgba(231,76,60,.4);
+    }
+
     .method-card {
         border: 1.5px solid var(--border); border-radius: var(--radius);
         padding: 14px 16px; cursor: pointer; transition: all .2s;
@@ -237,6 +384,7 @@
     .stat-card {
         background: var(--bg-card); border: 1px solid var(--border);
         border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-sm);
+        position: relative;
     }
     .stat-card-title {
         font-size: 13px; font-weight: 700; color: var(--primary); text-transform: uppercase;
@@ -259,6 +407,140 @@
     .acc-pct { font-size: 28px; font-weight: 700; }
     .acc-name { font-size: 11px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
 
+    .method-info-btn {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        width: 26px;
+        height: 26px;
+        border: 1px solid rgba(0,102,204,.18);
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f7fbff, #e8f2fb);
+        color: var(--primary);
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,102,204,.12);
+        transition: transform .2s, box-shadow .2s, background .2s;
+        z-index: 2;
+    }
+    .method-info-btn:hover {
+        transform: translateY(-1px) scale(1.05);
+        box-shadow: 0 4px 10px rgba(0,102,204,.18);
+        background: linear-gradient(135deg, #e8f2fb, #dbeaf7);
+    }
+    .method-info-btn:focus-visible {
+        outline: 2px solid rgba(0,102,204,.35);
+        outline-offset: 2px;
+    }
+
+    .method-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-right: 34px;
+        margin-bottom: 16px;
+    }
+
+    .method-info-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 20, 35, .62);
+        backdrop-filter: blur(4px);
+        z-index: 9800;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+    }
+    .method-info-box {
+        width: min(720px, 100%);
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border);
+        overflow: hidden;
+        animation: modalSlideIn .25s ease;
+    }
+    .method-info-header {
+        padding: 16px 20px;
+        background: linear-gradient(135deg, var(--primary), var(--success));
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+    .method-info-header h3 {
+        font-size: 17px;
+        font-weight: 800;
+        margin: 0;
+    }
+    .method-info-header p {
+        font-size: 12px;
+        margin-top: 4px;
+        color: rgba(255,255,255,.82);
+    }
+    .method-info-close {
+        width: 34px;
+        height: 34px;
+        border: none;
+        border-radius: 50%;
+        background: rgba(255,255,255,.18);
+        color: #fff;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .method-info-close:hover { background: rgba(255,255,255,.28); }
+    .method-info-body {
+        padding: 20px;
+    }
+    .method-info-body p {
+        margin: 0 0 12px;
+        color: var(--text);
+        line-height: 1.7;
+        font-size: 13px;
+    }
+    .method-info-list {
+        margin: 14px 0 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 10px;
+    }
+    .method-info-list li {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--bg);
+        font-size: 13px;
+        color: var(--text);
+        line-height: 1.6;
+    }
+    .method-info-list strong {
+        color: var(--primary);
+        min-width: 96px;
+        flex-shrink: 0;
+    }
+    .method-step-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        margin-top: 7px;
+        background: var(--success);
+        flex-shrink: 0;
+    }
+
     /* Wordcloud */
     .wc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
     .wc-box { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
@@ -269,10 +551,16 @@
     .wc-body img { width: 100%; border-radius: 4px; }
 
     /* CM grid */
-    .cm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px; }
+    .cm-scroll { overflow-x: auto; }
+    .cm-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(260px, 1fr));
+        gap: 16px;
+        min-width: 1120px;
+    }
     .cm-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
     .cm-card-title { padding: 12px 16px; background: var(--bg); border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--primary); }
-    .cm-card img { width: 100%; }
+    .cm-card img { width: 100%; display: block; }
 
     .section-heading {
         font-size: 15px; font-weight: 700; color: var(--primary);
@@ -369,9 +657,12 @@
         </svg>
     </div>
     <div class="analysis-hero-text">
-        <h2>🤖 AI-Powered Sentiment Analysis</h2>
-        <p>Analisis sentimen menggunakan 4 metode Machine Learning: Naive Bayes, SVM, LSTM, dan IndoBERT untuk hasil yang akurat</p>
+        <h2>Analisis Sentimen Terpadu</h2>
+        <p>Analisis sentimen menggunakan 4 metode Machine Learning: Naive Bayes, SVM, LSTM, dan IndoBERT.</p>
     </div>
+    <div class="hero-dot dot-1"></div>
+    <div class="hero-dot dot-2"></div>
+    <div class="hero-dot dot-3"></div>
 </div>
 
 <div class="page-header">
@@ -382,10 +673,12 @@
         <h1>Analisis Sentimen</h1>
         <p>Pilih sumber data dan metode, lalu jalankan analisis sentimen</p>
     </div>
+    
 </div>
 
 <!-- Data Source Card -->
 <div class="card">
+    <button class="section-info" type="button" data-title="Sumber Data Komentar" data-info="Pilih komentar dari scraping terakhir atau dari file yang sudah tersimpan." title="Info">i</button>
     <div class="card-title">Sumber Data Komentar</div>
     <div class="card-sub">Gunakan data scraping terakhir atau pilih file yang pernah disimpan</div>
 
@@ -470,7 +763,8 @@
 
     <!-- Word Cloud -->
     <div class="card" id="wordcloud-section">
-        <div class="section-heading">Word Cloud Sentimen</div>
+        <button class="section-info" type="button" data-title="Word Cloud Sentimen" data-info="Menampilkan kata-kata paling sering muncul pada komentar positif dan negatif." title="Info">i</button>
+    <div class="section-heading">Word Cloud Sentimen</div>
         <div id="wordcloud-container">
             <div class="wc-grid">
                 <div class="wc-box"><div class="wc-header pos">Komentar Positif</div><div class="wc-body"><p style="color:var(--text-muted);font-size:12px;">Memuat...</p></div></div>
@@ -487,9 +781,161 @@
 
 </div>
 
+<div class="method-info-overlay" id="method-info-overlay" aria-hidden="true">
+    <div class="method-info-box" role="dialog" aria-modal="true" aria-labelledby="method-info-title">
+        <div class="method-info-header">
+            <div>
+                <h3 id="method-info-title">Detail Metode</h3>
+                <p id="method-info-subtitle">Penjelasan cara kerja model</p>
+            </div>
+            <button class="method-info-close" type="button" aria-label="Tutup" onclick="closeMethodInfo()">&times;</button>
+        </div>
+        <div class="method-info-body" id="method-info-body"></div>
+    </div>
+</div>
+
+<div class="section-info-overlay" id="section-info-overlay" aria-hidden="true">
+    <div class="section-info-box" role="dialog" aria-modal="true" aria-labelledby="section-info-title">
+        <div class="section-info-header">
+            <div>
+                <h3 id="section-info-title">Informasi Bagian</h3>
+            </div>
+            <button class="section-info-close" type="button" aria-label="Tutup" onclick="closeSectionInfo()">&times;</button>
+        </div>
+        <div class="section-info-body" id="section-info-body"></div>
+    </div>
+</div>
+
 <script>
 let selectedFile = null;
 let activeTab = 'current';
+
+const methodInfo = {
+    naive_bayes: {
+        title: 'Naive Bayes',
+        subtitle: 'TF-IDF + Multinomial Naive Bayes',
+        intro: 'Teks dibersihkan, diubah menjadi angka dengan TF-IDF, lalu model menghitung probabilitas kelas positif, negatif, dan netral.',
+        steps: [
+            ['Input', 'Teks dibersihkan: huruf kecil, hapus URL/angka/tanda baca, normalisasi kata gaul, stopword, dan stemming.'],
+            ['Penilaian', 'Model menghitung probabilitas untuk setiap kelas. Skor menunjukkan seberapa yakin model terhadap label yang dipilih.'],
+            ['Labeling', 'Label akhir adalah kelas dengan nilai probabilitas tertinggi. Prediksi netral bisa diperiksa ulang dengan skor leksikon jika rendah keyakinan.'],
+            ['Ringkasan', 'Semua komentar diberi label, lalu jumlah positif/negatif/netral dihitung dan diubah menjadi persentase.'],
+        ],
+    },
+    svm: {
+        title: 'SVM',
+        subtitle: 'TF-IDF + Linear Support Vector Classifier',
+        intro: 'TF-IDF mengubah teks menjadi angka, lalu SVM mencari batas pemisah untuk menentukan kelas sentimen.',
+        steps: [
+            ['Input', 'Komentar yang dibersihkan diubah menjadi vektor TF-IDF.'],
+            ['Processing', 'LinearSVC menentukan seberapa jauh komentar dari garis pemisah antar kelas.'],
+            ['Penilaian', 'Keputusan model diubah menjadi skor 0-1 untuk menunjukkan kekuatan prediksi.'],
+            ['Labeling', 'Label akhir ditentukan dari posisi teks terhadap batas pemisah. Jika netral kurang kuat, skor leksikon dapat memperbaiki keputusan.'],
+            ['Ringkasan', 'Semua label dikumpulkan untuk menunjukkan distribusi sentimen metode ini.'],
+        ],
+    },
+    lstm: {
+        title: 'LSTM',
+        subtitle: 'Sequence-aware weighted scoring',
+        intro: 'Metode ini memperhitungkan urutan kata dan memberi bobot lebih besar pada kata yang tampil belakangan.',
+        steps: [
+            ['Input', 'Komentar dibersihkan dan dipisah menjadi kata-kata.'],
+            ['Processing', 'Setiap kata diberi skor sentimen dari leksikon, lalu dianggap dengan bobot berbeda sesuai posisi.'],
+            ['Penilaian', 'Skor rata-rata yang berbobot menentukan apakah teks cenderung positif, negatif, atau netral.'],
+            ['Labeling', 'Jika skor berada di atas ambang positif/negatif, komentar diberi label yang sesuai; jika tidak, label netral.'],
+            ['Ringkasan', 'Label semua komentar dihitung untuk membentuk persentase sentimen pada metode ini.'],
+        ],
+    },
+    indobert: {
+        title: 'IndoBERT',
+        subtitle: 'Context-aware heuristic scoring',
+        intro: 'Metode ini memeriksa konteks kata penguat dan negasi, lalu menghitung skor berdasarkan arti kata-kata tersebut.',
+        steps: [
+            ['Input', 'Komentar dipindai per kata setelah preprocessing.'],
+            ['Processing', 'Kata penguat seperti sangat atau sekali meningkatkan skor, sedangkan negasi seperti tidak atau bukan membalik arti kata berikutnya.'],
+            ['Penilaian', 'Jumlah skor dibagi rata dan dibandingkan dengan ambang positif, netral, dan negatif.'],
+            ['Labeling', 'Label akhir dipilih dari nilai skor akhir yang paling sesuai.'],
+            ['Ringkasan', 'Label semua komentar dikumpulkan lalu dihitung persentase positif/negatif/netral.'],
+        ],
+    },
+};
+
+function showMethodInfo(methodKey) {
+    const info = methodInfo[methodKey];
+    if (!info) return;
+
+    const overlay = document.getElementById('method-info-overlay');
+    const title = document.getElementById('method-info-title');
+    const subtitle = document.getElementById('method-info-subtitle');
+    const body = document.getElementById('method-info-body');
+
+    title.textContent = info.title;
+    subtitle.textContent = info.subtitle;
+    body.innerHTML = `
+        <p>${info.intro}</p>
+        <ul class="method-info-list">
+            ${info.steps.map(([label, text]) => `
+                <li>
+                    <span class="method-step-dot"></span>
+                    <div><strong>${label}</strong> ${text}</div>
+                </li>
+            `).join('')}
+        </ul>
+        <div style="margin-top:16px; padding:14px 16px; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg);">
+            <p style="margin:0 0 8px; font-weight:700; color:var(--primary);">Cara keputusan akhir dari banyak komentar</p>
+            <p style="margin:0; line-height:1.7; font-size:13px; color:var(--text);">Setiap komentar dianalisis satu per satu dan diberi label positif, negatif, atau netral. Persentase pada kartu distribusi berasal dari jumlah label tersebut dibanding total komentar. Jika lebih banyak komentar negatif, maka metode itu akan terlihat dominan negatif.</p>
+        </div>
+    `;
+
+    overlay.style.display = 'flex';
+    overlay.setAttribute('aria-hidden', 'false');
+}
+
+function closeMethodInfo() {
+    const overlay = document.getElementById('method-info-overlay');
+    overlay.style.display = 'none';
+    overlay.setAttribute('aria-hidden', 'true');
+}
+
+document.getElementById('method-info-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeMethodInfo();
+});
+
+document.getElementById('section-info-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeSectionInfo();
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeMethodInfo();
+        closeSectionInfo();
+    }
+});
+
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.section-info');
+    if (!btn) return;
+    e.stopPropagation();
+    const title = btn.dataset.title || 'Info Bagian';
+    const infoText = btn.dataset.info || btn.title || 'Info tambahan tersedia di sini.';
+    showSectionInfo(title, infoText);
+});
+
+function showSectionInfo(title, text) {
+    const overlay = document.getElementById('section-info-overlay');
+    const titleEl = document.getElementById('section-info-title');
+    const bodyEl = document.getElementById('section-info-body');
+    titleEl.textContent = title;
+    bodyEl.innerHTML = text;
+    overlay.style.display = 'flex';
+    overlay.setAttribute('aria-hidden', 'false');
+}
+
+function closeSectionInfo() {
+    const overlay = document.getElementById('section-info-overlay');
+    overlay.style.display = 'none';
+    overlay.setAttribute('aria-hidden', 'true');
+}
 
 // ── Toast ──────────────────────────────────────────────────
 let toastTimer;
@@ -664,6 +1110,7 @@ function displayResults(data) {
         accDiv.className = 'card';
         accDiv.style.marginBottom = '20px';
         let html = '<div class="section-heading">Tingkat Kesepakatan Metode (Agreement Rate)</div>';
+        html += '<button class="section-info" type="button" data-title="Tingkat Kesepakatan Metode" data-info="Agreement Rate menunjukkan persentase kesepakatan metode terhadap label mayoritas dari semua metode yang dipilih. Nilainya membantu mengetahui seberapa konsisten model-model tersebut dalam menilai sentimen. " title="Info">i</button>';
         html += '<p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Dihitung berdasarkan kesepakatan dengan majority vote dari seluruh metode yang dipilih.</p>';
         html += '<div class="accuracy-grid">';
         for (const [m, pct] of Object.entries(data.accuracy)) {
@@ -701,13 +1148,15 @@ function displayResults(data) {
         cmDiv.id = 'cm-section';
         cmDiv.className = 'card';
         cmDiv.style.marginBottom = '20px';
-        let html = '<div class="section-heading">Confusion Matrix</div><div class="cm-grid">';
+        let html = '<div class="section-heading">Confusion Matrix</div>';
+        html += '<button class="section-info" type="button" data-title="Confusion Matrix" data-info="<p>Confusion Matrix menunjukkan performa prediksi model terhadap label acuan. Baris mewakili kelas yang diprediksi, sedangkan kolom mewakili label asli mayoritas.</p><p>Setiap angka adalah jumlah komentar pada kombinasi prediksi-aktual tersebut.</p><ul><li><strong>Diagonal utama</strong>: prediksi yang benar untuk Positif, Netral, dan Negatif.</li><li><strong>Non-diagonal</strong>: kesalahan model, misalnya prediksi Positif tetapi label asli Negatif.</li></ul><p>Semakin banyak angka di diagonal utama, semakin akurat model terhadap label acuan.</p>" title="Info">i</button>';
+        html += '<div class="cm-scroll"><div class="cm-grid">';
         for (const [m, img] of Object.entries(data.confusion_matrices)) {
             const name = m.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
             html += `<div class="cm-card"><div class="cm-card-title">${name}</div>
                 <img src="data:image/png;base64,${img}" alt="CM ${name}" style="animation:fadeUp .4s ease;"></div>`;
         }
-        html += '</div>';
+        html += '</div></div>';
         cmDiv.innerHTML = html;
         const ref = document.getElementById('acc-section');
         if (ref) ref.after(cmDiv);
@@ -721,11 +1170,15 @@ function displayResults(data) {
         const pp = (stats.positive / total * 100).toFixed(1);
         const np = (stats.negative / total * 100).toFixed(1);
         const ep = (stats.neutral  / total * 100).toFixed(1);
+        const methodKey = method.toLowerCase().replace(/\s+/g, '_');
 
         const card = document.createElement('div');
         card.className = 'stat-card';
         card.innerHTML = `
-            <div class="stat-card-title">${method}</div>
+            <button class="method-info-btn" type="button" title="Lihat cara kerja ${method}" aria-label="Lihat cara kerja ${method}" onclick="showMethodInfo('${methodKey}')">i</button>
+            <div class="method-title-row">
+                <div class="stat-card-title" style="margin:0; padding-bottom:10px; border-bottom: 2px solid var(--primary);">${method}</div>
+            </div>
             <div class="bar-row">
                 <div class="bar-meta"><span class="bar-label">Positif</span><span class="bar-count">${stats.positive} (${pp}%)</span></div>
                 <div class="bar-track"><div class="bar-fill fill-pos bar-fill-init" data-w="${pp}"></div></div>
@@ -811,4 +1264,8 @@ async function exportData() {
     }
 }
 </script>
+
 {% endblock %}
+
+</script>
+

@@ -386,10 +386,116 @@
 
     /* Step item transition */
     .step-item { transition: border-color .4s, color .4s; }
+    
+    /* Section Info Overlay */
+    .section-info {
+        position: relative;
+        display: inline-flex;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 1px solid rgba(16,91,147,.18);
+        color: #105b93;
+        font-size: 12px;
+        font-weight: 700;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform .2s, background .2s, box-shadow .2s, color .2s;
+        z-index: 2;
+    }
+    .section-info:hover {
+        transform: translateY(-1px) scale(1.05);
+        background: #f4f9ff;
+        box-shadow: 0 4px 12px rgba(16,91,147,.15);
+        color: #08375e;
+    }
+    .section-info:focus-visible {
+        outline: 2px solid rgba(255,255,255,.75);
+        outline-offset: 2px;
+    }
+
+    .section-info-overlay {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at top center, rgba(16,91,147,.25), rgba(10,20,35,.92));
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9998;
+        padding: 20px;
+        backdrop-filter: blur(6px);
+        animation: overlayFade .4s ease;
+    }
+    .section-info-box {
+        width: min(560px, 100%);
+        background: linear-gradient(180deg, rgba(255,255,255,.98), #f8fbff);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow: 0 24px 80px rgba(0,0,0,.22);
+        position: relative;
+        border: 1px solid rgba(16,91,147,.12);
+        overflow: hidden;
+        animation: cardFloat 1.8s ease-in-out infinite alternate;
+    }
+    .section-info-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+    .section-info-header h3 {
+        font-size: 16px;
+        margin: 0;
+        color: #103d75;
+    }
+    .section-info-close {
+        width: 34px;
+        height: 34px;
+        border: none;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #105b93, #1a8bcd);
+        color: #fff;
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: transform .2s, background .2s;
+    }
+    .section-info-close:hover { background: linear-gradient(135deg, #0c4c7a, #186da3); transform: scale(1.05); }
+    .section-info-body {
+        font-size: 13px;
+        color: var(--text);
+        line-height: 1.75;
+    }
+
+    @keyframes overlayFade {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+    @keyframes cardFloat {
+        from { transform: translateY(0px); }
+        to   { transform: translateY(-6px); }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+
+<!-- Section Info Overlay -->
+<div class="section-info-overlay" id="section-info-overlay" aria-hidden="true">
+    <div class="section-info-box" role="dialog" aria-modal="true" aria-labelledby="section-info-title">
+        <div class="section-info-header">
+            <div>
+                <h3 id="section-info-title">Informasi Bagian</h3>
+            </div>
+            <button class="section-info-close" type="button" aria-label="Tutup" onclick="closeSectionInfo()">&times;</button>
+        </div>
+        <div class="section-info-body" id="section-info-body"></div>
+    </div>
+</div>
 
 <!-- API Key Check Banner -->
 <div class="api-banner" id="api-banner">
@@ -561,7 +667,10 @@
 
 <!-- Scrape Form -->
 <div class="card scrape-form-card">
-    <div class="card-title">Input Video YouTube</div>
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px;">
+        <div class="card-title" style="margin-bottom: 0;">Input Video YouTube</div>
+        <button class="section-info" type="button" data-title="Input Video YouTube" data-info="Masukkan URL video YouTube untuk mengambil komentar. Format yang didukung: youtube.com/watch?v=, youtu.be/, atau youtube.com/embed/. Atur jumlah komentar (hingga 100.000) dan pilih untuk menyertakan balasan jika diperlukan." title="Info">i</button>
+    </div>
     <div class="card-sub">Masukkan URL video YouTube yang akan diambil komentarnya</div>
 
     <div class="alert alert-error" id="error-message"></div>
@@ -776,6 +885,42 @@ function showAlert(type, msg) {
 function hideAlerts() {
     document.getElementById('error-message').style.display = 'none';
     document.getElementById('warning-message').style.display = 'none';
+}
+
+// Section Info Popup Functions
+document.getElementById('section-info-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeSectionInfo();
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeSectionInfo();
+    }
+});
+
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.section-info');
+    if (!btn) return;
+    e.stopPropagation();
+    const title = btn.dataset.title || 'Info Bagian';
+    const infoText = btn.dataset.info || btn.title || 'Info tambahan tersedia di sini.';
+    showSectionInfo(title, infoText);
+});
+
+function showSectionInfo(title, text) {
+    const overlay = document.getElementById('section-info-overlay');
+    const titleEl = document.getElementById('section-info-title');
+    const bodyEl = document.getElementById('section-info-body');
+    titleEl.textContent = title;
+    bodyEl.textContent = text;
+    overlay.style.display = 'flex';
+    overlay.setAttribute('aria-hidden', 'false');
+}
+
+function closeSectionInfo() {
+    const overlay = document.getElementById('section-info-overlay');
+    overlay.style.display = 'none';
+    overlay.setAttribute('aria-hidden', 'true');
 }
 </script>
 {% endblock %}

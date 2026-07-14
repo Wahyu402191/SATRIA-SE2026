@@ -526,6 +526,7 @@ class SentimentAnalyzer:
         for idx, comment in enumerate(comments):
             br = batch_results[idx]
             comment_result = {
+                'comment_id': comment.get('comment_id'),
                 'author': comment['author'],
                 'text':   comment['text'],
                 'likes':  comment['likes'],

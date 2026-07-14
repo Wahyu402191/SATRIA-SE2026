@@ -752,18 +752,26 @@ def get_dashboard_stats():
         comment_count = execute_query("SELECT COUNT(*) as count FROM comments", fetch=True)
         total_comments = comment_count[0]['count'] if comment_count else 0
         
-        # Get total analyzed (unique comment_id in analysis_results)
-        analyzed_count = execute_query(
-            "SELECT COUNT(DISTINCT comment_id) as count FROM analysis_results", 
+        # Get total analysis sessions (each analysis run increments this)
+        session_count = execute_query(
+            "SELECT COUNT(*) as count FROM analysis_sessions",
             fetch=True
         )
-        total_analyzed = analyzed_count[0]['count'] if analyzed_count else 0
+        total_analyzed = session_count[0]['count'] if session_count else 0
+
+        # Keep total analyzed comments available for future UI use
+        analyzed_comments_count = execute_query(
+            "SELECT COUNT(*) as count FROM analysis_results",
+            fetch=True
+        )
+        total_analyzed_comments = analyzed_comments_count[0]['count'] if analyzed_comments_count else 0
         
         return jsonify({
             'success': True,
             'total_videos': total_videos,
             'total_comments': total_comments,
-            'total_analyzed': total_analyzed
+            'total_analyzed': total_analyzed,
+            'total_analyzed_comments': total_analyzed_comments
         })
         
     except Exception as e:
