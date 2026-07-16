@@ -92,6 +92,97 @@ CREATE TABLE analysis_results (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ═══════════════════════════════════════════════════════════════════════════
+-- MEDIA MASSA TABLES
+-- Tabel untuk dashboard Analisis Sentimen Media Massa
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Table: news_sources
+-- Menyimpan daftar sumber media massa (CNN, Kompas, CNBC, Detik, dll)
+-- ═══════════════════════════════════════════════════════════════════════════
+CREATE TABLE news_sources (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    source_name VARCHAR(255) NOT NULL UNIQUE,
+    description TEXT,
+    website_url VARCHAR(500),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_source_name (source_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Table: news_articles
+-- Menyimpan artikel berita dari berbagai media massa
+-- ═══════════════════════════════════════════════════════════════════════════
+CREATE TABLE news_articles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(1000) NOT NULL,
+    content TEXT NOT NULL,
+    url VARCHAR(1000),
+    source VARCHAR(255) NOT NULL,
+    published_date DATETIME,
+    month INT NOT NULL,
+    year INT NOT NULL,
+    imported_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_source (source),
+    INDEX idx_month_year (month, year),
+    INDEX idx_published_date (published_date),
+    FOREIGN KEY (source) REFERENCES news_sources(source_name) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Table: news_analysis_sessions
+-- Menyimpan metadata session analisis untuk media massa
+-- ═══════════════════════════════════════════════════════════════════════════
+CREATE TABLE news_analysis_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    month INT NOT NULL,
+    year INT NOT NULL,
+    methods_used VARCHAR(255),
+    total_articles_analyzed INT DEFAULT 0,
+    started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    completed_at DATETIME,
+    duration_seconds INT DEFAULT 0,
+    INDEX idx_month_year (month, year),
+    INDEX idx_started_at (started_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Table: news_analysis_results
+-- Menyimpan hasil analisis sentimen per artikel berita
+-- ═══════════════════════════════════════════════════════════════════════════
+CREATE TABLE news_analysis_results (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    analysis_session_id INT NULL,
+    article_id INT NOT NULL,
+    method_name VARCHAR(50) NOT NULL,
+    sentiment VARCHAR(20) NOT NULL,
+    confidence_score DECIMAL(5,4) DEFAULT 0.0000,
+    analyzed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_analysis_session_id (analysis_session_id),
+    INDEX idx_article_id (article_id),
+    INDEX idx_method (method_name),
+    INDEX idx_sentiment (sentiment),
+    FOREIGN KEY (article_id) REFERENCES news_articles(id) ON DELETE CASCADE,
+    FOREIGN KEY (analysis_session_id) REFERENCES news_analysis_sessions(id) ON DELETE SET NULL,
+    UNIQUE KEY unique_analysis (analysis_session_id, article_id, method_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- SAMPLE DATA untuk testing (opsional)
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- Insert sample news sources
+INSERT INTO news_sources (source_name, description, website_url) VALUES
+('CNN Indonesia', 'Portal berita CNN Indonesia', 'https://www.cnnindonesia.com'),
+('Kompas', 'Media berita Kompas', 'https://www.kompas.com'),
+('CNBC Indonesia', 'Portal berita ekonomi dan bisnis', 'https://www.cnbcindonesia.com'),
+('Detik', 'Portal berita Detik', 'https://www.detik.com'),
+('Tempo', 'Majalah dan portal berita Tempo', 'https://www.tempo.co'),
+('Bisnis Indonesia', 'Media berita bisnis dan ekonomi', 'https://www.bisnis.com');
+
+-- ═══════════════════════════════════════════════════════════════════════════
 -- SELESAI - Database siap digunakan!
--- Total: 4 tabel (videos, comments, analysis_results, analysis_sessions)
+-- Total: 8 tabel
+-- YouTube: videos, comments, analysis_sessions, analysis_results
+-- Media Massa: news_sources, news_articles, news_analysis_sessions, news_analysis_results
 -- ═══════════════════════════════════════════════════════════════════════════

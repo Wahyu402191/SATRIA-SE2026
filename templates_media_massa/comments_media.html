@@ -1,5 +1,5 @@
-{% extends "base.html" %}
-{% block title %}Komentar — SATRIA SE2026{% endblock %}
+{% extends "base_media.html" %}
+{% block title %}Data Berita — SATRIA SE2026{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -74,39 +74,43 @@
     }
     .sort-select:focus { outline:none; border-color:var(--primary-light); }
 
-    /* comment card - Enhanced */
-    .comment-card {
+    /* article card - Enhanced */
+    .article-card {
         border:1px solid var(--border); border-radius:var(--radius-lg);
         margin-bottom:10px; overflow:hidden;
         transition:all .3s cubic-bezier(.22,1,.36,1);
         background:var(--bg-card);
         position:relative;
     }
-    .comment-card::before {
+    .article-card::before {
         content:''; position:absolute; top:0; left:0; right:0; height:2px;
         background:var(--gradient-blue-green);
         opacity:0; transition:opacity .3s;
     }
-    .comment-card:hover {
+    .article-card:hover {
         box-shadow:var(--shadow-md);
         transform:translateY(-2px) scale(1.005);
         border-color:var(--primary-light);
     }
-    .comment-card:hover::before { opacity:1; }
-    .comment-header {
+    .article-card:hover::before { opacity:1; }
+    .article-header {
         display:flex; align-items:center; gap:10px;
         padding:10px 16px; background:var(--bg); border-bottom:1px solid var(--border);
     }
-    .comment-avatar {
-        width:30px; height:30px; border-radius:50%;
-        background:linear-gradient(135deg,var(--primary),var(--primary-light));
-        color:#fff; display:flex; align-items:center; justify-content:center;
-        font-size:12px; font-weight:700; flex-shrink:0; text-transform:uppercase;
+    .article-source {
+        font-size:12px; font-weight:700; color:var(--primary);
+        padding:4px 10px; border-radius:99px;
+        background:linear-gradient(135deg,rgba(40,116,166,.08),rgba(65,158,130,.08));
+        border:1px solid var(--primary-light);
+        flex-shrink:0;
     }
-    .comment-author { font-size:13px; font-weight:600; color:var(--primary); flex:1; }
-    .comment-meta   { font-size:11px; color:var(--text-muted); display:flex; gap:12px; }
-    .comment-body { padding:10px 16px; font-size:13px; color:var(--text); line-height:1.65; }
-    .comment-footer {
+    .article-date { font-size:11px; color:var(--text-muted); margin-left:auto; }
+    .article-title {
+        padding:12px 16px;
+        font-size:14px; font-weight:700; color:var(--text); line-height:1.5;
+    }
+    .article-content { padding:10px 16px; font-size:13px; color:var(--text); line-height:1.65; }
+    .article-footer {
         padding:7px 16px; border-top:1px solid var(--border);
         display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px;
     }
@@ -151,11 +155,11 @@
 {% block content %}
 <div class="page-header reveal">
     <div class="page-header-icon">
-        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
     </div>
     <div class="page-header-content">
-        <h1>Semua Komentar</h1>
-        <p>Filter, sort, dan analisis detail setiap komentar yang telah diambil · Lihat preprocessing lengkap 12 langkah</p>
+        <h1>Data Berita</h1>
+        <p>Filter dan analisis detail setiap berita yang telah dianalisis · Lihat preprocessing lengkap 12 langkah</p>
     </div>
 </div>
 
@@ -164,16 +168,16 @@
     <div class="toolbar">
         <div class="search-wrap">
             <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="search-input" placeholder="Cari komentar atau nama pengguna..." oninput="applyFilters()">
+            <input type="text" id="search-input" placeholder="Cari judul berita atau sumber..." oninput="applyFilters()">
         </div>
         <select class="sort-select" id="sort-select" onchange="applyFilters()">
             <option value="default">Urutan Asli</option>
-            <option value="likes_desc">Likes Terbanyak</option>
-            <option value="likes_asc">Likes Tersedikit</option>
-            <option value="text_asc">Teks A-Z</option>
-            <option value="text_desc">Teks Z-A</option>
+            <option value="date_desc">Tanggal Terbaru</option>
+            <option value="date_asc">Tanggal Terlama</option>
+            <option value="title_asc">Judul A-Z</option>
+            <option value="title_desc">Judul Z-A</option>
         </select>
-        <span id="comment-count" class="count-badge">0</span>
+        <span id="article-count" class="count-badge">0</span>
     </div>
     <!-- Toolbar baris 2: filter chips -->
     <div class="filter-chips" id="filter-chips" style="margin-bottom:16px;">
@@ -184,7 +188,7 @@
         <div class="chip"      data-filter="no_label" onclick="setFilter('no_label',this)">Belum Dianalisis</div>
     </div>
 
-    <div id="comments-list"></div>
+    <div id="articles-list"></div>
 </div>
 
 <!-- Preprocessing Modal -->
@@ -193,7 +197,7 @@
         <div class="pp-header">
             <div>
                 <h2>Detail Preprocessing Teks</h2>
-                <p id="pp-author">12 langkah pemrosesan NLP</p>
+                <p id="pp-title">12 langkah pemrosesan NLP</p>
             </div>
             <button class="pp-close" onclick="closePP()">&times;</button>
         </div>
@@ -204,28 +208,23 @@
 </div>
 
 <script>
-let allComments = [];
+let allArticles = [];
 let analysisMap = {};
 let activeFilter = 'all';
 
-async function loadComments() {
-    const el = document.getElementById('comments-list');
-    const res = await fetch('/youtube/get_scraped_data');
+async function loadArticles() {
+    const el = document.getElementById('articles-list');
+    const res = await fetch('/media/get_analysis_results');
     const data = await res.json();
 
     if (!data.success) {
-        el.innerHTML = `<div class="empty-state"><p>Belum ada data. <a href="/">Lakukan scraping terlebih dahulu</a>.</p></div>`;
+        el.innerHTML = `<div class="empty-state"><p>Belum ada data. <a href="/media/">Lakukan analisis terlebih dahulu</a>.</p></div>`;
         return;
     }
 
-    allComments = data.data.comments;
-
-    // Load analysis if available
-    try {
-        const ar = await fetch('/youtube/get_analysis_results');
-        const ad = await ar.json();
-        if (ad.success) ad.results.comments.forEach((c,i) => { analysisMap[i] = c; });
-    } catch(e) {}
+    allArticles = data.results.articles;
+    // Build analysis map
+    allArticles.forEach((a, i) => { analysisMap[i] = a; });
 
     applyFilters();
 }
@@ -248,7 +247,7 @@ function applyFilters() {
     const sort = document.getElementById('sort-select').value;
 
     // Map to index for sentiment lookup
-    let indexed = allComments.map((c, i) => ({ c, i }));
+    let indexed = allArticles.map((a, i) => ({ a, i }));
 
     // Filter by sentiment
     if (activeFilter !== 'all') {
@@ -261,19 +260,19 @@ function applyFilters() {
 
     // Filter by search
     if (q) {
-        indexed = indexed.filter(({c}) =>
-            c.text.toLowerCase().includes(q) || (c.author||'').toLowerCase().includes(q)
+        indexed = indexed.filter(({a}) =>
+            (a.title||'').toLowerCase().includes(q) || (a.source||'').toLowerCase().includes(q) || (a.content||'').toLowerCase().includes(q)
         );
     }
 
     // Sort
-    if (sort === 'likes_desc')  indexed.sort((a,b) => parseInt(b.c.likes||0) - parseInt(a.c.likes||0));
-    if (sort === 'likes_asc')   indexed.sort((a,b) => parseInt(a.c.likes||0) - parseInt(b.c.likes||0));
-    if (sort === 'text_asc')    indexed.sort((a,b) => a.c.text.localeCompare(b.c.text, 'id'));
-    if (sort === 'text_desc')   indexed.sort((a,b) => b.c.text.localeCompare(a.c.text, 'id'));
+    if (sort === 'date_desc')  indexed.sort((a,b) => (b.a.published_date||'').localeCompare(a.a.published_date||''));
+    if (sort === 'date_asc')   indexed.sort((a,b) => (a.a.published_date||'').localeCompare(b.a.published_date||''));
+    if (sort === 'title_asc')  indexed.sort((a,b) => (a.a.title||'').localeCompare(b.a.title||'', 'id'));
+    if (sort === 'title_desc') indexed.sort((a,b) => (b.a.title||'').localeCompare(a.a.title||'', 'id'));
 
-    document.getElementById('comment-count').textContent = indexed.length;
-    renderComments(indexed);
+    document.getElementById('article-count').textContent = indexed.length;
+    renderArticles(indexed);
 }
 
 function sbClass(s) {
@@ -283,14 +282,14 @@ function sbClass(s) {
     return 's-neu';
 }
 
-function renderComments(indexed) {
-    const el = document.getElementById('comments-list');
+function renderArticles(indexed) {
+    const el = document.getElementById('articles-list');
     if (!indexed.length) {
-        el.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:12px;text-align:center;">Tidak ada komentar yang cocok.</p>';
+        el.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:12px;text-align:center;">Tidak ada berita yang cocok.</p>';
         return;
     }
 
-    el.innerHTML = indexed.map(({c, i}) => {
+    el.innerHTML = indexed.map(({a, i}) => {
         const analysis = analysisMap[i];
         let badges = '';
         if (analysis) {
@@ -298,19 +297,17 @@ function renderComments(indexed) {
             badges = Object.entries(map).filter(([,v])=>v).map(([k,v])=>
                 `<span class="s-badge ${sbClass(v)}">${k}: ${v}</span>`).join('');
         }
-        const av = (c.author||'?').charAt(0);
-        return `<div class="comment-card">
-            <div class="comment-header">
-                <div class="comment-avatar">${av}</div>
-                <div class="comment-author">${esc(c.author)}</div>
-                <div class="comment-meta">
-                    <span>${c.likes} likes</span>
-                    <span>${c.reply_count||0} replies</span>
-                    ${c.published_at ? `<span>${c.published_at.slice(0,10)}</span>` : ''}
-                </div>
+        
+        const contentPreview = (a.content||'').substring(0, 200) + ((a.content||'').length > 200 ? '...' : '');
+        
+        return `<div class="article-card">
+            <div class="article-header">
+                <div class="article-source">${esc(a.source||'Unknown')}</div>
+                <div class="article-date">${a.published_date||'N/A'}</div>
             </div>
-            <div class="comment-body">${esc(c.text)}</div>
-            <div class="comment-footer">
+            <div class="article-title">${esc(a.title||'Untitled')}</div>
+            <div class="article-content">${esc(contentPreview)}</div>
+            <div class="article-footer">
                 <div>
                     <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px;">#${i+1}</div>
                     <div class="sentiment-badges">${badges || '<span style="font-size:11px;color:var(--text-muted);">Belum dianalisis</span>'}</div>
@@ -327,14 +324,14 @@ function esc(s) {
 
 // ── Preprocessing Modal ────────────────────────────────────
 function showPP(index) {
-    const c = allComments[index];
-    document.getElementById('pp-author').textContent = `Komentar #${index+1} — @${c.author}`;
+    const a = allArticles[index];
+    document.getElementById('pp-title').textContent = `Berita #${index+1} — ${a.title||'Untitled'}`;
     document.getElementById('pp-body').innerHTML = `<div style="text-align:center;padding:40px;"><div class="spinner"></div><p style="margin-top:14px;color:var(--text-muted);">Memproses...</p></div>`;
     document.getElementById('pp-modal').style.display = 'block';
 
     fetch('/youtube/preprocess_text', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({text: c.text})
+        body: JSON.stringify({text: a.content || a.title})
     })
     .then(r=>r.json())
     .then(d => { if(d.success) renderPP(d.steps); else document.getElementById('pp-body').innerHTML='<p style="color:var(--danger);padding:20px;">Gagal memproses.</p>'; })
@@ -381,6 +378,6 @@ function renderPP(s) {
 function closePP() { document.getElementById('pp-modal').style.display='none'; }
 document.getElementById('pp-modal').addEventListener('click', e => { if(e.target===e.currentTarget) closePP(); });
 
-loadComments();
+loadArticles();
 </script>
 {% endblock %}

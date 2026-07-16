@@ -729,7 +729,7 @@
     <div class="alert alert-success" id="save-message" style="display:none;"></div>
     <div class="result-info" id="video-info"></div>
     <div class="action-row">
-        <a href="/analysis" class="btn btn-success">
+        <a href="/youtube/analysis" class="btn btn-success">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             Analisis Sentimen
         </a>
@@ -743,7 +743,7 @@ let progressInterval = null;
 // Load dashboard statistics on page load
 async function loadDashboardStats() {
     try {
-        const res = await fetch('/get_dashboard_stats');
+        const res = await fetch('/youtube/get_dashboard_stats');
         const data = await res.json();
         
         if (data.success) {
@@ -762,7 +762,7 @@ document.addEventListener('DOMContentLoaded', loadDashboardStats);
 
 async function updateProgress() {
     try {
-        const res = await fetch('/progress');
+        const res = await fetch('/youtube/progress');
         const d = await res.json();
         const bar   = document.getElementById('progress-bar');
         const label = document.getElementById('progress-text');
@@ -806,7 +806,7 @@ document.getElementById('scrape-form').addEventListener('submit', async (e) => {
     progressInterval = setInterval(updateProgress, 500);
 
     try {
-        const res = await fetch('/scrape', {
+        const res = await fetch('/youtube/scrape', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({

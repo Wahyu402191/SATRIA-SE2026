@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_media.html" %}
 {% block title %}Perbandingan Metode — SATRIA SE2026{% endblock %}
 
 {% block extra_css %}
@@ -128,6 +128,17 @@
 
     .empty-state { text-align:center; padding:60px 24px; color:var(--text-muted); }
     .empty-state a { color:var(--primary); font-weight:600; text-decoration:none; }
+
+    /* Month info badge */
+    .month-badge {
+        display:inline-flex; align-items:center; gap:8px;
+        background:linear-gradient(135deg,rgba(40,116,166,.12),rgba(65,158,130,.12));
+        border:1.5px solid var(--primary-light);
+        padding:8px 16px; border-radius:99px;
+        font-size:13px; font-weight:600; color:var(--primary);
+        margin-bottom:20px;
+    }
+    .month-badge svg { width:16px; height:16px; fill:var(--primary); }
 </style>
 {% endblock %}
 
@@ -138,17 +149,20 @@
     </div>
     <div class="page-header-content">
         <h1>Perbandingan Metode Analisis</h1>
-        <p>Komparasi hasil analisis sentimen dari 4 metode Machine Learning · Naive Bayes, SVM, LSTM, dan IndoBERT</p>
+        <p>Komparasi hasil analisis sentimen berita dari 4 metode Machine Learning · Naive Bayes, SVM, LSTM, dan IndoBERT</p>
     </div>
 </div>
 
 <div id="no-data" style="display:none;">
     <div class="card empty-state">
-        <p>Belum ada hasil analisis. <a href="/youtube/analysis">Lakukan analisis terlebih dahulu</a>.</p>
+        <p>Belum ada hasil analisis. <a href="/media/">Lakukan analisis terlebih dahulu</a>.</p>
     </div>
 </div>
 
 <div id="comparison-content" style="display:none;">
+
+    <!-- Month info -->
+    <div id="month-info"></div>
 
     <!-- Per-method summary -->
     <div class="card">
@@ -174,7 +188,7 @@
 
 <script>
 async function loadComparison() {
-    const res  = await fetch('/youtube/get_analysis_results');
+    const res  = await fetch('/media/get_analysis_results');
     const data = await res.json();
 
     if (!data.success) {
@@ -184,6 +198,24 @@ async function loadComparison() {
     document.getElementById('comparison-content').style.display = 'block';
     const summary = data.results.summary;
     const accuracy= data.results.accuracy;
+    const selectedMonth = data.selected_month;
+
+    // Show month info
+    if (selectedMonth) {
+        const monthNames = {
+            '01': 'Januari', '02': 'Februari', '03': 'Maret', '04': 'April',
+            '05': 'Mei', '06': 'Juni', '07': 'Juli', '08': 'Agustus',
+            '09': 'September', '10': 'Oktober', '11': 'November', '12': 'Desember'
+        };
+        const [year, month] = selectedMonth.split('-');
+        const monthName = monthNames[month] || month;
+        document.getElementById('month-info').innerHTML = `
+            <div class="month-badge">
+                <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg>
+                Data Analisis: ${monthName} ${year}
+            </div>
+        `;
+    }
 
     // Summary grid
     const sg = document.getElementById('summary-grid');
@@ -210,7 +242,7 @@ async function loadComparison() {
                 <span class="ms-pct" style="color:var(--neutral);">${ep}%</span>
             </div>
             <div class="ms-progress"><div class="ms-progress-fill" style="width:${ep}%; background:var(--neutral);"></div></div>
-            <div class="ms-total">Total: ${total} komentar</div>
+            <div class="ms-total">Total: ${total} berita</div>
         </div>`;
     }
 

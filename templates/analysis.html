@@ -968,7 +968,7 @@ async function loadSavedFiles() {
     const fl = document.getElementById('file-list');
     fl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);">Memuat...</div>';
     try {
-        const res  = await fetch('/saved_files');
+        const res  = await fetch('/youtube/saved_files');
         const data = await res.json();
         if (!data.files.length) {
             fl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);">Belum ada file tersimpan.</div>';
@@ -1027,12 +1027,12 @@ async function startAnalysis() {
         let comments;
         if (activeTab === 'saved') {
             if (!selectedFile) { showToast('Pilih file terlebih dahulu.', 'error'); return; }
-            const fr = await fetch('/load_file/' + selectedFile);
+            const fr = await fetch('/youtube/load_file/' + selectedFile);
             const fd = await fr.json();
             if (!fd.success) throw new Error('Gagal memuat file');
             comments = fd.data.comments;
         } else {
-            const dr = await fetch('/get_scraped_data');
+            const dr = await fetch('/youtube/get_scraped_data');
             const dd = await dr.json();
             if (!dd.success) {
                 showToast('Belum ada data. Lakukan scraping terlebih dahulu.', 'error');
@@ -1044,7 +1044,7 @@ async function startAnalysis() {
 
         statusEl.textContent = `Menganalisis ${comments.length.toLocaleString('id-ID')} komentar...`;
 
-        const ar = await fetch('/analyze', {
+        const ar = await fetch('/youtube/analyze', {
             method:'POST', headers:{'Content-Type':'application/json'},
             body: JSON.stringify({comments, methods})
         });
@@ -1073,7 +1073,7 @@ async function startAnalysis() {
 async function loadWordclouds() {
     try {
         const wc = document.getElementById('wordcloud-container');
-        const res = await fetch('/generate_wordcloud', { method:'POST', headers:{'Content-Type':'application/json'} });
+        const res = await fetch('/youtube/generate_wordcloud', { method:'POST', headers:{'Content-Type':'application/json'} });
         const data = await res.json();
         if (!data.success) {
             wc.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:12px;">Word cloud tidak tersedia.</p>';
@@ -1215,7 +1215,7 @@ async function exportPDF() {
     btn.disabled = true;
     showToast('Menyiapkan laporan...');
     try {
-        const res = await fetch('/export_pdf');
+        const res = await fetch('/youtube/export_pdf');
         if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
         const html = await res.text();
         const win = window.open('', '_blank');
@@ -1237,7 +1237,7 @@ async function exportData() {
     showToast('Menyiapkan file Excel...');
 
     try {
-        const res = await fetch('/export');
+        const res = await fetch('/youtube/export');
         if (!res.ok) {
             const err = await res.json();
             throw new Error(err.error || 'Gagal export');

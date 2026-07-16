@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pilih Aplikasi - SATRIA SE2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f2238 0%, #1a3a5c 50%, #0f2238 100%);
+            color: white;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Grid Background */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(200, 151, 58, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(200, 151, 58, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            position: relative;
+            z-index: 10;
+            padding: 30px 50px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo-bps {
+            width: 50px;
+            height: 50px;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
+        }
+
+        .header-title {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-title h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, #c8973a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1px;
+        }
+
+        .header-title p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .badge-year-header {
+            background: rgba(200, 151, 58, 0.15);
+            border: 2px solid rgba(200, 151, 58, 0.4);
+            color: #e8b96a;
+            padding: 6px 18px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        /* Main Container */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 50px;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 20px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .page-title h2 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .page-title p {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.6);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+
+        /* Card */
+        .app-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px 35px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            animation: fadeInUp 1.2s ease-out;
+            backdrop-filter: blur(10px);
+        }
+
+        .app-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .app-card:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, transparent, rgba(200, 151, 58, 0.8), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .app-card:hover::before {
+            transform: translateX(100%);
+        }
+
+        .app-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(200, 151, 58, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 60px rgba(200, 151, 58, 0.3);
+        }
+
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(200, 151, 58, 0.2), rgba(200, 151, 58, 0.1));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            font-size: 40px;
+            transition: all 0.4s ease;
+        }
+
+        .app-card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+            background: linear-gradient(135deg, rgba(200, 151, 58, 0.3), rgba(200, 151, 58, 0.2));
+        }
+
+        .card-title {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .card-description {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .card-features {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+
+        .card-features li {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .card-features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #c8973a;
+            font-weight: bold;
+        }
+
+        .card-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #e8b96a 0%, #c8973a 100%);
+            color: #0f2238;
+            border: none;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-button:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(200, 151, 58, 0.4);
+        }
+
+        .card-button::after {
+            content: '→';
+            transition: transform 0.3s ease;
+        }
+
+        .card-button:hover::after {
+            transform: translateX(5px);
+        }
+
+        /* Special styling for each card */
+        .card-news {
+            border-color: rgba(76, 175, 80, 0.3);
+        }
+
+        .card-news:hover {
+            border-color: rgba(76, 175, 80, 0.6);
+            box-shadow: 0 20px 60px rgba(76, 175, 80, 0.2);
+        }
+
+        .card-news .card-icon {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.1));
+        }
+
+        .card-media {
+            border-color: rgba(33, 150, 243, 0.3);
+        }
+
+        .card-media:hover {
+            border-color: rgba(33, 150, 243, 0.6);
+            box-shadow: 0 20px 60px rgba(33, 150, 243, 0.2);
+        }
+
+        .card-media .card-icon {
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(33, 150, 243, 0.1));
+        }
+
+        .card-youtube {
+            border-color: rgba(255, 87, 34, 0.3);
+        }
+
+        .card-youtube:hover {
+            border-color: rgba(255, 87, 34, 0.6);
+            box-shadow: 0 20px 60px rgba(255, 87, 34, 0.2);
+        }
+
+        .card-youtube .card-icon {
+            background: linear-gradient(135deg, rgba(255, 87, 34, 0.2), rgba(255, 87, 34, 0.1));
+        }
+
+        /* Footer */
+        .footer {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 40px 20px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .footer strong {
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 600;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .cards-grid {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 20px 30px;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .container {
+                padding: 40px 30px;
+            }
+
+            .page-title h2 {
+                font-size: 32px;
+            }
+
+            .page-title p {
+                font-size: 16px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .app-card {
+                padding: 30px 25px;
+            }
+        }
+
+        /* Back Button */
+        .back-button {
+            position: fixed;
+            top: 30px;
+            right: 50px;
+            z-index: 100;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(200, 151, 58, 0.5);
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Grid Background -->
+    <div class="grid-bg"></div>
+
+    <!-- Back Button -->
+    <button class="back-button" onclick="window.location.href='/'">
+        ← Kembali
+    </button>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <img src="{{ url_for('static', filename='img/bps-logo.png') }}" alt="BPS Logo" class="logo-bps">
+            <div class="header-title">
+                <h1>SATRIA</h1>
+                <p>Badan Pusat Statistik</p>
+            </div>
+        </div>
+        <div class="badge-year-header">SE 2026</div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <div class="page-title">
+            <h2>Pilih Aplikasi</h2>
+            <p>
+                Pilih salah satu aplikasi analisis yang tersedia untuk memulai 
+                monitoring dan analisis data sentimen publik
+            </p>
+        </div>
+
+        <!-- Cards Grid -->
+        <div class="cards-grid">
+            <!-- Card 1: Berita SE2026 -->
+            <div class="app-card card-news" onclick="navigateTo('news')">
+                <div class="card-icon">📰</div>
+                <h3 class="card-title">Berita Sensus Ekonomi 2026</h3>
+                <p class="card-description">
+                    Portal berita dan informasi terkini seputar pelaksanaan Sensus Ekonomi 2026
+                </p>
+                <ul class="card-features">
+                    <li>Berita terbaru SE2026</li>
+                    <li>Update resmi dari BPS</li>
+                    <li>Informasi dan panduan</li>
+                    <li>Pengumuman penting</li>
+                </ul>
+                <button class="card-button">Buka Aplikasi</button>
+            </div>
+
+            <!-- Card 2: Analisis Media Massa -->
+            <div class="app-card card-media" onclick="navigateTo('media')">
+                <div class="card-icon">📊</div>
+                <h3 class="card-title">Analisis Sentimen Media Massa</h3>
+                <p class="card-description">
+                    Analisis sentimen berita dari berbagai media massa menggunakan 4 metode Machine Learning
+                </p>
+                <ul class="card-features">
+                    <li>Analisis berita bulanan (2026)</li>
+                    <li>4 Metode ML (NB, SVM, LSTM, IndoBERT)</li>
+                    <li>Filter sentimen positif/negatif</li>
+                    <li>Trend kata per minggu</li>
+                </ul>
+                <button class="card-button">Mulai Analisis</button>
+            </div>
+
+            <!-- Card 3: YouTube Scraping -->
+            <div class="app-card card-youtube" onclick="navigateTo('youtube')">
+                <div class="card-icon">🎥</div>
+                <h3 class="card-title">Scraping & Analisis YouTube</h3>
+                <p class="card-description">
+                    Scraping komentar YouTube dan analisis sentimen real-time dengan teknologi AI
+                </p>
+                <ul class="card-features">
+                    <li>Scraping komentar otomatis</li>
+                    <li>Analisis 4 metode ML</li>
+                    <li>Wordcloud & visualisasi</li>
+                    <li>Export Excel & PDF</li>
+                </ul>
+                <button class="card-button">Mulai Scraping</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <strong>SATRIA SE2026</strong> &copy; 2026 Badan Pusat Statistik Kabupaten Bangkalan
+    </div>
+
+    <script>
+        function navigateTo(app) {
+            // Add smooth transition
+            document.body.style.transition = 'opacity 0.3s ease-out';
+            document.body.style.opacity = '0';
+            
+            setTimeout(() => {
+                if (app === 'news') {
+                    // Future: link to news portal
+                    alert('Fitur Berita SE2026 akan segera hadir!');
+                    document.body.style.opacity = '1';
+                } else if (app === 'media') {
+                    window.location.href = '/media/';
+                } else if (app === 'youtube') {
+                    window.location.href = '/youtube/';
+                }
+            }, 300);
+        }
+
+        // Prevent card click when clicking button
+        document.querySelectorAll('.card-button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        });
+    </script>
+</body>
+</html>

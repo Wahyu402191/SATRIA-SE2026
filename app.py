@@ -1,7 +1,10 @@
 from flask import Flask, render_template, request, jsonify, send_file, session, Response
+from jinja2 import ChoiceLoader, FileSystemLoader
 from youtube_scraper import YouTubeScraper
 from sentiment_analyzer import SentimentAnalyzer
 from data_storage import DataStorage
+from media_massa_analyzer import MediaMassaAnalyzer
+from media_massa_storage import MediaMassaStorage
 import os
 from dotenv import load_dotenv
 import pandas as pd
@@ -20,9 +23,17 @@ except ImportError:
 load_dotenv()
 
 app = Flask(__name__)
+
+# Support multiple template folders
+base_dir = os.path.dirname(os.path.abspath(__file__))
+app.jinja_loader = ChoiceLoader([
+    FileSystemLoader(os.path.join(base_dir, 'templates')),
+    FileSystemLoader(os.path.join(base_dir, 'templates_media_massa')),
+])
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-here-change-this-in-production')
 app.config['SESSION_TYPE'] = 'filesystem'
 
+# YouTube components
 API_KEY = os.getenv('YOUTUBE_API_KEY', '').strip()
 if not API_KEY or API_KEY == 'your_api_key_here':
     print("[WARNING] YOUTUBE_API_KEY belum dikonfigurasi di file .env")
@@ -31,10 +42,20 @@ scraper = YouTubeScraper(API_KEY)
 analyzer = SentimentAnalyzer()
 storage = DataStorage()
 
+# Media Massa components
+media_analyzer = MediaMassaAnalyzer()
+media_storage = MediaMassaStorage()
+
 # Store data in memory (in production, use database)
 app_data = {
     'scraped_data': None,
     'analysis_results': None
+}
+
+# Media massa data
+media_data = {
+    'analysis_results': None,
+    'selected_month': None
 }
 
 # Progress tracking
@@ -45,27 +66,55 @@ progress_data = {
     'message': ''
 }
 
+# ═══════════════════════════════════════════════════════════════════════════
+# LANDING & SELECTION ROUTES
+# ═══════════════════════════════════════════════════════════════════════════
+
 @app.route('/')
-def index():
+def landing():
+    """Landing page - Dashboard awal aplikasi"""
+    return render_template('landing.html')
+
+@app.route('/selection')
+def selection():
+    """Selection page - Pilihan aplikasi"""
+    return render_template('selection.html')
+
+# ═══════════════════════════════════════════════════════════════════════════
+# YOUTUBE DASHBOARD ROUTES
+# ═══════════════════════════════════════════════════════════════════════════
+
+@app.route('/youtube/')
+def youtube_index():
+    """YouTube dashboard - Beranda"""
     return render_template('index.html')
 
-@app.route('/analysis')
-def analysis():
+@app.route('/youtube/analysis')
+def youtube_analysis():
+    """YouTube dashboard - Analisis"""
     return render_template('analysis.html')
 
-@app.route('/comments')
-def comments():
+@app.route('/youtube/comments')
+def youtube_comments():
+    """YouTube dashboard - Komentar"""
     return render_template('comments.html')
 
-@app.route('/comparison')
-def comparison():
+@app.route('/youtube/comparison')
+def youtube_comparison():
+    """YouTube dashboard - Perbandingan"""
     return render_template('comparison.html')
 
-@app.route('/about')
-def about():
+@app.route('/youtube/about')
+def youtube_about():
+    """YouTube dashboard - Tentang"""
     return render_template('about.html')
 
-@app.route('/scrape', methods=['POST'])
+@app.route('/youtube/trend')
+def youtube_trend():
+    """YouTube dashboard - Trend"""
+    return render_template('trend.html')
+
+@app.route('/youtube/scrape', methods=['POST'])
 def scrape_comments():
     try:
         # Check API key first
@@ -174,12 +223,12 @@ def scrape_comments():
         progress_data['message'] = f'Error: {str(e)}'
         return jsonify({'error': str(e)}), 500
 
-@app.route('/progress')
-def get_progress():
+@app.route('/youtube/progress')
+def youtube_get_progress():
     """Endpoint to get scraping progress"""
     return jsonify(progress_data)
 
-@app.route('/analyze', methods=['POST'])
+@app.route('/youtube/analyze', methods=['POST'])
 def analyze():
     try:
         # Get comments from request or app_data
@@ -236,7 +285,7 @@ def analyze():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-@app.route('/generate_wordcloud', methods=['POST'])
+@app.route('/youtube/generate_wordcloud', methods=['POST'])
 def generate_wordcloud():
     """Generate wordcloud on demand (lazy loading)"""
     try:
@@ -261,7 +310,7 @@ def generate_wordcloud():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/saved_files', methods=['GET'])
+@app.route('/youtube/saved_files', methods=['GET'])
 def get_saved_files():
     try:
         files = storage.get_saved_files()
@@ -270,7 +319,7 @@ def get_saved_files():
         print(f"Error getting saved files: {e}")
         return jsonify({'success': True, 'files': []})
 
-@app.route('/load_file/<filename>', methods=['GET'])
+@app.route('/youtube/load_file/<filename>', methods=['GET'])
 def load_file(filename):
     data = storage.load_comments(filename)
     if data:
@@ -285,13 +334,13 @@ def load_file(filename):
         return jsonify({'success': True, 'data': data})
     return jsonify({'success': False, 'error': 'File tidak ditemukan'}), 404
 
-@app.route('/delete_file/<filename>', methods=['DELETE'])
+@app.route('/youtube/delete_file/<filename>', methods=['DELETE'])
 def delete_file(filename):
     if storage.delete_file(filename):
         return jsonify({'success': True, 'message': 'File berhasil dihapus'})
     return jsonify({'success': False, 'error': 'File tidak ditemukan'}), 404
 
-@app.route('/get_scraped_data', methods=['GET'])
+@app.route('/youtube/get_scraped_data', methods=['GET'])
 def get_scraped_data():
     if app_data['scraped_data']:
         return jsonify({
@@ -300,7 +349,7 @@ def get_scraped_data():
         })
     return jsonify({'success': False, 'error': 'Belum ada data scraping'}), 404
 
-@app.route('/get_analysis_results', methods=['GET'])
+@app.route('/youtube/get_analysis_results', methods=['GET'])
 def get_analysis_results():
     if app_data['analysis_results']:
         return jsonify({
@@ -310,7 +359,7 @@ def get_analysis_results():
         })
     return jsonify({'success': False, 'error': 'Belum ada hasil analisis'}), 404
 
-@app.route('/export', methods=['GET'])
+@app.route('/youtube/export', methods=['GET'])
 def export_data():
     try:
         if not app_data.get('analysis_results'):
@@ -397,11 +446,7 @@ def export_data():
         traceback.print_exc()
         return jsonify({'error': f'Export gagal: {str(e)}'}), 500
 
-@app.route('/trend')
-def trend():
-    return render_template('trend.html')
-
-@app.route('/export_pdf', methods=['GET'])
+@app.route('/youtube/export_pdf', methods=['GET'])
 def export_pdf():
     """Generate PDF laporan analisis sentimen"""
     try:
@@ -534,7 +579,7 @@ def export_pdf():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-@app.route('/word_trend', methods=['GET'])
+@app.route('/youtube/word_trend', methods=['GET'])
 def word_trend():
     """API endpoint: top words per month from scraped comments"""
     try:
@@ -593,7 +638,7 @@ def word_trend():
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/analyze_single', methods=['POST'])
+@app.route('/youtube/analyze_single', methods=['POST'])
 def analyze_single():
     """Analyze single comment input from user"""
     try:
@@ -655,7 +700,7 @@ def analyze_single():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-@app.route('/preprocess_text', methods=['POST'])
+@app.route('/youtube/preprocess_text', methods=['POST'])
 def preprocess_text():
     """Endpoint untuk mendapatkan detail preprocessing steps untuk satu text"""
     try:
@@ -737,6 +782,261 @@ def preprocess_text():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/youtube/get_dashboard_stats', methods=['GET'])
+def youtube_get_dashboard_stats():
+    """Get dashboard statistics from database"""
+    try:
+        from db_config import execute_query
+        
+        # Get total videos
+        video_count = execute_query("SELECT COUNT(*) as count FROM videos", fetch=True)
+        total_videos = video_count[0]['count'] if video_count else 0
+        
+        # Get total comments
+        comment_count = execute_query("SELECT COUNT(*) as count FROM comments", fetch=True)
+        total_comments = comment_count[0]['count'] if comment_count else 0
+        
+        # Get total analysis sessions (each analysis run increments this)
+        session_count = execute_query(
+            "SELECT COUNT(*) as count FROM analysis_sessions",
+            fetch=True
+        )
+        total_analyzed = session_count[0]['count'] if session_count else 0
+
+        # Keep total analyzed comments available for future UI use
+        analyzed_comments_count = execute_query(
+            "SELECT COUNT(*) as count FROM analysis_results",
+            fetch=True
+        )
+        total_analyzed_comments = analyzed_comments_count[0]['count'] if analyzed_comments_count else 0
+        
+        return jsonify({
+            'success': True,
+            'total_videos': total_videos,
+            'total_comments': total_comments,
+            'total_analyzed': total_analyzed,
+            'total_analyzed_comments': total_analyzed_comments
+        })
+        
+    except Exception as e:
+        # Return zeros if database not available
+        return jsonify({
+            'success': False,
+            'total_videos': 0,
+            'total_comments': 0,
+            'total_analyzed': 0,
+            'error': str(e)
+        })
+
+# ═══════════════════════════════════════════════════════════════════════════
+# MEDIA MASSA DASHBOARD ROUTES
+# ═══════════════════════════════════════════════════════════════════════════
+
+@app.route('/media/')
+def media_index():
+    """Media Massa dashboard - Beranda/Analisis"""
+    # Get statistics
+    stats = media_storage.get_statistics()
+    
+    # Get available months
+    available_months = media_storage.get_available_months()
+    
+    return render_template(
+        'index_media.html',
+        total_articles=stats['total_articles'],
+        total_months=stats['total_months'],
+        total_sources=stats['total_sources'],
+        total_analyzed=stats['total_analyzed'],
+        available_months=available_months
+    )
+
+@app.route('/media/comments')
+def media_comments():
+    """Media Massa dashboard - Data Berita"""
+    return render_template('comments_media.html')
+
+@app.route('/media/comparison')
+def media_comparison():
+    """Media Massa dashboard - Perbandingan"""
+    return render_template('comparison_media.html')
+
+@app.route('/media/trend')
+def media_trend():
+    """Media Massa dashboard - Trend"""
+    return render_template('trend_media.html')
+
+@app.route('/media/about')
+def media_about():
+    """Media Massa dashboard - Tentang"""
+    return render_template('about_media.html')
+
+@app.route('/media/analyze', methods=['POST'])
+def media_analyze():
+    """Analyze news articles for selected month"""
+    try:
+        data = request.get_json()
+        month = data.get('month')
+        methods = data.get('methods', ['naive_bayes', 'svm', 'lstm', 'indobert'])
+        
+        if not month:
+            return jsonify({'error': 'Month parameter required'}), 400
+        
+        # Get articles for the month
+        articles = media_storage.get_articles_by_month(month)
+        
+        if not articles:
+            return jsonify({'error': 'Tidak ada artikel untuk bulan tersebut'}), 404
+        
+        # Analyze articles
+        results = media_analyzer.analyze_articles(articles, methods)
+        
+        # Save analysis results
+        media_storage.save_analysis_results(month, results['articles'], methods)
+        
+        # Store in media_data
+        media_data['analysis_results'] = results
+        media_data['selected_month'] = month
+        
+        return jsonify({
+            'success': True,
+            'summary': results['summary'],
+            'total_articles': len(articles),
+            'preprocessing_examples': results.get('preprocessing_examples', []),
+            'accuracy': results.get('accuracy', {}),
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/media/get_analysis_results', methods=['GET'])
+def media_get_analysis_results():
+    """Get stored analysis results"""
+    if media_data['analysis_results']:
+        return jsonify({
+            'success': True,
+            'results': media_data['analysis_results'],
+            'selected_month': media_data['selected_month']
+        })
+    return jsonify({'success': False, 'error': 'Belum ada hasil analisis'}), 404
+
+@app.route('/media/word_trend', methods=['GET'])
+def media_word_trend():
+    """API endpoint: top words per week from analyzed articles"""
+    try:
+        if not media_data.get('analysis_results'):
+            return jsonify({'error': 'Belum ada data analisis'}), 400
+        
+        articles = media_data['analysis_results'].get('articles', [])
+        month_value = media_data.get('selected_month', '')
+        
+        trend_data = media_analyzer.generate_word_trend_weekly(articles, month_value)
+        
+        return jsonify(trend_data)
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/media/generate_wordcloud', methods=['POST'])
+def media_generate_wordcloud():
+    """Generate wordcloud for analyzed articles"""
+    try:
+        if not media_data.get('analysis_results'):
+            return jsonify({'error': 'Belum ada hasil analisis'}), 400
+        
+        # Generate wordcloud
+        results = media_data['analysis_results']
+        wordclouds = media_analyzer.generate_wordcloud(results['articles'])
+        
+        return jsonify({
+            'success': True,
+            'wordcloud_positive': wordclouds.get('positive'),
+            'wordcloud_negative': wordclouds.get('negative'),
+            'positive_count': wordclouds.get('positive_count', 0),
+            'negative_count': wordclouds.get('negative_count', 0)
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/media/export', methods=['GET'])
+def media_export():
+    """Export analysis results to Excel"""
+    try:
+        if not media_data.get('analysis_results'):
+            return jsonify({'error': 'Tidak ada data untuk di-export'}), 400
+        
+        results = media_data['analysis_results']
+        selected_month = media_data.get('selected_month', 'export')
+        
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            # Sheet 1: Summary per Method
+            summary_rows = []
+            for method, stats in results.get('summary', {}).items():
+                pos = int(stats.get('positive', 0))
+                neg = int(stats.get('negative', 0))
+                neu = int(stats.get('neutral', 0))
+                total = pos + neg + neu
+                if total == 0:
+                    continue
+                summary_rows.append({
+                    'Metode': method,
+                    'Positif': pos,
+                    'Negatif': neg,
+                    'Netral': neu,
+                    'Total': total,
+                    'Pct Positif (%)': round(pos / total * 100, 2),
+                    'Pct Negatif (%)': round(neg / total * 100, 2),
+                    'Pct Netral (%)': round(neu / total * 100, 2),
+                })
+            if summary_rows:
+                df_summary = pd.DataFrame(summary_rows)
+                df_summary.to_excel(writer, sheet_name='Ringkasan Metode', index=False)
+            
+            # Sheet 2: Articles + Sentiments
+            articles_raw = results.get('articles', [])
+            if articles_raw:
+                df_articles = pd.DataFrame(articles_raw)
+                # Reorder columns
+                prio = ['title', 'source', 'published_date',
+                        'naive_bayes_sentiment', 'naive_bayes_score',
+                        'svm_sentiment', 'svm_score',
+                        'lstm_sentiment', 'lstm_score',
+                        'indobert_sentiment', 'indobert_score']
+                cols = [c for c in prio if c in df_articles.columns] + \
+                       [c for c in df_articles.columns if c not in prio]
+                df_articles = df_articles[cols]
+                df_articles.to_excel(writer, sheet_name='Berita & Sentimen', index=False)
+            
+            # Sheet 3: Agreement Rate
+            accuracy = results.get('accuracy')
+            if accuracy:
+                acc_rows = [{'Metode': m.replace('_', ' ').title(),
+                             'Agreement Rate (%)': v}
+                            for m, v in accuracy.items()]
+                pd.DataFrame(acc_rows).to_excel(writer, sheet_name='Agreement Rate', index=False)
+        
+        output.seek(0)
+        filename = f'SATRIA_SE2026_MediaMassa_{selected_month}.xlsx'
+        
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Export gagal: {str(e)}'}), 500
 
 @app.route('/get_dashboard_stats', methods=['GET'])
 def get_dashboard_stats():

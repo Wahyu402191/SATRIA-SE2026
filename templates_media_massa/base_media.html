@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}SATRIA SE2026 — BPS Kabupaten Bangkalan{% endblock %}</title>
+    <title>{% block title %}SATRIA SE2026 — Analisis Media Massa{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -823,8 +823,8 @@
                 <div class="inst-subtitle">Jalan Halim Perdanakusuma No. 5, Kelurahan Mlajah, Kecamatan Bangkalan, Kabupaten Bangkalan, Jawa Timur 69116</div>
                 <div class="inst-meta">
                     <div class="inst-meta-item">Sensus Ekonomi 2026</div>
-                    <div class="inst-meta-item">Scraping Komentrar YouTube</div>
-                    <div class="inst-meta-item">Analisis Sentimen Komentar YouTube</div>
+                    <div class="inst-meta-item">Analisis Sentimen Media Massa</div>
+                    <div class="inst-meta-item">Machine Learning 4 Metode</div>
                     <div class="inst-meta-item">Badan Pusat Statistik</div>
                 </div>
             </div>
@@ -840,7 +840,7 @@
     <!-- ─── MAIN NAVIGATION ─── -->
     <nav class="navbar">
         <div class="navbar-inner">
-            <a href="/" class="navbar-brand">
+            <a href="/media/" class="navbar-brand">
                 <div class="brand-mark">
                     <img src="/static/img/bps-logo.png"
                          alt="Logo BPS"
@@ -848,194 +848,54 @@
                 </div>
                 <div>
                     <div class="brand-text-main">SATRIA SE2026</div>
-                    <div class="brand-text-sub">Scraping and Analysis Tracker for Research and Information Acquisition</div>
+                    <div class="brand-text-sub">Analisis Sentimen Media Massa Indonesia</div>
                 </div>
             </a>
 
             <ul class="nav-links">
                 <li>
-                    <a href="/youtube/" class="{% if request.path == '/youtube/' %}active{% endif %}">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-                        Beranda
-                    </a>
-                </li>
-                <li>
-                    <a href="/youtube/analysis" class="{% if request.path == '/youtube/analysis' %}active{% endif %}">
+                    <a href="/media/" class="{% if request.path == '/media/' %}active{% endif %}">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
                         Analisis
                     </a>
                 </li>
                 <li>
-                    <a href="/youtube/comments" class="{% if request.path == '/youtube/comments' %}active{% endif %}">
+                    <a href="/media/comments" class="{% if request.path == '/media/comments' %}active{% endif %}">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
-                        Komentar
+                        Data Berita
                     </a>
                 </li>
                 <li>
-                    <a href="/youtube/comparison" class="{% if request.path == '/youtube/comparison' %}active{% endif %}">
+                    <a href="/media/comparison" class="{% if request.path == '/media/comparison' %}active{% endif %}">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3v18h18V3H3zm8 16H5v-6h6v6zm0-8H5V5h6v6zm8 8h-6v-6h6v6zm0-8h-6V5h6v6z"/></svg>
                         Perbandingan
                     </a>
                 </li>
                 <li>
-                    <a href="/youtube/trend" class="{% if request.path == '/youtube/trend' %}active{% endif %}">
+                    <a href="/media/trend" class="{% if request.path == '/media/trend' %}active{% endif %}">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
                         Trend
                     </a>
                 </li>
                 <li>
-                    <a href="/youtube/about" class="{% if request.path == '/youtube/about' %}active{% endif %}">
+                    <a href="/media/about" class="{% if request.path == '/media/about' %}active{% endif %}">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
                         Tentang
                     </a>
                 </li>
                 <li class="nav-divider"></li>
                 <li>
-                    <button class="btn-nav-cta" onclick="showQuickAnalysis()">
-                        <svg viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
-                        Analisis Cepat
-                    </button>
+                    <a href="/selection" class="btn-nav-cta" style="text-decoration:none;">
+                        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                        Kembali ke Menu
+                    </a>
                 </li>
             </ul>
         </div>
     </nav>
 
     <!-- ─── QUICK ANALYSIS MODAL ─── -->
-    <div class="modal-overlay" id="quick-modal">
-        <div class="modal-box">
-            <div class="modal-header">
-                <div>
-                    <h2>Analisis Komentar Cepat</h2>
-                    <p>Uji teks secara langsung menggunakan 4 metode Machine Learning</p>
-                </div>
-                <button class="modal-close" onclick="closeQuickAnalysis()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div id="quick-history-section" style="display:none; margin-bottom:20px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <span style="font-size:13px; font-weight:600; color:var(--primary);">Riwayat Analisis</span>
-                        <button onclick="clearAllHistory()" class="btn btn-sm" style="background:var(--danger);">Hapus Semua</button>
-                    </div>
-                    <div id="quick-history-list" style="max-height:150px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius); padding:10px; background:var(--bg);"></div>
-                </div>
-                <textarea id="quick-comment-input"
-                    placeholder="Ketik atau tempel komentar di sini untuk dianalisis..."
-                    style="height:90px; resize:vertical; margin-bottom:14px;"></textarea>
-                <div style="display:flex; gap:10px; margin-bottom:16px;">
-                    <button onclick="analyzeQuickComment()" id="quick-analyze-btn" class="btn" style="flex:1;">Analisis</button>
-                    <button onclick="saveCurrentResult()" id="quick-save-btn" class="btn btn-success" style="flex:1; display:none;">Simpan Hasil</button>
-                </div>
-                <div id="quick-loading" style="display:none; text-align:center; padding:20px;">
-                    <div class="spinner"></div>
-                    <p style="margin-top:12px; color:var(--text-muted); font-size:13px;">Menganalisis sentimen...</p>
-                </div>
-                <div id="quick-results" style="display:none;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <span style="font-size:14px; font-weight:600; color:var(--primary);">Hasil Analisis</span>
-                        <span id="quick-result-time" style="font-size:11px; color:var(--text-muted);"></span>
-                    </div>
-                    <div id="quick-results-content"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    </style>
-    <script>
-        let analysisHistory = [];
-        let currentAnalysis = null;
-        window.addEventListener('DOMContentLoaded', function () {
-            const saved = localStorage.getItem('quickAnalysisHistory');
-            if (saved) {
-                try { analysisHistory = JSON.parse(saved); } catch(e) { analysisHistory = []; }
-                if (analysisHistory.length > 0) renderHistory();
-            }
-        });
-        function showQuickAnalysis() {
-            document.getElementById('quick-modal').style.display = 'block';
-            setTimeout(() => document.getElementById('quick-comment-input').focus(), 100);
-            if (analysisHistory.length > 0) { document.getElementById('quick-history-section').style.display = 'block'; renderHistory(); }
-        }
-        function closeQuickAnalysis() { document.getElementById('quick-modal').style.display = 'none'; }
-        document.getElementById('quick-modal').addEventListener('click', function(e) { if (e.target === this) closeQuickAnalysis(); });
-        function clearAllHistory() {
-            if (!confirm('Hapus semua riwayat analisis?')) return;
-            analysisHistory = []; localStorage.removeItem('quickAnalysisHistory');
-            document.getElementById('quick-history-section').style.display = 'none';
-        }
-        function deleteHistoryItem(i) {
-            analysisHistory.splice(i,1); localStorage.setItem('quickAnalysisHistory', JSON.stringify(analysisHistory));
-            renderHistory();
-            if (!analysisHistory.length) document.getElementById('quick-history-section').style.display = 'none';
-        }
-        function loadHistoryItem(i) {
-            const item = analysisHistory[i]; currentAnalysis = item;
-            document.getElementById('quick-comment-input').value = item.original;
-            displayQuickResults(item); document.getElementById('quick-save-btn').style.display = 'none';
-        }
-        function renderHistory() {
-            const el = document.getElementById('quick-history-list');
-            if (!analysisHistory.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:12px;">Belum ada riwayat.</p>'; return; }
-            el.innerHTML = analysisHistory.map((item,i) => {
-                const preview = item.original.substring(0,55) + (item.original.length > 55 ? '…' : '');
-                const s = Object.values(item.sentiments)[0]?.label || '';
-                const cls = s.includes('Positif') ? 'badge-success' : s.includes('Negatif') ? 'badge-danger' : 'badge-neutral';
-                return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-card);border-radius:var(--radius);margin-bottom:6px;cursor:pointer;border:1px solid var(--border);transition:box-shadow .15s;" onmouseover="this.style.boxShadow='var(--shadow-sm)'" onmouseout="this.style.boxShadow='none'" onclick="loadHistoryItem(${i})">
-                    <div style="flex:1"><div style="font-size:11px;color:var(--text-muted);">${item.timestamp||''}</div><div style="font-size:12px;color:var(--text);">${preview}</div></div>
-                    <span class="badge ${cls}">${s}</span>
-                    <button onclick="deleteHistoryItem(${i});event.stopPropagation();" class="btn btn-sm" style="background:var(--danger);padding:4px 8px;font-size:11px;">Hapus</button>
-                </div>`;
-            }).join('');
-            document.getElementById('quick-history-section').style.display = 'block';
-        }
-        function saveCurrentResult() {
-            if (!currentAnalysis) return;
-            currentAnalysis.timestamp = new Date().toLocaleString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-            analysisHistory = analysisHistory.filter(x => x.original !== currentAnalysis.original);
-            analysisHistory.unshift(currentAnalysis);
-            if (analysisHistory.length > 20) analysisHistory = analysisHistory.slice(0,20);
-            localStorage.setItem('quickAnalysisHistory', JSON.stringify(analysisHistory));
-            renderHistory(); document.getElementById('quick-save-btn').style.display = 'none';
-            alert('Hasil berhasil disimpan.');
-        }
-        async function analyzeQuickComment() {
-            const comment = document.getElementById('quick-comment-input').value.trim();
-            if (!comment) { alert('Masukkan teks komentar terlebih dahulu.'); return; }
-            const btn = document.getElementById('quick-analyze-btn');
-            btn.disabled = true; btn.textContent = 'Menganalisis...';
-            document.getElementById('quick-loading').style.display = 'block';
-            document.getElementById('quick-results').style.display = 'none';
-            document.getElementById('quick-save-btn').style.display = 'none';
-            try {
-                const res = await fetch('/youtube/analyze_single', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({comment}) });
-                const data = await res.json();
-                if (data.success) { currentAnalysis = data.results; displayQuickResults(data.results); document.getElementById('quick-save-btn').style.display = 'block'; }
-                else { alert('Error: ' + data.error); }
-            } catch(e) { alert('Terjadi kesalahan: ' + e); }
-            finally { btn.disabled = false; btn.textContent = 'Analisis'; document.getElementById('quick-loading').style.display = 'none'; }
-        }
-        function displayQuickResults(data) {
-            const rc = document.getElementById('quick-results-content');
-            document.getElementById('quick-result-time').textContent = data.timestamp || new Date().toLocaleString('id-ID');
-            let html = `<div style="background:var(--bg);padding:14px 16px;border-radius:var(--radius);margin-bottom:14px;font-size:13px;border:1px solid var(--border);">
-                <div><strong style="color:var(--primary);">Teks Asli:</strong><br><span>${data.original}</span></div>
-                <div style="margin-top:8px;"><strong style="color:var(--primary);">Teks Terproses:</strong><br><span style="color:var(--text-muted);font-style:italic;">${data.preprocessed||'-'}</span></div>
-            </div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">`;
-            for (const [,r] of Object.entries(data.sentiments)) {
-                const isPos = r.label.toLowerCase().includes('positif');
-                const isNeg = r.label.toLowerCase().includes('negatif');
-                const color = isPos ? 'var(--success)' : isNeg ? 'var(--danger)' : 'var(--neutral)';
-                html += `<div style="border:1.5px solid ${color};border-radius:var(--radius);padding:16px;text-align:center;background:var(--bg-card);">
-                    <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;">${r.name}</div>
-                    <div style="font-size:22px;font-weight:800;color:${color};margin:10px 0;letter-spacing:-.3px;">${r.label}</div>
-                    <div style="font-size:11px;color:var(--text-muted);">${(r.score*100).toFixed(1)}% confidence</div>
-                </div>`;
-            }
-            html += '</div>';
-            rc.innerHTML = html;
-            document.getElementById('quick-results').style.display = 'block';
-        }
-    </script>
+    <!-- Tidak digunakan di dashboard Media Massa -->
 
     <div class="container">
         {% block content %}{% endblock %}

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SATRIA SE2026 - Badan Pusat Statistik</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0f2238 0%, #1a3a5c 50%, #0f2238 100%);
+            color: white;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Animated Background Particles */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(200, 151, 58, 0.3);
+            border-radius: 50%;
+            animation: float 15s infinite;
+        }
+
+        .particle:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-duration: 12s; animation-delay: 0s; }
+        .particle:nth-child(2) { width: 120px; height: 120px; left: 80%; animation-duration: 18s; animation-delay: 2s; }
+        .particle:nth-child(3) { width: 60px; height: 60px; left: 50%; animation-duration: 14s; animation-delay: 4s; }
+        .particle:nth-child(4) { width: 100px; height: 100px; left: 30%; animation-duration: 16s; animation-delay: 1s; }
+        .particle:nth-child(5) { width: 70px; height: 70px; left: 70%; animation-duration: 13s; animation-delay: 3s; }
+        .particle:nth-child(6) { width: 90px; height: 90px; left: 20%; animation-duration: 17s; animation-delay: 5s; }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Grid Background */
+        .grid-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(200, 151, 58, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(200, 151, 58, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
+        }
+
+        /* Main Container */
+        .container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        /* Logo BPS */
+        .logo-container {
+            margin-bottom: 30px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .logo-bps {
+            width: 100px;
+            height: 100px;
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Badge */
+        .badge-year {
+            display: inline-block;
+            background: rgba(200, 151, 58, 0.15);
+            border: 2px solid rgba(200, 151, 58, 0.4);
+            color: #e8b96a;
+            padding: 8px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            animation: fadeIn 1.2s ease-out;
+        }
+
+        /* Main Title */
+        .title-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 15px;
+            animation: fadeIn 1.4s ease-out;
+        }
+
+        .main-title {
+            font-size: 120px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, #c8973a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+            line-height: 1;
+            margin-bottom: 15px;
+            animation: fadeInUp 1s ease-out;
+            text-shadow: 0 0 80px rgba(200, 151, 58, 0.5);
+        }
+
+        .main-subtitle {
+            font-size: 24px;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 10px;
+            animation: fadeIn 1.6s ease-out;
+        }
+
+        .description {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.5);
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+            animation: fadeIn 1.8s ease-out;
+        }
+
+        /* Button */
+        .btn-enter {
+            position: relative;
+            padding: 18px 60px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #0f2238;
+            background: linear-gradient(135deg, #e8b96a 0%, #c8973a 100%);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 40px rgba(200, 151, 58, 0.4);
+            animation: fadeInUp 2s ease-out;
+        }
+
+        .btn-enter:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-enter:hover:before {
+            left: 100%;
+        }
+
+        .btn-enter:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 50px rgba(200, 151, 58, 0.6);
+        }
+
+        .btn-enter:active {
+            transform: translateY(-1px);
+        }
+
+        /* Footer */
+        .footer {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+            z-index: 10;
+            animation: fadeIn 2.2s ease-out;
+        }
+
+        .footer strong {
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 600;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 60px;
+            }
+            .main-subtitle {
+                font-size: 18px;
+            }
+            .description {
+                font-size: 14px;
+            }
+            .btn-enter {
+                padding: 15px 45px;
+                font-size: 16px;
+            }
+            .logo-bps {
+                width: 70px;
+                height: 70px;
+            }
+        }
+
+        /* Glowing effect */
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 0 0 20px rgba(200, 151, 58, 0.3),
+                             0 0 40px rgba(200, 151, 58, 0.2),
+                             0 0 60px rgba(200, 151, 58, 0.1);
+            }
+            50% {
+                text-shadow: 0 0 30px rgba(200, 151, 58, 0.5),
+                             0 0 60px rgba(200, 151, 58, 0.3),
+                             0 0 90px rgba(200, 151, 58, 0.2);
+            }
+        }
+
+        .main-title {
+            animation: fadeInUp 1s ease-out, glow 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Particles -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- Grid Background -->
+    <div class="grid-bg"></div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Logo -->
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='img/bps-logo.png') }}" alt="BPS Logo" class="logo-bps">
+        </div>
+
+        <!-- Badge -->
+        <div class="badge-year">SENSUS EKONOMI 2026</div>
+
+        <!-- Title -->
+        <div class="title-container">
+            <div class="subtitle">Badan Pusat Statistik</div>
+            <h1 class="main-title">SATRIA</h1>
+            <h2 class="main-subtitle">Sistem Analisis Tren dan Riset Interaktif</h2>
+            <p class="description">
+                Platform analisis sentimen berbasis AI untuk monitoring persepsi publik 
+                terhadap Sensus Ekonomi 2026 melalui media sosial dan media massa
+            </p>
+        </div>
+
+        <!-- Button -->
+        <button class="btn-enter" onclick="enterApp()">
+            Masuk Aplikasi
+        </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <strong>SATRIA SE2026</strong> &copy; 2026 Badan Pusat Statistik Kabupaten Bangkalan
+    </div>
+
+    <script>
+        function enterApp() {
+            // Add smooth transition effect
+            document.body.style.transition = 'opacity 0.5s ease-out';
+            document.body.style.opacity = '0';
+            
+            setTimeout(() => {
+                window.location.href = '/selection';
+            }, 500);
+        }
+
+        // Add keyboard support (Enter key)
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                enterApp();
+            }
+        });
+    </script>
+</body>
+</html>
