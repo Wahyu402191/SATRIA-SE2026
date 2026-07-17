@@ -5,6 +5,8 @@ from sentiment_analyzer import SentimentAnalyzer
 from data_storage import DataStorage
 from media_massa_analyzer import MediaMassaAnalyzer
 from media_massa_storage import MediaMassaStorage
+from se_news_storage import SeNewsStorage
+from se_news_analyzer import SeNewsAnalyzer
 import os
 from dotenv import load_dotenv
 import pandas as pd
@@ -14,6 +16,8 @@ import base64
 import time
 from queue import Queue
 import threading
+from datetime import datetime, date
+from zoneinfo import ZoneInfo
 
 try:
     from livereload import Server
@@ -29,9 +33,14 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 app.jinja_loader = ChoiceLoader([
     FileSystemLoader(os.path.join(base_dir, 'templates')),
     FileSystemLoader(os.path.join(base_dir, 'templates_media_massa')),
+    FileSystemLoader(os.path.join(base_dir, 'templates_news')),
 ])
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-here-change-this-in-production')
 app.config['SESSION_TYPE'] = 'filesystem'
+
+# Hoisted to module level (not just inside `if __name__ == '__main__':`) so it's
+# available under gunicorn too, which never executes that block.
+debug = os.getenv('FLASK_DEBUG', 'true').lower() == 'true'
 
 # YouTube components
 API_KEY = os.getenv('YOUTUBE_API_KEY', '').strip()
@@ -45,6 +54,10 @@ storage = DataStorage()
 # Media Massa components
 media_analyzer = MediaMassaAnalyzer()
 media_storage = MediaMassaStorage()
+
+# Berita SE2026 components (auto-discovery via Google News RSS)
+se_news_storage = SeNewsStorage()
+se_news_analyzer = SeNewsAnalyzer()
 
 # Store data in memory (in production, use database)
 app_data = {
@@ -804,6 +817,7 @@ def youtube_get_dashboard_stats():
         )
         total_analyzed = session_count[0]['count'] if session_count else 0
 
+
         # Keep total analyzed comments available for future UI use
         analyzed_comments_count = execute_query(
             "SELECT COUNT(*) as count FROM analysis_results",
@@ -1084,9 +1098,304 @@ def get_dashboard_stats():
             'error': str(e)
         })
 
+# ═══════════════════════════════════════════════════════════════════════════
+# BERITA SENSUS EKONOMI 2026 — NEWS MONITORING ROUTES
+# ═══════════════════════════════════════════════════════════════════════════
+
+news_refresh_state = {'running': False}
+
+
+@app.route('/news/')
+def news_index():
+    """Berita SE2026 — Beranda: ringkasan statistik, status fetch, berita terbaru"""
+    stats = se_news_storage.get_statistics()
+    latest = se_news_storage.get_articles(limit=8)
+    last_log = se_news_storage.get_latest_fetch_log()
+    return render_template(
+        'index_news.html',
+        stats=stats,
+        latest_articles=latest,
+        last_log=last_log,
+        fetch_interval_hours=int(os.getenv('SE_NEWS_FETCH_INTERVAL_HOURS', 3)),
+    )
+
+
+@app.route('/news/articles')
+def news_articles_page():
+    """Berita SE2026 — Data Berita: filter per tanggal/sumber/sentimen/pencarian"""
+    return render_template('articles_news.html', sources=se_news_storage.get_available_sources())
+
+
+@app.route('/news/analysis')
+def news_analysis_page():
+    """Berita SE2026 — Analisis Sentimen"""
+    return render_template('analysis_news.html')
+
+
+@app.route('/news/daily')
+def news_daily_page():
+    """Berita SE2026 — Statistik Harian: pilih bulan, lihat jumlah berita per hari"""
+    return render_template('daily_news.html')
+
+
+@app.route('/news/trend')
+def news_trend_page():
+    """Berita SE2026 — Trend & Insight: sentimen dari waktu ke waktu, sumber, kalender heatmap"""
+    return render_template('trend_news.html')
+
+
+@app.route('/news/about')
+def news_about_page():
+    """Berita SE2026 — Tentang"""
+    return render_template('about_news.html')
+
+
+@app.route('/news/refresh', methods=['POST'])
+def news_refresh():
+    """Trigger manual fetch pipeline in a background thread; returns immediately."""
+    if news_refresh_state['running']:
+        return jsonify({'success': False, 'error': 'Refresh sedang berjalan, tunggu sebentar.'}), 409
+
+    def _run():
+        news_refresh_state['running'] = True
+        try:
+            from se_news_scheduler import run_fetch_job
+            run_fetch_job(se_news_storage, se_news_analyzer, trigger_type='manual')
+        finally:
+            news_refresh_state['running'] = False
+
+    threading.Thread(target=_run, daemon=True).start()
+    return jsonify({'success': True, 'message': 'Refresh dimulai di background.'})
+
+
+@app.route('/news/refresh_status')
+def news_refresh_status():
+    """Poll the latest fetch log row to show progress/result of a refresh."""
+    log = se_news_storage.get_latest_fetch_log()
+    return jsonify({
+        'success': True,
+        'running': news_refresh_state['running'],
+        'log': log,
+    })
+
+
+@app.route('/news/api/articles')
+def news_api_articles():
+    try:
+        articles = se_news_storage.get_articles(
+            date=request.args.get('date'),
+            date_from=request.args.get('date_from'),
+            date_to=request.args.get('date_to'),
+            q=request.args.get('q'),
+            source=request.args.get('source'),
+            sentiment=request.args.get('sentiment'),
+            method=request.args.get('method', 'naive_bayes'),
+            limit=int(request.args.get('limit', 50)),
+            offset=int(request.args.get('offset', 0)),
+        )
+        return jsonify({'success': True, 'articles': articles})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/news/api/article/<int:article_id>')
+def news_api_article_detail(article_id):
+    article = se_news_storage.get_article_by_id(article_id)
+    if not article:
+        return jsonify({'success': False, 'error': 'Artikel tidak ditemukan'}), 404
+    return jsonify({'success': True, 'article': article})
+
+
+@app.route('/news/api/daily_counts')
+def news_api_daily_counts():
+    """?month=YYYY-MM -> per-day counts for that month, zero-filled including
+    future days (so a day that hasn't happened yet reads as 'belum terjadi',
+    not the same as a past day with genuinely zero news)."""
+    try:
+        import calendar as cal
+        month_param = request.args.get('month')
+        if not month_param:
+            return jsonify({'error': 'month parameter required (format YYYY-MM)'}), 400
+        year, month = (int(x) for x in month_param.split('-'))
+
+        rows = se_news_storage.get_daily_counts(year, month)
+        counts_by_day = {}
+        for r in rows:
+            d = r['published_day']
+            day_num = d.day if hasattr(d, 'day') else int(str(d).split('-')[2])
+            counts_by_day[day_num] = r['count']
+
+        days_in_month = cal.monthrange(year, month)[1]
+        today = datetime.now(ZoneInfo('Asia/Jakarta')).date()
+
+        days = []
+        for day_num in range(1, days_in_month + 1):
+            this_date = date(year, month, day_num)
+            days.append({
+                'day': day_num,
+                'count': counts_by_day.get(day_num, 0),
+                'is_future': this_date > today,
+            })
+
+        return jsonify({'success': True, 'year': year, 'month': month, 'days': days})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/news/api/calendar_counts')
+def news_api_calendar_counts():
+    """?year=YYYY -> day->count map for the year-long calendar heatmap."""
+    try:
+        year = int(request.args.get('year', datetime.now().year))
+        rows = se_news_storage.get_calendar_counts(year)
+        days = {str(r['published_day']): r['count'] for r in rows}
+        return jsonify({'success': True, 'year': year, 'days': days})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/news/api/source_breakdown')
+def news_api_source_breakdown():
+    try:
+        rows = se_news_storage.get_source_breakdown(
+            date_from=request.args.get('date_from'),
+            date_to=request.args.get('date_to'),
+        )
+        return jsonify({'success': True, 'sources': rows})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/news/api/sentiment_trend')
+def news_api_sentiment_trend():
+    try:
+        date_to = request.args.get('date_to') or datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y-%m-%d')
+        date_from = request.args.get('date_from') or '2026-01-01'
+        method = request.args.get('method', 'naive_bayes')
+        rows = se_news_storage.get_sentiment_trend(date_from, date_to, method)
+
+        by_day = {}
+        for r in rows:
+            day = str(r['published_day'])
+            by_day.setdefault(day, {'Positif': 0, 'Negatif': 0, 'Netral': 0})
+            by_day[day][r['sentiment']] = r['count']
+
+        days = sorted(by_day.keys())
+        return jsonify({
+            'success': True,
+            'days': days,
+            'positive': [by_day[d].get('Positif', 0) for d in days],
+            'negative': [by_day[d].get('Negatif', 0) for d in days],
+            'neutral': [by_day[d].get('Netral', 0) for d in days],
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/news/api/analyze', methods=['POST'])
+def news_api_analyze():
+    """Re-run/refresh sentiment analysis over a date range with selected methods."""
+    try:
+        data = request.get_json() or {}
+        date_from = data.get('date_from') or '2026-01-01'
+        date_to = data.get('date_to') or datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y-%m-%d')
+        methods = data.get('methods') or ['naive_bayes', 'svm', 'lstm', 'indobert']
+
+        articles = se_news_storage.get_articles(date_from=date_from, date_to=date_to, limit=2000)
+        articles = [a for a in articles if a.get('content')]
+
+        if not articles:
+            return jsonify({'error': 'Tidak ada artikel dengan konten untuk dianalisis pada rentang ini'}), 404
+
+        results = se_news_analyzer.analyze_batch(articles, methods)
+        for row in results['articles']:
+            if row.get('id'):
+                se_news_storage.save_sentiment_results(row['id'], row['_method_results'])
+
+        return jsonify({
+            'success': True,
+            'total_articles': len(articles),
+            'summary': results['summary'],
+            'accuracy': results.get('accuracy', {}),
+            'preprocessing_examples': results.get('preprocessing_examples', []),
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/news/export')
+def news_export():
+    """Export filtered articles + sentiment to Excel."""
+    try:
+        date_from = request.args.get('date_from') or '2026-01-01'
+        date_to = request.args.get('date_to') or datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y-%m-%d')
+        articles = se_news_storage.get_articles(date_from=date_from, date_to=date_to, limit=5000)
+
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            if articles:
+                df = pd.DataFrame(articles)
+                prio = ['title', 'source', 'published_date', 'url', 'content_source',
+                        'naive_bayes_sentiment', 'naive_bayes_score',
+                        'svm_sentiment', 'svm_score',
+                        'lstm_sentiment', 'lstm_score',
+                        'indobert_sentiment', 'indobert_score']
+                cols = [c for c in prio if c in df.columns] + [c for c in df.columns if c not in prio]
+                df[cols].to_excel(writer, sheet_name='Berita & Sentimen', index=False)
+            else:
+                pd.DataFrame([{'info': 'Tidak ada data pada rentang tanggal ini'}]).to_excel(
+                    writer, sheet_name='Berita & Sentimen', index=False)
+
+        output.seek(0)
+        filename = f'SATRIA_SE2026_BeritaSE2026_{date_from}_{date_to}.xlsx'
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Export gagal: {str(e)}'}), 500
+
+
+def _should_start_news_scheduler():
+    """See se_news_scheduler.py docstring for the reasoning: the classic
+    Werkzeug reloader (used only when FLASK_DEBUG=true and the optional
+    `livereload` package isn't installed) forks a parent+child process, and
+    only the child sets WERKZEUG_RUN_MAIN — so the scheduler must be skipped
+    in the parent to avoid starting twice. The livereload branch and
+    gunicorn (which never hits `__main__` at all) each run this module
+    exactly once, so no such guard is needed there."""
+    using_classic_werkzeug_reloader = debug and Server is None
+    if using_classic_werkzeug_reloader and os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+        return False
+    return os.getenv('SE_NEWS_SCHEDULER_ENABLED', 'true').lower() == 'true'
+
+
+if _should_start_news_scheduler():
+    try:
+        from se_news_scheduler import init_scheduler
+        init_scheduler(se_news_storage, se_news_analyzer)
+    except Exception as e:
+        print(f"[!] Berita SE2026 scheduler failed to start: {e}")
+
+
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
-    debug = os.getenv('FLASK_DEBUG', 'true').lower() == 'true'
     if debug and Server is not None:
         server = Server(app.wsgi_app)
         server.watch('*.py')

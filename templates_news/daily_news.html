@@ -1,0 +1,152 @@
+{% extends "base_news.html" %}
+{% block title %}Statistik Harian — Berita SE2026{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { display:flex; align-items:center; gap:18px; margin-bottom:28px; padding:24px 28px; border-radius:var(--radius-lg); background: var(--gradient-wave-cool); border:1px solid var(--border); }
+    .page-header-icon { width:56px; height:56px; background:linear-gradient(135deg, var(--accent), var(--accent-light)); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(230,126,34,.3); }
+    .page-header-icon svg { width:28px; height:28px; fill:#fff; }
+    .page-header h1 { font-size:22px; font-weight:800; margin-bottom:6px; color:var(--primary); }
+    .page-header p { font-size:13px; color:var(--text-muted); line-height:1.6; }
+
+    .month-picker { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom: 6px; }
+    .chart-wrap { position:relative; width:100%; }
+    canvas { width:100% !important; }
+
+    table.daily-table { width:100%; border-collapse:collapse; margin-top:8px; font-size:13px; }
+    table.daily-table th { text-align:left; padding:10px 14px; background:var(--bg); color:var(--text-muted); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid var(--border); }
+    table.daily-table td { padding:10px 14px; border-bottom:1px solid var(--border); }
+    table.daily-table tr.future td { color: var(--text-muted); font-style: italic; }
+    .day-link { color:var(--primary); font-weight:600; text-decoration:none; font-size:12px; }
+    .day-link:hover { text-decoration:underline; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header reveal">
+    <div class="page-header-icon"><svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg></div>
+    <div>
+        <h1>Statistik Harian per Bulan</h1>
+        <p>Pilih bulan untuk melihat jumlah berita Sensus Ekonomi 2026 yang ditemukan setiap tanggal.</p>
+    </div>
+</div>
+
+<div class="card reveal">
+    <div class="month-picker">
+        <label style="margin-bottom:0;">Pilih Bulan:</label>
+        <select id="month-select" style="max-width:220px;" onchange="loadDaily()">
+            <option value="2026-01">Januari 2026</option>
+            <option value="2026-02">Februari 2026</option>
+            <option value="2026-03">Maret 2026</option>
+            <option value="2026-04">April 2026</option>
+            <option value="2026-05">Mei 2026</option>
+            <option value="2026-06">Juni 2026</option>
+            <option value="2026-07">Juli 2026</option>
+            <option value="2026-08">Agustus 2026</option>
+            <option value="2026-09">September 2026</option>
+            <option value="2026-10">Oktober 2026</option>
+            <option value="2026-11">November 2026</option>
+            <option value="2026-12">Desember 2026</option>
+        </select>
+        <span id="month-total" class="badge badge-success" style="display:none;"></span>
+    </div>
+</div>
+
+<div class="card reveal">
+    <h2>Jumlah Berita per Hari</h2>
+    <div class="chart-wrap"><canvas id="daily-chart" height="280"></canvas></div>
+</div>
+
+<div class="card reveal">
+    <h2>Tabel Rincian</h2>
+    <div style="overflow-x:auto;">
+        <table class="daily-table">
+            <thead><tr><th>Tanggal</th><th>Hari</th><th>Jumlah Berita</th><th></th></tr></thead>
+            <tbody id="daily-table-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const WEEKDAYS = ['Minggu','Senin','Selasa','Rabu','Kamis',"Jum'at",'Sabtu'];
+const MONTH_NAMES = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+let dailyChart = null;
+
+function currentMonthValue() {
+    const now = new Date();
+    return `2026-${String(now.getMonth()+1).padStart(2,'0')}`;
+}
+
+async function loadDaily() {
+    const monthSelect = document.getElementById('month-select');
+    const monthValue = monthSelect.value;
+    const [year, month] = monthValue.split('-').map(Number);
+
+    const res = await fetch(`/news/api/daily_counts?month=${monthValue}`);
+    const data = await res.json();
+    if (data.error) { alert(data.error); return; }
+
+    const labels = data.days.map(d => d.day);
+    const counts = data.days.map(d => d.count);
+    const colors = data.days.map(d => d.is_future ? 'rgba(149,165,166,.25)' : 'rgba(40,116,166,.75)');
+    const borders = data.days.map(d => d.is_future ? 'rgba(149,165,166,.4)' : 'rgba(40,116,166,1)');
+
+    const total = counts.reduce((a,b)=>a+b, 0);
+    const totalBadge = document.getElementById('month-total');
+    totalBadge.style.display = 'inline-flex';
+    totalBadge.textContent = `Total: ${total} berita`;
+
+    const ctx = document.getElementById('daily-chart').getContext('2d');
+    if (dailyChart) dailyChart.destroy();
+    dailyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Jumlah Berita',
+                data: counts,
+                backgroundColor: colors,
+                borderColor: borders,
+                borderWidth: 1.5,
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1B4F72', padding: 10, cornerRadius: 8,
+                    callbacks: {
+                        label: (ctx) => {
+                            const d = data.days[ctx.dataIndex];
+                            return d.is_future ? 'Belum terjadi' : `${d.count} berita`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display:false }, title: { display:true, text: `Tanggal (${MONTH_NAMES[month-1]} ${year})` } },
+                y: { beginAtZero:true, ticks: { precision:0 } }
+            }
+        }
+    });
+
+    const tbody = document.getElementById('daily-table-body');
+    tbody.innerHTML = data.days.map(d => {
+        const dateObj = new Date(year, month-1, d.day);
+        const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d.day).padStart(2,'0')}`;
+        return `<tr class="${d.is_future ? 'future' : ''}">
+            <td>${d.day} ${MONTH_NAMES[month-1]} ${year}</td>
+            <td>${WEEKDAYS[dateObj.getDay()]}</td>
+            <td>${d.is_future ? '—' : d.count + ' berita'}</td>
+            <td>${d.is_future ? '' : `<a class="day-link" href="/news/articles?date=${dateStr}">Lihat berita →</a>`}</td>
+        </tr>`;
+    }).join('');
+}
+
+document.getElementById('month-select').value = currentMonthValue();
+loadDaily();
+</script>
+{% endblock %}

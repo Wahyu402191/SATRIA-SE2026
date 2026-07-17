@@ -70,7 +70,14 @@ mysql -u root < database.sql
 mysql -u root -e "USE satria_se2026; SHOW TABLES;"
 ```
 
-Pastikan muncul table: `videos`, `comments`, `analysis_results`
+Pastikan muncul table: `videos`, `comments`, `analysis_results`, `se_news_articles`
+
+> **Catatan:** `database.sql` diawali `DROP DATABASE IF EXISTS` — menjalankan ulang file ini akan
+> **menghapus semua data yang sudah ada** (video, komentar, berita yang sudah diimport, dll).
+> Jika kamu sudah punya data dan hanya ingin menambahkan tabel `se_news_articles` /
+> `se_news_sentiment` / `se_news_fetch_log` (fitur Berita SE2026) tanpa menghapus data lama,
+> cukup copy-paste blok `CREATE TABLE` ketiga tabel tersebut (bagian "BERITA SENSUS EKONOMI 2026
+> TABLES" di `database.sql`) langsung ke phpMyAdmin/MySQL client, jangan jalankan seluruh file.
 
 ### Step 5: Konfigurasi Environment Variables
 
@@ -136,6 +143,37 @@ Press CTRL+C to quit
 | 📊 **Wordcloud** | Visualisasi kata-kata yang sering muncul |
 | 🎯 **Confusion Matrix** | Evaluasi akurasi model ML |
 | 📉 **Trend Kata** | Analisis trend sentimen dari waktu ke waktu |
+
+### Fitur Berita Sensus Ekonomi 2026 (`/news/`)
+
+Modul monitoring berita otomatis — berbeda dari dashboard Analisis Media Massa (yang datanya
+diimport manual per bulan), modul ini **menemukan berita baru sendiri setiap hari** lewat
+Google News RSS (gratis, tanpa API key), menghitung jumlah berita per hari, men-scrape isi
+artikelnya, lalu otomatis menganalisis sentimennya dengan 4 metode ML yang sama.
+
+| Halaman | Fungsi |
+|---------|--------|
+| `/news/` | Beranda: statistik ringkas, status fetch terakhir, tombol "Refresh Sekarang" |
+| `/news/articles` | Data Berita: filter per tanggal spesifik / rentang tanggal / sumber / kata kunci / sentimen |
+| `/news/daily` | Statistik Harian: pilih bulan (Jan–Des 2026), lihat jumlah berita tiap tanggal |
+| `/news/analysis` | Analisis Sentimen: jalankan/lihat ulang analisis 4 metode ML pada rentang tanggal |
+| `/news/trend` | Trend & Insight: trend sentimen harian, sebaran sumber media, peta intensitas berita 1 tahun |
+| `/news/about` | Penjelasan cara kerja, sumber data, dan keterbatasannya |
+
+**Konfigurasi (`.env`):**
+```env
+SE_NEWS_QUERY_TERMS=Sensus Ekonomi 2026,SE2026 BPS,Sensus Ekonomi BPS
+SE_NEWS_FETCH_INTERVAL_HOURS=3
+SE_NEWS_SCHEDULER_ENABLED=true
+```
+- `SE_NEWS_QUERY_TERMS`: kata kunci pencarian (pisahkan dengan koma) — tambahkan variasi lain di sini jika ingin cakupan berita lebih luas.
+- `SE_NEWS_FETCH_INTERVAL_HOURS`: seberapa sering scheduler otomatis mengambil berita baru.
+- `SE_NEWS_SCHEDULER_ENABLED`: set `false` untuk mematikan scheduler otomatis (fetch tetap bisa dipicu manual lewat tombol Refresh).
+
+**Catatan penting soal data historis:** karena sumbernya adalah indeks Google News (bukan arsip
+resmi), kelengkapan data untuk tanggal-tanggal sebelum modul ini pertama kali dijalankan
+tidak dijamin 100% — tergantung apa yang masih terindeks Google saat itu. Data sejak modul ini
+mulai berjalan tercatat real-time dan akurat.
 
 ### Menghentikan Aplikasi
 ```bash

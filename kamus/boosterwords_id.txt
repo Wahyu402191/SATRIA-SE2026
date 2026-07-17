@@ -28,3 +28,111 @@ telak:1
 terkadang:-1
 terlalu:2
 terus-terusan:1
+
+amat sangat:3
+agak sedikit:-2
+bagitu:1
+bahkan:1
+benar-benar:2
+bener-bener:2
+benar sekali:2
+betul-betul:2
+bisa jadi:-1
+cukup:1
+cukup sekali:1
+dahsyat:2
+ekstra:2
+gak:-1
+gimana ya:-1
+hampir:-1
+jarang:-2
+jauh lebih:2
+jauh sekali:2
+justru:1
+kali ini:1
+kayaknya:-1
+kelewatan:2
+kira-kira:-1
+kurang lebih:-1
+lagi:-1
+makin:1
+makin parah:2
+mana mungkin:-2
+mau:-1
+mesti:1
+ngak:-1
+ogah:-2
+paling tidak:-1
+paling sekali:3
+pernah:-1
+rata-rata:-1
+relatif:-1
+rupa-rupa:1
+sebentar:-1
+sebetulnya:-1
+sedikit:-1
+sedikit sekali:-2
+sekadar:-1
+sekali-kali:-2
+selain:-1
+seolah-olah:-1
+sesekali:-1
+setidaknya:-1
+sudah:-1
+supra:2
+terlalu:2
+terlampau:2
+terlebih lagi:2
+tidak hanya:1
+tidak pernah:-2
+tidak sama sekali:-3
+tidak selalu:-1
+toh:-1
+terlalu berlebihan:2
+terlalu parah:2
+teramat:2
+teramat sangat:3
+ultra:2
+wah:1
+ya sedikit:-1
+boro-boro:-2
+gimanapun:1
+bagaimanapun:1
+sungguh-sungguh:2
+mungkin sekali:1
+paling:2
+terus-terusan:2
+sesungguhnya:1
+sepenuhnya:2
+seutuhnya:2
+sepenuh hati:2
+setulus hati:2
+sebenar-benarnya:2
+sehebat-hebatnya:2
+sebaik-baiknya:2
+sedalam-dalamnya:2
+sebesar-besarnya:2
+sekuat-kuatnya:2
+setinggi-tingginya:2
+serendah-rendahnya:-2
+seburuk-buruknya:-2
+separah-parahnya:-2
+sejahat-jahatnya:-2
+sejelek-jeleknya:-2
+sedalam-dalamnya:2
+sangat-sangat:3
+amat-amat:3
+super sekali:3
+luar biasa sekali:3
+dahsyat sekali:3
+hebat sekali:3
+mantap sekali:3
+keren sekali:3
+bagus sekali:3
+indah sekali:3
+baik sekali:3
+buruk sekali:-3
+jelek sekali:-3
+parah sekali:-3
+hancur sekali:-3
+jahat sekali:-3

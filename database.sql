@@ -181,8 +181,88 @@ INSERT INTO news_sources (source_name, description, website_url) VALUES
 ('Bisnis Indonesia', 'Media berita bisnis dan ekonomi', 'https://www.bisnis.com');
 
 -- ═══════════════════════════════════════════════════════════════════════════
+-- BERITA SENSUS EKONOMI 2026 TABLES
+-- Tabel untuk dashboard "Berita Sensus Ekonomi 2026" (monitoring otomatis)
+-- Terpisah dari news_articles di atas: tabel di atas isinya diimport manual
+-- per bulan, sedangkan tabel di bawah ini tumbuh otomatis tiap hari lewat
+-- Google News RSS + scraping, jadi butuh kolom pelacakan proses tersendiri.
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Table: se_news_articles
+-- Satu baris per artikel yang ditemukan. Kolom fase-1 (title/url/source/
+-- published_date) selalu terisi begitu ditemukan dari RSS. Kolom fase-2
+-- (content/scrape_status) diisi belakangan secara best-effort dan TIDAK
+-- PERNAH memblokir penghitungan jumlah berita per hari.
+-- ═══════════════════════════════════════════════════════════════════════════
+CREATE TABLE se_news_articles (
+    id                    INT AUTO_INCREMENT PRIMARY KEY,
+    title                 VARCHAR(1000) NOT NULL,
+    url                   VARCHAR(1000) NOT NULL,          -- link RSS asli (kadang redirector Google)
+    url_hash              CHAR(40) NOT NULL,                -- SHA1(url) — kunci dedupe (aman utk index)
+    resolved_url          VARCHAR(1000) NULL,               -- URL publisher asli hasil resolusi (best-effort)
+    source                VARCHAR(255) NULL,                -- nama sumber dari tag <source> RSS
+    rss_snippet           TEXT NULL,                         -- ringkasan/description dari RSS, selalu ada
+    content               LONGTEXT NULL,                     -- isi artikel hasil scrape, fallback ke rss_snippet
+    content_source        ENUM('scraped','rss_snippet','none') NOT NULL DEFAULT 'none',
+    scrape_status         ENUM('pending','success','failed') NOT NULL DEFAULT 'pending',
+    scrape_attempted_at   DATETIME NULL,
+    query_keyword         VARCHAR(255) NULL,                 -- query pencarian yang menemukan artikel ini
+    published_date        DATETIME NOT NULL,                 -- waktu terbit (disimpan dalam WIB/Asia-Jakarta)
+    published_day         DATE GENERATED ALWAYS AS (DATE(published_date)) STORED,
+    discovered_at         DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_url_hash (url_hash),
+    INDEX idx_published_day (published_day),
+    INDEX idx_source (source),
+    INDEX idx_scrape_status (scrape_status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Table: se_news_sentiment
+-- Satu baris per (artikel, metode). Sentimen dihitung otomatis begitu artikel
+-- ditemukan (4 metode berjalan independen, tanpa training/batch data
+-- historis), dan bisa di-refresh ulang lewat halaman Analisis Sentimen
+-- (ON DUPLICATE KEY UPDATE menimpa hasil lama).
+-- ═══════════════════════════════════════════════════════════════════════════
+CREATE TABLE se_news_sentiment (
+    id                INT AUTO_INCREMENT PRIMARY KEY,
+    article_id        INT NOT NULL,
+    method_name       VARCHAR(50) NOT NULL,   -- naive_bayes | svm | lstm | indobert
+    sentiment         VARCHAR(20) NOT NULL,   -- Positif | Negatif | Netral
+    confidence_score  DECIMAL(6,4) DEFAULT 0.0000,
+    analyzed_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (article_id) REFERENCES se_news_articles(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_article_method (article_id, method_name),
+    INDEX idx_method (method_name),
+    INDEX idx_sentiment (sentiment)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Table: se_news_fetch_log
+-- Riwayat setiap kali proses fetch (otomatis/manual) berjalan. Dipakai untuk
+-- panel status di dashboard, dan sebagai penanda agar scheduler tidak
+-- menjalankan fetch dobel dalam interval yang sama (aman meski di-deploy
+-- dengan beberapa worker gunicorn sekalipun).
+-- ═══════════════════════════════════════════════════════════════════════════
+CREATE TABLE se_news_fetch_log (
+    id                       INT AUTO_INCREMENT PRIMARY KEY,
+    trigger_type             ENUM('scheduler','manual') NOT NULL DEFAULT 'scheduler',
+    status                   ENUM('running','success','failed') NOT NULL DEFAULT 'running',
+    started_at               DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    completed_at             DATETIME NULL,
+    articles_found           INT DEFAULT 0,
+    articles_new             INT DEFAULT 0,
+    articles_scraped_ok      INT DEFAULT 0,
+    articles_scraped_failed  INT DEFAULT 0,
+    error_message            TEXT NULL,
+    INDEX idx_started_at (started_at),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ═══════════════════════════════════════════════════════════════════════════
 -- SELESAI - Database siap digunakan!
--- Total: 8 tabel
+-- Total: 11 tabel
 -- YouTube: videos, comments, analysis_sessions, analysis_results
 -- Media Massa: news_sources, news_articles, news_analysis_sessions, news_analysis_results
+-- Berita SE2026: se_news_articles, se_news_sentiment, se_news_fetch_log
 -- ═══════════════════════════════════════════════════════════════════════════

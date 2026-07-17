@@ -40,3 +40,8 @@ pymysql
 
 # Lain-lain
 python-dotenv
+
+# Berita SE2026 automation (Google News RSS + scheduler)
+APScheduler
+feedparser
+tzdata

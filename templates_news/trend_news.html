@@ -1,0 +1,196 @@
+{% extends "base_news.html" %}
+{% block title %}Trend & Insight — Berita SE2026{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { display:flex; align-items:center; gap:18px; margin-bottom:28px; padding:24px 28px; border-radius:var(--radius-lg); background: var(--gradient-wave-cool); border:1px solid var(--border); }
+    .page-header-icon { width:56px; height:56px; background:linear-gradient(135deg, var(--accent), var(--accent-light)); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(230,126,34,.3); }
+    .page-header-icon svg { width:28px; height:28px; fill:#fff; }
+    .page-header h1 { font-size:22px; font-weight:800; margin-bottom:6px; color:var(--primary); }
+    .page-header p { font-size:13px; color:var(--text-muted); line-height:1.6; }
+
+    .chart-wrap { position:relative; width:100%; }
+    canvas { width:100% !important; }
+    .filter-bar { display:flex; align-items:flex-end; gap:14px; flex-wrap:wrap; margin-bottom:10px; }
+    .filter-group { display:flex; flex-direction:column; gap:6px; }
+    .filter-group label { margin-bottom:0; font-size:12px; }
+
+    /* Calendar heatmap */
+    .heatmap-wrap { overflow-x:auto; padding-bottom:6px; }
+    .heatmap-grid { display:grid; grid-auto-flow:column; grid-template-rows:repeat(7, 14px); gap:3px; width:max-content; }
+    .heatmap-cell { width:14px; height:14px; border-radius:3px; background:var(--border); position:relative; cursor:default; }
+    .heatmap-cell[data-level="1"] { background:#cfe3f2; }
+    .heatmap-cell[data-level="2"] { background:#8fc0e0; }
+    .heatmap-cell[data-level="3"] { background:#4f9cca; }
+    .heatmap-cell[data-level="4"] { background:var(--primary-dark); }
+    .heatmap-cell:hover::after {
+        content: attr(data-tooltip);
+        position:absolute; bottom:120%; left:50%; transform:translateX(-50%);
+        background:#1B4F72; color:#fff; padding:4px 8px; border-radius:6px;
+        font-size:11px; white-space:nowrap; z-index:10;
+    }
+    .heatmap-legend { display:flex; align-items:center; gap:6px; margin-top:10px; font-size:11px; color:var(--text-muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header reveal">
+    <div class="page-header-icon"><svg viewBox="0 0 24 24"><path d="M3.5 18.5l6-6 4 4L22 6.92"/></svg></div>
+    <div>
+        <h1>Trend & Insight</h1>
+        <p>Perkembangan sentimen dari waktu ke waktu, sebaran sumber media, dan peta intensitas berita sepanjang tahun.</p>
+    </div>
+</div>
+
+<div class="card reveal">
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label>Dari Tanggal</label>
+            <input type="date" id="date-from" value="2026-01-01">
+        </div>
+        <div class="filter-group">
+            <label>Sampai Tanggal</label>
+            <input type="date" id="date-to">
+        </div>
+        <div class="filter-group">
+            <label>Metode</label>
+            <select id="method-select">
+                <option value="naive_bayes">Naive Bayes</option>
+                <option value="svm">SVM</option>
+                <option value="lstm">LSTM</option>
+                <option value="indobert">IndoBERT</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <button class="btn" onclick="loadAll()">Terapkan</button>
+        </div>
+    </div>
+</div>
+
+<div class="card reveal">
+    <h2>Trend Sentimen Harian</h2>
+    <div class="chart-wrap"><canvas id="sentiment-chart" height="280"></canvas></div>
+</div>
+
+<div class="card reveal">
+    <h2>Sumber Media Terbanyak</h2>
+    <div class="chart-wrap"><canvas id="source-chart" height="280"></canvas></div>
+</div>
+
+<div class="card reveal">
+    <h2>Peta Intensitas Berita — 2026</h2>
+    <p class="card-sub">Setiap kotak mewakili satu hari. Semakin gelap warnanya, semakin banyak berita yang ditemukan pada hari itu.</p>
+    <div class="heatmap-wrap"><div class="heatmap-grid" id="heatmap-grid"></div></div>
+    <div class="heatmap-legend">
+        Sedikit
+        <div class="heatmap-cell" data-level="0" style="width:11px;height:11px;"></div>
+        <div class="heatmap-cell" data-level="1" style="width:11px;height:11px;"></div>
+        <div class="heatmap-cell" data-level="2" style="width:11px;height:11px;"></div>
+        <div class="heatmap-cell" data-level="3" style="width:11px;height:11px;"></div>
+        <div class="heatmap-cell" data-level="4" style="width:11px;height:11px;"></div>
+        Banyak
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const PALETTE = ['#2874A6','#E67E22','#27AE60','#9b2335','#5DADE2','#F39C12','#1ABC9C','#8e6b2a','#5a6a7a','#4caf87'];
+let sentimentChart = null, sourceChart = null;
+
+function todayStr() { return new Date().toISOString().slice(0,10); }
+document.getElementById('date-to').value = todayStr();
+
+async function loadSentimentTrend() {
+    const date_from = document.getElementById('date-from').value;
+    const date_to = document.getElementById('date-to').value;
+    const method = document.getElementById('method-select').value;
+
+    const res = await fetch(`/news/api/sentiment_trend?date_from=${date_from}&date_to=${date_to}&method=${method}`);
+    const data = await res.json();
+    if (!data.success) return;
+
+    const ctx = document.getElementById('sentiment-chart').getContext('2d');
+    if (sentimentChart) sentimentChart.destroy();
+    sentimentChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.days,
+            datasets: [
+                { label: 'Positif', data: data.positive, borderColor: '#27AE60', backgroundColor: '#27AE6018', tension:.35, fill:false },
+                { label: 'Negatif', data: data.negative, borderColor: '#E74C3C', backgroundColor: '#E74C3C18', tension:.35, fill:false },
+                { label: 'Netral',  data: data.neutral,  borderColor: '#95A5A6', backgroundColor: '#95A5A618', tension:.35, fill:false },
+            ]
+        },
+        options: {
+            responsive: true,
+            interaction: { mode:'index', intersect:false },
+            scales: { y: { beginAtZero:true, ticks:{ precision:0 } } }
+        }
+    });
+}
+
+async function loadSourceBreakdown() {
+    const date_from = document.getElementById('date-from').value;
+    const date_to = document.getElementById('date-to').value;
+    const res = await fetch(`/news/api/source_breakdown?date_from=${date_from}&date_to=${date_to}`);
+    const data = await res.json();
+    if (!data.success) return;
+
+    const labels = data.sources.map(s => s.source || 'Tidak diketahui');
+    const counts = data.sources.map(s => s.count);
+
+    const ctx = document.getElementById('source-chart').getContext('2d');
+    if (sourceChart) sourceChart.destroy();
+    sourceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{ label: 'Jumlah Berita', data: counts, backgroundColor: labels.map((_,i)=>PALETTE[i%PALETTE.length]) }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: { legend: { display:false } },
+            scales: { x: { beginAtZero:true, ticks:{ precision:0 } } }
+        }
+    });
+}
+
+async function loadHeatmap() {
+    const year = 2026;
+    const res = await fetch(`/news/api/calendar_counts?year=${year}`);
+    const data = await res.json();
+    if (!data.success) return;
+
+    const counts = data.days;
+    const max = Math.max(1, ...Object.values(counts));
+    const grid = document.getElementById('heatmap-grid');
+    grid.innerHTML = '';
+
+    const start = new Date(year, 0, 1);
+    const end = new Date(year, 11, 31);
+    const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+        const key = d.toISOString().slice(0,10);
+        const count = counts[key] || 0;
+        let level = 0;
+        if (count > 0) level = Math.min(4, Math.ceil((count / max) * 4));
+
+        const cell = document.createElement('div');
+        cell.className = 'heatmap-cell';
+        cell.dataset.level = level;
+        cell.dataset.tooltip = `${d.getDate()} ${monthNames[d.getMonth()]} ${year} — ${count} berita`;
+        grid.appendChild(cell);
+    }
+}
+
+function loadAll() {
+    loadSentimentTrend();
+    loadSourceBreakdown();
+}
+
+loadAll();
+loadHeatmap();
+</script>
+{% endblock %}

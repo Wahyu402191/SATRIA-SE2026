@@ -1,0 +1,106 @@
+{% extends "base_news.html" %}
+{% block title %}Tentang — Berita SE2026{% endblock %}
+
+{% block extra_css %}
+<style>
+    .about-hero {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, var(--accent-light) 100%);
+        border-radius: var(--radius-lg); padding: 40px 44px; margin-bottom: 28px;
+        color: #fff; position: relative; overflow: hidden;
+        box-shadow: 0 8px 32px rgba(40,116,166,.25);
+        border:2px solid rgba(255,255,255,.2);
+    }
+    .about-hero h1 { font-size:28px; font-weight:900; margin-bottom:12px; letter-spacing:-.6px; }
+    .about-hero p { font-size:14px; color:rgba(255,255,255,.85); line-height:1.8; max-width:760px; }
+    .about-hero .version-badge {
+        display:inline-flex; align-items:center; gap:8px; margin-top:18px;
+        background:rgba(255,255,255,.18); border:2px solid rgba(255,255,255,.25);
+        color:#fff; font-size:12px; font-weight:600; padding:7px 18px; border-radius:99px;
+    }
+
+    .section-heading { font-size:17px; font-weight:800; margin-bottom:20px; display:flex; align-items:center; gap:10px; color: var(--primary); }
+    .section-heading::before { content:''; display:block; width:4px; height:24px; background:var(--gradient-blue-green); border-radius:3px; }
+
+    .pipeline { display:flex; flex-direction:column; gap:0; }
+    .pipe-step { display:flex; align-items:flex-start; gap:16px; padding:14px 0; border-bottom:1px solid var(--border); }
+    .pipe-step:last-child { border-bottom:none; }
+    .pipe-num { width:30px; height:30px; border-radius:50%; background:var(--gradient-blue-green); color:#fff; font-size:13px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .pipe-label { font-size:14px; font-weight:700; color:var(--text); }
+    .pipe-desc { font-size:12px; color:var(--text-muted); line-height:1.6; }
+
+    .feature-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
+    .feature-item { display:flex; align-items:flex-start; gap:12px; padding:16px; background:var(--bg-card); border-radius:var(--radius-lg); border:1.5px solid var(--border); }
+    .feature-dot { width:10px; height:10px; border-radius:50%; background:var(--accent); margin-top:5px; flex-shrink:0; }
+    .feature-text { font-size:13px; color:var(--text); line-height:1.7; font-weight:500; }
+
+    .db-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
+    .db-item { background:var(--bg-card); border:2px solid var(--border); border-radius:var(--radius-lg); padding:18px; text-align:center; }
+    .db-name { font-size:13px; font-weight:700; color:var(--primary); margin-bottom:4px; }
+    .db-desc { font-size:11px; color:var(--text-muted); line-height:1.5; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="about-hero">
+    <h1>Berita Sensus Ekonomi 2026</h1>
+    <p>Modul monitoring berita otomatis untuk memantau liputan media massa Indonesia terhadap program Sensus Ekonomi 2026 —
+       menemukan berita baru setiap hari, menghitung volumenya, dan menganalisis sentimennya dengan 4 metode Machine Learning.</p>
+    <div class="version-badge"><span></span> Dashboard Berita SE2026 &nbsp;|&nbsp; SATRIA SE2026 &nbsp;|&nbsp; 2026</div>
+</div>
+
+<div class="card">
+    <div class="section-heading">Bagaimana Cara Kerjanya?</div>
+    <div class="pipeline">
+        <div class="pipe-step"><div class="pipe-num">1</div><div><div class="pipe-label">Pencarian Otomatis (Google News RSS)</div><div class="pipe-desc">Sistem mencari berita dengan kata kunci "Sensus Ekonomi 2026" (dan variasinya) lewat Google News RSS — gratis, tanpa API key, tanpa batas kuota harian.</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">2</div><div><div class="pipe-label">Pencatatan Jumlah Berita per Hari</div><div class="pipe-desc">Setiap artikel yang ditemukan langsung dicatat tanggal terbitnya — inilah yang membuat fitur Statistik Harian selalu akurat, bahkan jika langkah scraping isi artikel di bawah ini gagal untuk sebagian artikel.</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">3</div><div><div class="pipe-label">Scraping Isi Artikel (Best-Effort)</div><div class="pipe-desc">Sistem mencoba mengambil isi lengkap tiap artikel dari situs aslinya. Jika gagal (situs memblokir, redirect kompleks, dsb), sistem memakai ringkasan dari RSS sebagai cadangan — ditandai jelas di halaman Data Berita.</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">4</div><div><div class="pipe-label">Analisis Sentimen Otomatis</div><div class="pipe-desc">Begitu isi artikel didapat, sistem langsung menganalisis sentimennya dengan 4 metode ML (Naive Bayes, SVM, LSTM, IndoBERT) — hasilnya langsung tersimpan, tidak perlu menunggu proses batch manual.</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">5</div><div><div class="pipe-label">Berulang Otomatis</div><div class="pipe-desc">Seluruh proses di atas diulang otomatis setiap beberapa jam oleh background scheduler, dan bisa dipicu kapan saja lewat tombol "Refresh Sekarang" di Beranda.</div></div></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-heading">Sumber Data & Keterbatasannya</div>
+    <p style="font-size:13px; color:var(--text); line-height:1.8; margin-bottom:14px;">
+        Data berita berasal dari <strong>Google News RSS</strong>, indeks berita gratis yang mencakup ratusan media online Indonesia.
+    </p>
+    <p style="padding:14px; background:var(--accent-pale); border-radius:var(--radius); font-size:12px; color:#7a5a0a; line-height:1.7; border-left:3px solid var(--accent);">
+        <strong>Catatan penting:</strong> Kelengkapan data historis (terutama untuk tanggal-tanggal sebelum modul ini pertama kali dijalankan)
+        bergantung pada apa yang masih terindeks oleh Google News saat itu — <strong>tidak dijamin 100% lengkap sejak 1 Januari 2026</strong>.
+        Semakin lama sistem ini berjalan, semakin lengkap dan akurat data harian yang tercatat, karena setiap hari baru selalu tercatat secara real-time.
+    </p>
+</div>
+
+<div class="card">
+    <div class="section-heading">Metode Analisis Sentimen</div>
+    <div class="feature-list">
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Naive Bayes</strong> — probabilistic classifier berbasis TF-IDF</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>SVM</strong> — Support Vector Machine linear dengan class weight balanced</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>LSTM</strong> — pendekatan sequence-aware berbasis lexicon</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>IndoBERT</strong> — simulasi transformer Bahasa Indonesia dengan negation handling</div></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-heading">Struktur Database</div>
+    <div class="db-grid">
+        <div class="db-item"><div class="db-name">se_news_articles</div><div class="db-desc">Artikel yang ditemukan otomatis: judul, url, sumber, tanggal terbit, isi (jika berhasil di-scrape)</div></div>
+        <div class="db-item"><div class="db-name">se_news_sentiment</div><div class="db-desc">Hasil sentimen per artikel per metode ML</div></div>
+        <div class="db-item"><div class="db-name">se_news_fetch_log</div><div class="db-desc">Riwayat setiap proses fetch otomatis/manual</div></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-heading">Fitur Dashboard</div>
+    <div class="feature-list">
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Pemantauan otomatis jumlah berita per hari, sejak 1 Januari 2026 hingga hari ini dan seterusnya</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Refresh manual kapan saja + scheduler otomatis setiap beberapa jam</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Scraping isi artikel dengan fallback ringkasan RSS bila gagal</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Analisis sentimen otomatis 4 metode ML begitu artikel ditemukan</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Statistik harian per bulan (Januari - Desember 2026)</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Filter & pencarian berita berdasarkan tanggal spesifik, sumber, kata kunci, dan sentimen</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Trend sentimen harian, sebaran sumber media, dan peta intensitas berita tahunan</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Export data ke Excel (.xlsx)</div></div>
+    </div>
+</div>
+{% endblock %}

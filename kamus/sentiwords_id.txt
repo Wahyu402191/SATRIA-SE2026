@@ -1727,3 +1727,367 @@ wtf:-4
 yatim:-1
 yeah:3
 zina:-5
+
+korupsi:-5
+pungli:-5
+suap:-4
+sogok:-4
+kolusi:-5
+nepotisme:-5
+manipulasi:-4
+kecurangan:-5
+pemalsuan:-5
+plagiat:-4
+pencurian:-5
+perampokan:-5
+pembunuhan:-5
+terorisme:-5
+teroris:-5
+radikalisme:-5
+ekstremisme:-5
+diskriminasi:-5
+bullying:-5
+cyberbullying:-5
+pelecehan:-5
+pemerkosaan:-5
+penyiksaan:-5
+perdagangan manusia:-5
+narkoba:-5
+judi:-5
+pornografi:-5
+prostitusi:-5
+selingkuh:-5
+pengkhianatan:-5
+fitnah:-5
+hoaks:-5
+disinformasi:-5
+ujaran kebencian:-5
+hate speech:-5
+scam:-5
+fraud:-5
+gaslighting:-5
+toxic:-4
+abusive:-5
+KDRT:-5
+depresi:-5
+burnout:-4
+stres berat:-5
+putus asa:-5
+hopeless:-5
+trauma:-5
+racun:-4
+wabah:-4
+pandemi:-4
+epidemi:-4
+koruptor:-5
+penjahat:-5
+kriminal:-5
+bejat:-5
+amoral:-5
+immoral:-5
+asusila:-5
+tercela:-4
+hina:-5
+nista:-5
+biadab:-5
+barbar:-5
+sadis:-5
+brutal:-5
+kejam:-5
+ganas:-5
+rakus:-5
+tamak:-5
+serakah:-5
+arogan:-4
+sombong:-4
+angkuh:-4
+congkak:-4
+egois:-5
+kikir:-4
+pengecut:-4
+penakut:-3
+plin-plan:-3
+malas:-4
+bohong:-5
+curang:-5
+licik:-4
+munafik:-5
+penipu:-5
+pembohong:-4
+penghasut:-5
+provokatif:-4
+merendahkan:-4
+menghina:-5
+melecehkan:-5
+mempermalukan:-5
+memfitnah:-5
+mengintimidasi:-5
+menekan:-4
+memaksa:-4
+mengancam:-4
+menyiksa:-5
+menganiaya:-5
+menindas:-5
+merampok:-5
+mencuri:-5
+membunuh:-5
+membakar:-4
+merusak:-4
+menghancurkan:-4
+meracuni:-5
+memperdaya:-5
+menyesatkan:-5
+menyalahgunakan:-4
+mengeksploitasi:-5
+mencemari:-4
+mengotori:-4
+memanipulasi:-4
+menipu:-5
+menggelapkan:-4
+menyuap:-4
+menyogok:-4
+berpura-pura:-4
+bersandiwara:-4
+berkhianat:-5
+berkonspirasi:-4
+bersekongkol:-4
+menghasut:-4
+memprovokasi:-4
+menyebar fitnah:-5
+menyebar hoaks:-5
+mengancam nyawa:-5
+membahayakan:-5
+meracuni pikiran:-5
+memanipulasi emosi:-5
+mengendalikan secara paksa:-5
+membuat trauma:-5
+menyakiti hati:-5
+menghancurkan kepercayaan:-5
+mengkhianati kepercayaan:-5
+menyalahkan orang lain:-4
+selalu menyalahkan:-4
+tidak pernah salah:-4
+tidak mau minta maaf:-4
+tidak bertanggung jawab:-4
+tidak bisa diandalkan:-4
+tidak amanah:-5
+korup:-5
+culas:-5
+bengis:-5
+lalim:-5
+zalim:-5
+aniaya:-5
+durhaka:-5
+keji:-5
+cabul:-5
+vulgar:-4
+jorok:-4
+kotor:-4
+busuk:-4
+menjijikkan:-5
+memuakkan:-5
+muak:-5
+jijik:-5
+anti:-2
+antipati:-4
+fobia:-3
+xenofobia:-4
+islamofobia:-4
+homofobia:-4
+rasialisme:-5
+tribalisme:-4
+sektarianisme:-4
+fanatisme:-4
+radikalis:-5
+ekstremis:-5
+separatisme:-4
+vandalisme:-5
+anarki:-5
+anarkisme:-4
+nihilisme:-4
+sinisme:-3
+pesimis:-4
+pesimisme:-4
+putus harapan:-5
+frustasi:-4
+demoralisasi:-4
+kecewa berat:-5
+patah hati:-5
+hancur hati:-5
+luka dalam:-5
+nestapa:-5
+sengsara:-5
+menderita:-5
+tersiksa:-5
+terluka:-4
+teraniaya:-5
+terdzalimi:-5
+ditinggalkan:-4
+dikucilkan:-5
+disingkirkan:-5
+dibuang:-5
+tidak diterima:-4
+ditolak:-4
+disepelekan:-5
+diremehkan:-5
+diabaikan:-4
+disia-siakan:-5
+tidak dihargai:-5
+direndahkan:-5
+dihinakan:-5
+dilecehkan:-5
+diintimidasi:-5
+dipaksa:-4
+dirampas:-5
+dijajah:-5
+diperbudak:-5
+dieksploitasi:-5
+berduka:-4
+berkabung:-4
+menangis:-3
+isak tangis:-4
+ratapan:-4
+tangisan:-4
+kesedihan mendalam:-5
+duka mendalam:-5
+kehilangan:-4
+ketiadaan:-3
+kekosongan:-4
+hampa:-4
+kosong hati:-4
+hampa jiwa:-5
+tertekan:-4
+tertekan batin:-5
+gelisah:-4
+resah:-4
+cemas berlebihan:-4
+khawatir berlebihan:-4
+paranoid:-4
+ancaman nyata:-5
+bahaya mengintai:-5
+hidup dalam ketakutan:-5
+tidak ada rasa aman:-5
+tidak tenang:-4
+tidak nyaman:-3
+menderita dalam diam:-5
+tersiksa dalam sunyi:-5
+terpenjara secara batin:-5
+tidak bebas:-4
+terkekang:-4
+terbelenggu:-4
+terjerat:-4
+terganjal:-4
+tertahan:-3
+sial:-4
+kesialan:-4
+nasib buruk:-4
+takdir buruk:-4
+celaka:-4
+cedera:-3
+sakit parah:-5
+penyakit kronis:-4
+cacat:-3
+lumpuh:-4
+meninggal dunia:-4
+kematian:-4
+tragedi:-5
+musibah:-5
+bencana:-5
+banjir besar:-4
+gempa dahsyat:-4
+tsunami:-5
+kebakaran besar:-5
+tanah longsor:-4
+kecelakaan fatal:-5
+kecelakaan maut:-5
+tabrakan maut:-5
+korban jiwa:-5
+luka parah:-4
+cacat permanen:-5
+kritis:-4
+sekarat:-5
+koma:-4
+krisis:-4
+kegagalan total:-5
+kolaps total:-5
+bangkrut:-5
+pailit:-5
+gulung tikar:-5
+rugi besar:-5
+defisit besar:-4
+hutang menumpuk:-4
+terlilit hutang:-5
+investasi gagal:-4
+bisnis hancur:-5
+karir hancur:-5
+reputasi hancur:-5
+nama baik rusak:-5
+skandal besar:-5
+kontroversi buruk:-4
+blunder:-4
+gagal paham:-3
+salah kaprah:-3
+miskomunikasi:-3
+miss komunikasi:-3
+tidak kompeten:-4
+tidak profesional:-4
+tidak handal:-4
+tidak terlatih:-3
+tidak berpengalaman:-3
+tidak layak:-4
+tidak pantas:-4
+tidak sesuai:-3
+tidak memadai:-3
+tidak mencukupi:-3
+tidak lengkap:-2
+tidak akurat:-3
+tidak valid:-3
+tidak credible:-3
+tidak terpercaya:-4
+tidak jujur:-5
+tidak transparan:-4
+tidak adil:-5
+tidak konsisten:-3
+tidak tegas:-3
+lemah kepemimpinan:-4
+kepemimpinan buruk:-4
+salah urus:-4
+salah kelola:-4
+mismanagement:-4
+salah kebijakan:-4
+kebijakan buruk:-4
+regulasi buruk:-4
+hukum tidak adil:-5
+penegakan hukum lemah:-4
+korupsi hukum:-5
+mafia hukum:-5
+suap hakim:-5
+vonis tidak adil:-5
+hak asasi dilanggar:-5
+kebebasan dirampas:-5
+demokrasi dirusak:-5
+otoriter:-4
+diktator:-5
+tirani:-5
+despotisme:-5
+totalitarianisme:-5
+fasis:-5
+fasisme:-5
+komunisme ekstrem:-4
+propaganda jahat:-5
+cuci otak:-5
+sensor berlebihan:-4
+privasi dilanggar:-4
+data disalahgunakan:-4
+privasi bocor:-4
+sadap ilegal:-4
+pengawasan berlebihan:-4
+mata-mata:-3
+spionase:-3
+provokasi berdarah:-5
+genosida:-5
+kejahatan perang:-5
+kejahatan terhadap kemanusiaan:-5
+apartheid:-5
+perbudakan modern:-5
+kerja paksa:-5

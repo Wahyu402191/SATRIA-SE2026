@@ -1,0 +1,234 @@
+{% extends "base_news.html" %}
+{% block title %}Data Berita — Berita SE2026{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-bar { display:flex; align-items:flex-end; gap:14px; flex-wrap:wrap; margin-bottom: 4px; }
+    .filter-group { display:flex; flex-direction:column; gap:6px; min-width: 160px; }
+    .filter-group label { margin-bottom:0; font-size:12px; }
+    .chip-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .chip { padding:8px 16px; border-radius:99px; border:1.5px solid var(--border); background:var(--bg-card); font-size:12.5px; font-weight:600; cursor:pointer; transition:all .2s; color:var(--text-muted); }
+    .chip:hover { border-color:var(--primary-light); }
+    .chip.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .chip.active.positif { background:var(--success); border-color:var(--success); }
+    .chip.active.negatif { background:var(--danger); border-color:var(--danger); }
+    .chip.active.netral { background:var(--neutral); border-color:var(--neutral); }
+
+    .article-row { display:flex; align-items:center; gap:16px; padding:16px 12px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .2s; }
+    .article-row:hover { background:var(--bg); }
+    .article-title { font-size:14px; font-weight:600; color:var(--text); }
+    .article-meta { font-size:11.5px; color:var(--text-muted); margin-top:4px; }
+    .content-source-tag { font-size:10px; padding:2px 8px; border-radius:99px; background:#f0f2f5; color:var(--text-muted); font-weight:600; }
+    .empty-state { text-align:center; padding:60px 24px; color:var(--text-muted); }
+    .pagination { display:flex; justify-content:center; gap:10px; margin-top:20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card reveal">
+    <h2>Filter & Cari Berita</h2>
+    <p class="card-sub">Cari berita Sensus Ekonomi 2026 berdasarkan tanggal, sumber, kata kunci, atau sentimen.</p>
+
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label>Tanggal Spesifik</label>
+            <input type="date" id="f-date">
+        </div>
+        <div class="filter-group">
+            <label>Dari Tanggal</label>
+            <input type="date" id="f-date-from" value="2026-01-01">
+        </div>
+        <div class="filter-group">
+            <label>Sampai Tanggal</label>
+            <input type="date" id="f-date-to">
+        </div>
+        <div class="filter-group" style="flex:1;">
+            <label>Cari Judul/Isi</label>
+            <input type="text" id="f-search" placeholder="mis. pendataan, UMKM, digital...">
+        </div>
+        <div class="filter-group">
+            <label>Sumber Media</label>
+            <select id="f-source">
+                <option value="">Semua Sumber</option>
+                {% for s in sources %}
+                <option value="{{ s }}">{{ s }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <button class="btn" onclick="resetAndLoad()">Terapkan Filter</button>
+        </div>
+    </div>
+
+    <div class="chip-row" style="margin-top:16px;">
+        <div class="chip active" data-sentiment="" onclick="setSentiment('', this)">Semua Sentimen</div>
+        <div class="chip positif" data-sentiment="Positif" onclick="setSentiment('Positif', this)">Positif</div>
+        <div class="chip negatif" data-sentiment="Negatif" onclick="setSentiment('Negatif', this)">Negatif</div>
+        <div class="chip netral" data-sentiment="Netral" onclick="setSentiment('Netral', this)">Netral</div>
+    </div>
+</div>
+
+<div class="card reveal">
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+        <h2 style="margin-bottom:0;">Daftar Berita</h2>
+        <a class="btn btn-ghost btn-sm" id="export-link" href="/news/export">Export Excel</a>
+    </div>
+    <div id="articles-list" style="margin-top:12px;"></div>
+    <div class="pagination">
+        <button class="btn btn-ghost btn-sm" id="prev-btn" onclick="changePage(-1)">← Sebelumnya</button>
+        <span id="page-info" style="align-self:center; font-size:12px; color:var(--text-muted);"></span>
+        <button class="btn btn-ghost btn-sm" id="next-btn" onclick="changePage(1)">Selanjutnya →</button>
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detail-modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div>
+                <h2 id="modal-title">Detail Berita</h2>
+                <p id="modal-subtitle"></p>
+            </div>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+    </div>
+</div>
+
+<script>
+const PAGE_SIZE = 15;
+let currentPage = 0;
+let currentSentiment = '';
+
+function getFilters() {
+    return {
+        date: document.getElementById('f-date').value,
+        date_from: document.getElementById('f-date-from').value,
+        date_to: document.getElementById('f-date-to').value,
+        q: document.getElementById('f-search').value,
+        source: document.getElementById('f-source').value,
+        sentiment: currentSentiment,
+    };
+}
+
+function setSentiment(val, el) {
+    currentSentiment = val;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    resetAndLoad();
+}
+
+function resetAndLoad() {
+    currentPage = 0;
+    loadArticles();
+}
+
+function changePage(delta) {
+    currentPage = Math.max(0, currentPage + delta);
+    loadArticles();
+}
+
+async function loadArticles() {
+    const f = getFilters();
+    const params = new URLSearchParams();
+    if (f.date) params.set('date', f.date);
+    if (!f.date && f.date_from) params.set('date_from', f.date_from);
+    if (!f.date && f.date_to) params.set('date_to', f.date_to);
+    if (f.q) params.set('q', f.q);
+    if (f.source) params.set('source', f.source);
+    if (f.sentiment) params.set('sentiment', f.sentiment);
+    params.set('limit', PAGE_SIZE);
+    params.set('offset', currentPage * PAGE_SIZE);
+
+    document.getElementById('export-link').href = `/news/export?date_from=${f.date_from || '2026-01-01'}&date_to=${f.date_to || ''}`;
+
+    const res = await fetch('/news/api/articles?' + params.toString());
+    const data = await res.json();
+    const list = document.getElementById('articles-list');
+
+    if (!data.success || !data.articles.length) {
+        list.innerHTML = `<div class="empty-state">Tidak ada berita yang cocok dengan filter ini.</div>`;
+        document.getElementById('page-info').textContent = '';
+        document.getElementById('next-btn').disabled = true;
+        return;
+    }
+
+    list.innerHTML = data.articles.map(a => `
+        <div class="article-row" onclick="openModal(${a.id})">
+            <div style="flex:1; min-width:0;">
+                <div class="article-title">${escapeHtml(a.title)}</div>
+                <div class="article-meta">
+                    ${escapeHtml(a.source || '-')} &middot; ${a.published_date || ''}
+                    <span class="content-source-tag">${a.content_source === 'scraped' ? '📄 Full text' : (a.content_source === 'rss_snippet' ? '📝 Ringkasan' : '⏳ Belum ada isi')}</span>
+                </div>
+            </div>
+            ${a.naive_bayes_sentiment ? `<span class="badge ${sentimentBadgeClass(a.naive_bayes_sentiment)}">${a.naive_bayes_sentiment}</span>` : ''}
+        </div>
+    `).join('');
+
+    document.getElementById('page-info').textContent = `Halaman ${currentPage + 1}`;
+    document.getElementById('prev-btn').disabled = currentPage === 0;
+    document.getElementById('next-btn').disabled = data.articles.length < PAGE_SIZE;
+}
+
+function sentimentBadgeClass(label) {
+    if (label === 'Positif') return 'badge-success';
+    if (label === 'Negatif') return 'badge-danger';
+    return 'badge-neutral';
+}
+
+function escapeHtml(s) {
+    const div = document.createElement('div');
+    div.textContent = s || '';
+    return div.innerHTML;
+}
+
+async function openModal(id) {
+    const res = await fetch(`/news/api/article/${id}`);
+    const data = await res.json();
+    if (!data.success) { alert(data.error); return; }
+    const a = data.article;
+
+    document.getElementById('modal-title').textContent = a.title;
+    document.getElementById('modal-subtitle').textContent = `${a.source || '-'} · ${a.published_date || ''}`;
+
+    const methods = [
+        ['naive_bayes', 'Naive Bayes'], ['svm', 'SVM'], ['lstm', 'LSTM'], ['indobert', 'IndoBERT']
+    ];
+    const badges = methods.map(([key, label]) => {
+        const val = a[`${key}_sentiment`];
+        if (!val) return `<span class="badge badge-neutral">${label}: -</span>`;
+        return `<span class="badge ${sentimentBadgeClass(val)}">${label}: ${val}</span>`;
+    }).join(' ');
+
+    document.getElementById('modal-body').innerHTML = `
+        <div style="margin-bottom:14px; display:flex; gap:8px; flex-wrap:wrap;">${badges}</div>
+        <div style="margin-bottom:14px;">
+            <span class="content-source-tag">${a.content_source === 'scraped' ? '📄 Isi lengkap hasil scraping' : (a.content_source === 'rss_snippet' ? '📝 Ringkasan dari RSS (isi lengkap gagal di-scrape)' : '⏳ Belum ada isi')}</span>
+        </div>
+        <p style="font-size:13.5px; line-height:1.8; color:var(--text); white-space:pre-wrap;">${escapeHtml(a.content || 'Belum ada isi.')}</p>
+        <div style="margin-top:20px;">
+            <a href="${a.resolved_url || a.url}" target="_blank" rel="noopener" class="btn btn-sm">Buka Berita Asli →</a>
+        </div>
+    `;
+
+    document.getElementById('detail-modal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('detail-modal').style.display = 'none';
+}
+document.getElementById('detail-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'detail-modal') closeModal();
+});
+
+// Pre-fill single-date filter from ?date= query param (linked from Statistik Harian)
+(function initFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const date = params.get('date');
+    if (date) document.getElementById('f-date').value = date;
+})();
+
+loadArticles();
+</script>
+{% endblock %}
