@@ -16,20 +16,50 @@
     .filter-group label { margin-bottom:0; font-size:12px; }
 
     /* Calendar heatmap */
-    .heatmap-wrap { overflow-x:auto; padding-bottom:6px; }
-    .heatmap-grid { display:grid; grid-auto-flow:column; grid-template-rows:repeat(7, 14px); gap:3px; width:max-content; }
-    .heatmap-cell { width:14px; height:14px; border-radius:3px; background:var(--border); position:relative; cursor:default; }
+    .heatmap-wrap {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 6px;
+    }
+    .heatmap-grid {
+        display: grid;
+        grid-auto-flow: column;
+        grid-template-rows: repeat(7, 1fr);
+        gap: 3px;
+        /* Isi penuh lebar container, cell ikut menyesuaikan */
+        width: 100%;
+        min-width: 0;
+    }
+    .heatmap-cell {
+        aspect-ratio: 1 / 1;    /* selalu kotak */
+        border-radius: 3px;
+        background: var(--border);
+        position: relative;
+        cursor: default;
+        min-width: 0;
+        min-height: 0;
+    }
     .heatmap-cell[data-level="1"] { background:#cfe3f2; }
     .heatmap-cell[data-level="2"] { background:#8fc0e0; }
     .heatmap-cell[data-level="3"] { background:#4f9cca; }
     .heatmap-cell[data-level="4"] { background:var(--primary-dark); }
     .heatmap-cell:hover::after {
         content: attr(data-tooltip);
-        position:absolute; bottom:120%; left:50%; transform:translateX(-50%);
-        background:#1B4F72; color:#fff; padding:4px 8px; border-radius:6px;
-        font-size:11px; white-space:nowrap; z-index:10;
+        position: absolute; bottom: 120%; left: 50%;
+        transform: translateX(-50%);
+        background: #1B4F72; color: #fff;
+        padding: 4px 8px; border-radius: 6px;
+        font-size: 11px; white-space: nowrap; z-index: 10;
+        pointer-events: none;
     }
-    .heatmap-legend { display:flex; align-items:center; gap:6px; margin-top:10px; font-size:11px; color:var(--text-muted); }
+    .heatmap-legend {
+        display: flex; align-items: center; gap: 6px;
+        margin-top: 10px; font-size: 11px; color: var(--text-muted);
+    }
+    .heatmap-legend .heatmap-cell {
+        width: 11px !important; height: 11px !important;
+        aspect-ratio: unset; flex-shrink: 0;
+    }
 </style>
 {% endblock %}
 
@@ -168,22 +198,49 @@ async function loadHeatmap() {
     grid.innerHTML = '';
 
     const start = new Date(year, 0, 1);
-    const end = new Date(year, 11, 31);
+    const end   = new Date(year, 11, 31);
     const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
-        const key = d.toISOString().slice(0,10);
+    // Hitung total minggu (kolom) yang dibutuhkan
+    // Mulai dari Senin pertama sebelum/pada 1 Jan
+    const firstDay  = start.getDay(); // 0=Sun
+    const startOffset = (firstDay === 0 ? 6 : firstDay - 1); // geser ke Senin
+    const totalDays  = Math.ceil((((end - start) / 86400000) + 1 + startOffset) / 7) * 7;
+    const totalWeeks = totalDays / 7;
+
+    // Set kolom grid secara eksplisit
+    grid.style.gridTemplateColumns = `repeat(${totalWeeks}, 1fr)`;
+    grid.style.gridTemplateRows    = 'repeat(7, 1fr)';
+
+    // Isi cell kosong di awal (padding hari sebelum 1 Jan)
+    for (let i = 0; i < startOffset; i++) {
+        const blank = document.createElement('div');
+        blank.className = 'heatmap-cell';
+        blank.style.background = 'transparent';
+        blank.style.border = 'none';
+        grid.appendChild(blank);
+    }
+
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const key   = d.toISOString().slice(0, 10);
         const count = counts[key] || 0;
         let level = 0;
         if (count > 0) level = Math.min(4, Math.ceil((count / max) * 4));
 
         const cell = document.createElement('div');
-        cell.className = 'heatmap-cell';
+        cell.className     = 'heatmap-cell';
         cell.dataset.level = level;
         cell.dataset.tooltip = `${d.getDate()} ${monthNames[d.getMonth()]} ${year} — ${count} berita`;
         grid.appendChild(cell);
     }
 }
+
+// Re-render heatmap saat ukuran window berubah
+let resizeTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(loadHeatmap, 200);
+});
 
 function loadAll() {
     loadSentimentTrend();

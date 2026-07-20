@@ -58,10 +58,9 @@
     </h2>
     <p class="card-sub">Pilih bulan untuk melihat dan menganalisis data berita dari media massa pada periode tersebut.</p>
     
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-top: 24px;">
+    <div class="month-grid">
         {% for month in available_months %}
-        <button class="month-btn" onclick="selectMonth('{{ month.value }}', '{{ month.label }}')"
-                style="padding: 18px; border: 2px solid var(--border); border-radius: var(--radius); background: var(--bg-card); cursor: pointer; transition: all 0.3s; text-align: center;">
+        <button class="month-btn" onclick="selectMonth('{{ month.value }}', '{{ month.label }}')">
             <div style="font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 6px;">{{ month.label }}</div>
             <div style="font-size: 20px; font-weight: 800; color: var(--accent);">{{ month.count }}</div>
             <div style="font-size: 11px; color: var(--text-muted);">berita</div>
@@ -131,17 +130,53 @@
 </div>
 
 <style>
+    .month-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 14px;
+        margin-top: 24px;
+    }
+
+    .month-btn {
+        padding: 18px 10px;
+        border: 2px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--bg-card);
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: center;
+        width: 100%;
+    }
+
     .month-btn:hover {
         border-color: var(--primary);
         background: var(--gradient-wave-cool);
         transform: translateY(-3px);
         box-shadow: var(--shadow-md);
     }
-    
+
     .month-btn.selected {
         border-color: var(--accent);
         background: linear-gradient(135deg, rgba(230, 126, 34, 0.1), rgba(243, 156, 18, 0.1));
         box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.2);
+    }
+
+    /* Tablet: 3 kolom */
+    @media (max-width: 900px) {
+        .month-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    /* Mobile: 2 kolom */
+    @media (max-width: 540px) {
+        .month-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .month-btn {
+            padding: 14px 8px;
+        }
     }
 </style>
 

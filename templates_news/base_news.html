@@ -257,16 +257,77 @@
         @keyframes skeletonWave { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
         /* ─── RESPONSIVE ─── */
-        @media (max-width: 900px) {
-            .inst-inner { flex-direction: column; min-height: auto; }
-            .inst-photo-wrap { width: 100%; height: 120px; }
-            .inst-badge { margin: 0 auto; margin-top: 12px; }
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            z-index: 1000;
         }
+        .hamburger span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: var(--primary);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .hamburger.open span:nth-child(2) { opacity: 0; }
+        .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        @media (max-width: 900px) {
+            .inst-inner { flex-direction: column; min-height: auto; padding: 16px; }
+            .inst-photo-wrap { width: 100%; height: 80px; }
+            .inst-badge { margin: 8px auto 12px; padding: 8px 16px; }
+            .inst-badge-year { font-size: 24px; }
+            .inst-body { padding: 12px 16px; }
+            .inst-title { font-size: 16px; }
+            .inst-subtitle { display: none; }
+            .inst-meta { display: none; }
+        }
+
         @media (max-width: 768px) {
-            .navbar-inner { flex-direction: column; height: auto; padding: 12px 16px; gap: 10px; }
-            .nav-links { flex-wrap: wrap; gap: 4px; }
-            .container { padding: 16px; }
-            .card { padding: 18px 20px; }
+            .hamburger { display: flex; }
+            .navbar { height: auto; }
+            .navbar-inner { padding: 12px 16px; flex-wrap: wrap; height: auto; gap: 0; }
+            .nav-links { display: none; width: 100%; flex-direction: column; gap: 2px; padding: 8px 0 12px; border-top: 1px solid var(--border); margin-top: 8px; }
+            .nav-links.open { display: flex; }
+            .nav-links a { padding: 10px 12px; font-size: 14px; }
+            .nav-links a.active::after { display: none; }
+            .nav-divider { display: none; }
+            .btn-nav-cta { width: 100%; justify-content: center; padding: 10px 16px; font-size: 13px; margin-top: 4px; }
+            .brand-text-sub { display: none; }
+            .container { padding: 12px; }
+            .card { padding: 16px; margin-bottom: 12px; }
+            .modal-overlay { padding: 0; }
+            .modal-box { width: 100%; border-radius: 0; min-height: 100vh; }
+            .modal-body { max-height: calc(100vh - 80px); overflow-y: auto; }
+            .progress-wrap { width: 100%; }
+            [style*="grid-template-columns: repeat(2"] { grid-template-columns: 1fr !important; }
+            [style*="grid-template-columns: repeat(3"] { grid-template-columns: 1fr !important; }
+            [style*="grid-template-columns: repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; }
+            /* Footer di mobile */
+            .footer-inner { flex-direction: column; align-items: flex-start; gap: 12px; }
+            footer { padding: 24px 16px; margin-top: 32px; }
+            .footer-meta { flex-direction: column; gap: 8px; }
+        }
+
+        @media (max-width: 480px) {
+            .inst-photo-wrap { height: 60px; }
+            .inst-eyebrow { font-size: 9px; }
+            .inst-title { font-size: 13px; }
+            .inst-badge { padding: 6px 12px; }
+            .inst-badge-year { font-size: 18px; }
+            .inst-badge-label { font-size: 8px; }
+            .inst-badge-sub { font-size: 8px; }
+            .card { padding: 12px; }
+            .btn { padding: 10px 18px; font-size: 12px; }
+            [style*="grid-template-columns: repeat(4"] { grid-template-columns: 1fr 1fr !important; }
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -316,7 +377,11 @@
                 </div>
             </a>
 
-            <ul class="nav-links">
+            <button class="hamburger" id="hamburger-btn" onclick="toggleMenu()" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+
+            <ul class="nav-links" id="nav-menu">
                 <li>
                     <a href="/news/" class="{% if request.path == '/news/' %}active{% endif %}">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
@@ -425,6 +490,39 @@
             else navbar.classList.remove('scrolled');
         }, { passive: true });
     }
+
+    function toggleMenu() {
+        const btn = document.getElementById('hamburger-btn');
+        const menu = document.getElementById('nav-menu');
+        if (btn && menu) {
+            btn.classList.toggle('open');
+            menu.classList.toggle('open');
+        }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('#nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('hamburger-btn')?.classList.remove('open');
+                document.getElementById('nav-menu')?.classList.remove('open');
+            });
+        });
+    });
+
+    // ── Hamburger Menu Toggle ────────────────────────────
+    function toggleMenu() {
+        const btn = document.getElementById('hamburger-btn');
+        const menu = document.getElementById('nav-menu');
+        if (btn && menu) {
+            btn.classList.toggle('open');
+            menu.classList.toggle('open');
+        }
+    }
+    document.querySelectorAll('#nav-menu a').forEach(link => {
+        link.addEventListener('click', () => {
+            document.getElementById('hamburger-btn')?.classList.remove('open');
+            document.getElementById('nav-menu')?.classList.remove('open');
+        });
+    });
 
     document.addEventListener('click', function(e) {
         const btn = e.target.closest('.btn');
