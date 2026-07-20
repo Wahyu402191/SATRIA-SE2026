@@ -224,9 +224,9 @@ def backfill_month(year, month, conn):
     for article in all_articles:
         try:
             cursor.execute("""
-                INSERT INTO se_news_articles 
+                INSERT INTO se_news_articles
                 (title, url, url_hash, source, rss_snippet, published_date, query_keyword,
-                 resolved_url, content, content_source, scrape_status, created_at)
+                 resolved_url, content, content_source, scrape_status, discovered_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 article['title'],

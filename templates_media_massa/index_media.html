@@ -132,7 +132,7 @@
 <style>
     .month-grid {
         display: grid;
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
         gap: 14px;
         margin-top: 24px;
     }
@@ -161,17 +161,10 @@
         box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.2);
     }
 
-    /* Tablet: 3 kolom */
-    @media (max-width: 900px) {
-        .month-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
-    }
-
-    /* Mobile: 2 kolom */
+    /* Mobile: card lebih kecil, tetap rata kanan-kiri via auto-fit */
     @media (max-width: 540px) {
         .month-grid {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
             gap: 10px;
         }
         .month-btn {

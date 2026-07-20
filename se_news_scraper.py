@@ -11,6 +11,7 @@ blocks phase 1's daily article counting for any other article.
 
 import os
 import re
+import json
 import time
 import hashlib
 import calendar
@@ -139,26 +140,77 @@ def fetch_new_articles():
     return rows, total_found
 
 
+def _decode_google_news_url(google_link, page_html):
+    """Google's `/rss/articles/<opaque-id>` links no longer 30x-redirect to
+    the publisher (Google resolves them client-side with JS instead). The
+    news.google.com article page embeds a signature/timestamp pair that the
+    same JS uses to call an internal batchexecute RPC and get the real URL
+    back — this replicates that call. Returns None if the page doesn't have
+    the expected markup or the RPC fails (e.g. Google changes the format)."""
+    m_sig = re.search(r'data-n-a-sg="([^"]+)"', page_html)
+    m_ts = re.search(r'data-n-a-ts="([^"]+)"', page_html)
+    if not (m_sig and m_ts):
+        return None
+    signature, timestamp = m_sig.group(1), m_ts.group(1)
+    article_id = urlparse(google_link).path.rsplit('/', 1)[-1]
+
+    inner_payload = [
+        'garturlreq',
+        [['en-ID', 'ID', ['FINANCE_TOP_INDICES', 'WEB_TEST_1_0_0'], None, None, 1, 1,
+          'ID:en', None, 180, None, None, None, None, None, 0, None, None,
+          [1608992183, 723341000]],
+         'en-ID', 'ID', 1, [2, 4, 8], 1, 1, None, 0, 0, None, 0],
+        article_id, timestamp, signature,
+    ]
+    payload = [[['Fbv4je', json.dumps(inner_payload), None, 'generic']]]
+
+    try:
+        resp = requests.post(
+            'https://news.google.com/_/DotsSplashUi/data/batchexecute',
+            data={'f.req': json.dumps(payload)},
+            headers={'User-Agent': USER_AGENT,
+                     'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
+            timeout=REQUEST_TIMEOUT,
+        )
+        resp.raise_for_status()
+        body = resp.text.split('\n', 1)[1] if resp.text.startswith(")]}'") else resp.text
+        outer = json.loads(body)
+        inner = json.loads(outer[0][2])
+        return inner[1]
+    except Exception:
+        return None
+
+
 def resolve_article_url(google_link, description_html=''):
     """Best-effort resolution of the real publisher URL:
     1. If the link's host isn't news.google.com, it's already direct.
     2. Follow HTTP redirects with `requests`; if the final host isn't
-       news.google.com, use it.
-    3. Try to pull the first <a href> out of the RSS <description> HTML.
-    4. Otherwise give up — caller falls back to the rss_snippet.
+       news.google.com, use it (works for the old-style Google News links).
+    3. New-style opaque `/rss/articles/...` links stay on news.google.com
+       even after following redirects — decode them via the batchexecute
+       trick in `_decode_google_news_url`.
+    4. Try to pull the first <a href> out of the RSS <description> HTML.
+    5. Otherwise give up — caller falls back to the rss_snippet.
     """
     host = urlparse(google_link).netloc
     if 'news.google.com' not in host:
         return google_link
 
+    page_html = None
     try:
         resp = requests.get(google_link, headers={'User-Agent': USER_AGENT},
                             timeout=REQUEST_TIMEOUT, allow_redirects=True)
         final_host = urlparse(resp.url).netloc
         if 'news.google.com' not in final_host:
             return resp.url
+        page_html = resp.text
     except requests.RequestException:
         pass
+
+    if page_html:
+        decoded = _decode_google_news_url(google_link, page_html)
+        if decoded:
+            return decoded
 
     if description_html:
         try:
@@ -174,8 +226,12 @@ def resolve_article_url(google_link, description_html=''):
 
 def scrape_article_content(url):
     """Generic full-article text extraction (requests + BeautifulSoup).
-    Returns None if the page couldn't be fetched or the extracted text is
-    too short to be a real article body (treated as extraction failure)."""
+    Pages (especially WordPress sites) often have several <article> tags —
+    related-post teasers, not just the main story — so instead of trusting
+    the first one, extract paragraph text from every candidate and keep
+    whichever yields the most text (the real story is reliably the longest).
+    Returns None if the page couldn't be fetched or the best candidate is
+    still too short to be a real article body (treated as extraction failure)."""
     try:
         resp = requests.get(url, headers={'User-Agent': USER_AGENT}, timeout=REQUEST_TIMEOUT)
         resp.raise_for_status()
@@ -190,15 +246,21 @@ def scrape_article_content(url):
     for tag in soup(['script', 'style', 'nav', 'footer', 'aside', 'header', 'iframe', 'form']):
         tag.decompose()
 
-    article_tag = soup.find('article')
-    paragraphs = article_tag.find_all('p') if article_tag else soup.find_all('p')
+    def paragraph_text(node):
+        text = ' '.join(p.get_text(' ', strip=True) for p in node.find_all('p'))
+        return re.sub(r'\s+', ' ', text).strip()
 
-    text = ' '.join(p.get_text(' ', strip=True) for p in paragraphs)
-    text = re.sub(r'\s+', ' ', text).strip()
+    candidates = soup.find_all('article') or [soup]
+    best_text = max((paragraph_text(c) for c in candidates), key=len, default='')
 
-    if len(text) < MIN_CONTENT_LENGTH:
+    if len(best_text) < MIN_CONTENT_LENGTH:
+        whole_page_text = paragraph_text(soup)
+        if len(whole_page_text) > len(best_text):
+            best_text = whole_page_text
+
+    if len(best_text) < MIN_CONTENT_LENGTH:
         return None
-    return text
+    return best_text
 
 
 def enrich_one_article(article_row):

@@ -10,6 +10,7 @@ auto-analyze articles right after scraping, and to re-run/filter results
 on demand from the Analisis Sentimen page.
 """
 
+import re
 import time
 from collections import Counter
 import numpy as np
@@ -28,6 +29,12 @@ _SENTIMENT_KEY = {
     'negatif': 'negative',
     'netral': 'neutral',
 }
+
+# Split on '.', '!', '?' followed by whitespace + an uppercase letter/digit/
+# opening quote — a reasonable approximation of "next sentence starts here"
+# without a full NLP sentence tokenizer.
+_SENTENCE_SPLIT_RE = re.compile(r'(?<=[.!?])\s+(?=[A-Z0-9"“])')
+_MIN_SENTENCE_CHARS = 15
 
 
 class SeNewsAnalyzer:
@@ -111,6 +118,66 @@ class SeNewsAnalyzer:
 
     def generate_wordcloud(self, analyzed_articles):
         return self.analyzer.generate_wordcloud(analyzed_articles)
+
+    def explain_sentiment(self, content):
+        """Sentence-level breakdown shown in the article detail view: split
+        the article into sentences, score each one against the sentiment
+        lexicon individually, and let whichever side (Positif vs Negatif)
+        has more sentences decide the reported label — mirrors how a
+        reader would actually justify "why is this Positif/Negatif" instead
+        of a single opaque score for the whole article. Returns None when
+        there's no content to break down (e.g. scraping never got past the
+        RSS snippet)."""
+        content = (content or '').strip()
+        if not content:
+            return None
+
+        raw_sentences = _SENTENCE_SPLIT_RE.split(content)
+        sentences = [s.strip() for s in raw_sentences if len(s.strip()) >= _MIN_SENTENCE_CHARS]
+        if not sentences:
+            return None
+
+        scored = []
+        for sentence in sentences:
+            cleaned = self.analyzer.preprocessor.preprocess_simple(sentence)
+            score = self.analyzer.ml_analyzer._lexicon_score(cleaned)
+            if score > 0.1:
+                label = 'Positif'
+            elif score < -0.1:
+                label = 'Negatif'
+            else:
+                label = 'Netral'
+            scored.append({'text': sentence, 'label': label, 'score': round(float(score), 3)})
+
+        positive = [s for s in scored if s['label'] == 'Positif']
+        negative = [s for s in scored if s['label'] == 'Negatif']
+        neutral = [s for s in scored if s['label'] == 'Netral']
+        total = len(scored)
+
+        def pct(n):
+            return round(n / total * 100, 1) if total else 0.0
+
+        if len(positive) > len(negative):
+            dominant = 'Positif'
+        elif len(negative) > len(positive):
+            dominant = 'Negatif'
+        elif positive:  # equal counts, both non-zero
+            dominant = 'Seimbang'
+        else:
+            dominant = 'Netral'
+
+        return {
+            'total_sentences': total,
+            'positive_sentences': positive,
+            'negative_sentences': negative,
+            'positive_count': len(positive),
+            'negative_count': len(negative),
+            'neutral_count': len(neutral),
+            'positive_pct': pct(len(positive)),
+            'negative_pct': pct(len(negative)),
+            'neutral_pct': pct(len(neutral)),
+            'dominant': dominant,
+        }
 
     # ── Copied from media_massa_analyzer.py (repo convention: duplicate
     #    small per-sub-app logic rather than share a cross-app module) ─────

@@ -9,6 +9,23 @@ CREATE DATABASE satria_se2026 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE satria_se2026;
 
 -- ═══════════════════════════════════════════════════════════════════════════
+-- Table: users
+-- Akun login aplikasi (register/login/profil). Dibuat otomatis oleh
+-- auth_storage.py (CREATE TABLE IF NOT EXISTS) saat app pertama kali start,
+-- didefinisikan di sini juga supaya skema database.sql tetap lengkap untuk
+-- instalasi baru.
+-- ═══════════════════════════════════════════════════════════════════════════
+CREATE TABLE users (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    name            VARCHAR(150) NOT NULL,
+    email           VARCHAR(255) NOT NULL UNIQUE,
+    password_hash   VARCHAR(255) NOT NULL,
+    instansi        VARCHAR(255) NULL,
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_login_at   DATETIME NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ═══════════════════════════════════════════════════════════════════════════
 -- Table: videos
 -- Menyimpan informasi video YouTube yang di-scrape
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -261,7 +278,8 @@ CREATE TABLE se_news_fetch_log (
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- SELESAI - Database siap digunakan!
--- Total: 11 tabel
+-- Total: 12 tabel
+-- Auth: users
 -- YouTube: videos, comments, analysis_sessions, analysis_results
 -- Media Massa: news_sources, news_articles, news_analysis_sessions, news_analysis_results
 -- Berita SE2026: se_news_articles, se_news_sentiment, se_news_fetch_log

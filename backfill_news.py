@@ -224,7 +224,10 @@ def entries_to_rows(entries, source_hint='Google News'):
 
 
 def scrape_content(url):
-    """Scrape isi artikel"""
+    """Scrape isi artikel. Picks whichever <article> candidate (or the whole
+    page as a fallback) yields the most paragraph text — sites with several
+    <article> tags (related-post teasers, not just the main story) often
+    have the real content in a different one than the first."""
     try:
         resp = requests.get(url, headers={'User-Agent': USER_AGENT}, timeout=REQUEST_TIMEOUT)
         resp.raise_for_status()
@@ -233,12 +236,19 @@ def scrape_content(url):
         for tag in soup(['script', 'style', 'nav', 'footer', 'aside', 'header', 'iframe']):
             tag.decompose()
 
-        article = soup.find('article')
-        paragraphs = article.find_all('p') if article else soup.find_all('p')
-        text = ' '.join(p.get_text(' ', strip=True) for p in paragraphs)
-        text = re.sub(r'\s+', ' ', text).strip()
+        def paragraph_text(node):
+            text = ' '.join(p.get_text(' ', strip=True) for p in node.find_all('p'))
+            return re.sub(r'\s+', ' ', text).strip()
 
-        return text if len(text) >= 200 else None
+        candidates = soup.find_all('article') or [soup]
+        best_text = max((paragraph_text(c) for c in candidates), key=len, default='')
+
+        if len(best_text) < 200:
+            whole_page_text = paragraph_text(soup)
+            if len(whole_page_text) > len(best_text):
+                best_text = whole_page_text
+
+        return best_text if len(best_text) >= 200 else None
     except Exception:
         return None
 

@@ -19,9 +19,10 @@ class MLSentimentAnalyzer:
         self.emoticons      = emoticons or {}
         self.negation_words = negation_words or set()
 
-        # Reduced features for speed (1-2 gram, 1000 features)
+        # Wider vocabulary now that training pulls thousands of lexicon
+        # words (was capped at 1000, too small to represent them)
         self.tfidf_vectorizer = TfidfVectorizer(
-            max_features=1000,
+            max_features=8000,
             ngram_range=(1, 2),
             min_df=1,
             max_df=0.95,
@@ -41,8 +42,11 @@ class MLSentimentAnalyzer:
     # ── Training data ──────────────────────────────────────────────────────
 
     def _prepare_training_data(self):
-        pos_words = list(self.positive_words)[:150]
-        neg_words = list(self.negative_words)[:150]
+        # Thousands of lexicon words per class (was capped at 150, which
+        # left the classifier unable to recognize almost any real article
+        # vocabulary — see _prepare_training_data note in predict_batch).
+        pos_words = list(self.positive_words)[:3000]
+        neg_words = list(self.negative_words)[:3000]
 
         for word in pos_words:
             self.training_samples += [word, f"sangat {word}", f"{word} sekali"]
@@ -57,7 +61,7 @@ class MLSentimentAnalyzer:
             "ya gitu deh", "hmm", "oh begitu", "okey", "ya sudah",
             "lumayan lah", "standar aja", "biasa", "cukup lah", "yaudah",
         ]
-        for _ in range(20):          # 16 * 20 = 320 neutral
+        for _ in range(400):          # 16 * 400 = 6400 neutral, same ratio as before
             self.training_samples += neutral
             self.training_labels  += [1] * len(neutral)
 
@@ -139,11 +143,23 @@ class MLSentimentAnalyzer:
         if 'naive_bayes' in methods or 'svm' in methods:
             self._train_models()
             X = self.tfidf_vectorizer.transform(texts)
+            # A text with zero vocabulary overlap (e.g. a bare headline with
+            # no lexicon words) has an all-zero TF-IDF row. NB/SVM then have
+            # no real signal to go on and effectively guess from class
+            # priors — MultinomialNB in particular ties Positif/Negatif
+            # exactly and always resolves the tie to class 0 (Negatif),
+            # silently mislabeling neutral text as negative. Detect that
+            # case up front and force Netral instead of trusting the guess.
+            no_signal = np.asarray(X.getnnz(axis=1)) == 0
 
             if 'naive_bayes' in methods:
                 preds  = self.nb_model.predict(X)
                 probas = self.nb_model.predict_proba(X)
                 for i in range(n):
+                    if no_signal[i]:
+                        results[i]['naive_bayes_sentiment'] = 'Netral'
+                        results[i]['naive_bayes_score']     = 0.0
+                        continue
                     pred  = preds[i]
                     score = float(probas[i][pred])
                     label = sentiment_map[pred]
@@ -159,6 +175,10 @@ class MLSentimentAnalyzer:
                 preds    = self.svm_model.predict(X)
                 decisions = self.svm_model.decision_function(X)
                 for i in range(n):
+                    if no_signal[i]:
+                        results[i]['svm_sentiment'] = 'Netral'
+                        results[i]['svm_score']     = 0.0
+                        continue
                     pred  = preds[i]
                     dec   = decisions[i]
                     raw   = float(np.max(np.abs(dec))) if dec.ndim > 0 else float(abs(dec))

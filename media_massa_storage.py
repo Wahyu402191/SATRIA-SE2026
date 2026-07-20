@@ -69,12 +69,28 @@ class MediaMassaStorage:
             timestamp = datetime.now()
             articles_data = []
             sources_to_add = set()
-            
+
+            def clean(value, default=''):
+                """Blank cells come back from pandas as NaN (a float), not a
+                missing key — row.get(col, default) doesn't catch that since
+                the column exists, it's just empty for this row. An
+                unhandled NaN passed to mysql-connector renders as the bare
+                word `nan` in the query, which MySQL parses as a column
+                reference ('Unknown column nan')."""
+                if value is None:
+                    return default
+                try:
+                    if pd.isna(value):
+                        return default
+                except (TypeError, ValueError):
+                    pass
+                return value
+
             for idx, row in df.iterrows():
                 # Get source
-                source = row.get('source', source_name) or source_name
+                source = clean(row.get('source'), source_name)
                 sources_to_add.add(source)
-                
+
                 # Parse published date
                 pub_date = None
                 if 'published_date' in row and pd.notna(row['published_date']):
@@ -84,11 +100,11 @@ class MediaMassaStorage:
                         pub_date = datetime(year, month, 1)
                 else:
                     pub_date = datetime(year, month, 1)
-                
+
                 articles_data.append((
-                    row['title'],
-                    row['content'],
-                    row.get('url', ''),
+                    clean(row['title']),
+                    clean(row['content']),
+                    clean(row.get('url'), ''),
                     source,
                     pub_date,
                     month,
@@ -149,12 +165,28 @@ class MediaMassaStorage:
             timestamp = datetime.now()
             articles_data = []
             sources_to_add = set()
-            
+
+            def clean(value, default=''):
+                """Blank cells come back from pandas as NaN (a float), not a
+                missing key — row.get(col, default) doesn't catch that since
+                the column exists, it's just empty for this row. An
+                unhandled NaN passed to mysql-connector renders as the bare
+                word `nan` in the query, which MySQL parses as a column
+                reference ('Unknown column nan')."""
+                if value is None:
+                    return default
+                try:
+                    if pd.isna(value):
+                        return default
+                except (TypeError, ValueError):
+                    pass
+                return value
+
             for idx, row in df.iterrows():
                 # Get source
-                source = row.get('source', source_name) or source_name
+                source = clean(row.get('source'), source_name)
                 sources_to_add.add(source)
-                
+
                 # Parse published date
                 pub_date = None
                 if 'published_date' in row and pd.notna(row['published_date']):
@@ -164,11 +196,11 @@ class MediaMassaStorage:
                         pub_date = datetime(year, month, 1)
                 else:
                     pub_date = datetime(year, month, 1)
-                
+
                 articles_data.append((
-                    row['title'],
-                    row['content'],
-                    row.get('url', ''),
+                    clean(row['title']),
+                    clean(row['content']),
+                    clean(row.get('url'), ''),
                     source,
                     pub_date,
                     month,

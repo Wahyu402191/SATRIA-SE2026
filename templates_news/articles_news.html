@@ -21,6 +21,18 @@
     .content-source-tag { font-size:10px; padding:2px 8px; border-radius:99px; background:#f0f2f5; color:var(--text-muted); font-weight:600; }
     .empty-state { text-align:center; padding:60px 24px; color:var(--text-muted); }
     .pagination { display:flex; justify-content:center; gap:10px; margin-top:20px; }
+
+    .sentence-analysis { margin-top:22px; padding-top:18px; border-top:1.5px dashed var(--border); }
+    .sentence-analysis-title { font-size:15px; font-weight:700; color:var(--primary); margin-bottom:10px; }
+    .sentence-analysis-empty { font-size:13px; color:var(--text-muted); }
+    .sentence-analysis-summary { font-size:13px; color:var(--text); line-height:1.7; margin-bottom:6px; }
+    .sentence-analysis-verdict { font-size:13px; color:var(--text); line-height:1.7; margin-bottom:16px; }
+    .sentence-group { margin-bottom:16px; }
+    .sentence-group-title { font-size:12.5px; font-weight:700; margin-bottom:8px; }
+    .sentence-group-title.positif { color:var(--success); }
+    .sentence-group-title.negatif { color:var(--danger); }
+    .sentence-list { padding-left:20px; margin:0; display:flex; flex-direction:column; gap:8px; }
+    .sentence-list li { font-size:13px; line-height:1.65; color:var(--text); }
 </style>
 {% endblock %}
 
@@ -207,12 +219,58 @@ async function openModal(id) {
             <span class="content-source-tag">${a.content_source === 'scraped' ? '📄 Isi lengkap hasil scraping' : (a.content_source === 'rss_snippet' ? '📝 Ringkasan dari RSS (isi lengkap gagal di-scrape)' : '⏳ Belum ada isi')}</span>
         </div>
         <p style="font-size:13.5px; line-height:1.8; color:var(--text); white-space:pre-wrap;">${escapeHtml(a.content || 'Belum ada isi.')}</p>
+        ${renderSentenceAnalysis(a.sentence_analysis)}
         <div style="margin-top:20px;">
             <a href="${a.resolved_url || a.url}" target="_blank" rel="noopener" class="btn btn-sm">Buka Berita Asli →</a>
         </div>
     `;
 
     document.getElementById('detail-modal').style.display = 'block';
+}
+
+function renderSentenceAnalysis(sa) {
+    if (!sa || !sa.total_sentences) {
+        return `
+            <div class="sentence-analysis">
+                <h3 class="sentence-analysis-title">Rincian Analisis per Kalimat</h3>
+                <p class="sentence-analysis-empty">Belum bisa dirinci per kalimat karena isi lengkap artikel ini belum tersedia.</p>
+            </div>`;
+    }
+
+    const dominantClass = sa.dominant === 'Positif' ? 'badge-success'
+        : sa.dominant === 'Negatif' ? 'badge-danger' : 'badge-neutral';
+
+    const summaryLine = `
+        <p class="sentence-analysis-summary">
+            Dari <strong>${sa.total_sentences} kalimat</strong> yang dianalisis:
+            <strong style="color:var(--success)">${sa.positive_count} positif (${sa.positive_pct}%)</strong>,
+            <strong style="color:var(--danger)">${sa.negative_count} negatif (${sa.negative_pct}%)</strong>,
+            ${sa.neutral_count} netral (${sa.neutral_pct}%).
+        </p>
+        <p class="sentence-analysis-verdict">
+            ${sa.dominant === 'Seimbang'
+                ? `Jumlah kalimat positif dan negatif <strong>sama banyak</strong> → berita ini <span class="badge ${dominantClass}">Seimbang</span>.`
+                : `Kalimat <strong>${sa.dominant.toLowerCase()}</strong> lebih dominan → berita ini tergolong <span class="badge ${dominantClass}">${sa.dominant}</span>.`}
+        </p>`;
+
+    const renderList = (title, items, cls) => {
+        if (!items.length) return '';
+        return `
+            <div class="sentence-group">
+                <h4 class="sentence-group-title ${cls}">${title} (${items.length})</h4>
+                <ol class="sentence-list">
+                    ${items.map(s => `<li>${escapeHtml(s.text)}</li>`).join('')}
+                </ol>
+            </div>`;
+    };
+
+    return `
+        <div class="sentence-analysis">
+            <h3 class="sentence-analysis-title">Rincian Analisis per Kalimat</h3>
+            ${summaryLine}
+            ${renderList('Kalimat Positif', sa.positive_sentences, 'positif')}
+            ${renderList('Kalimat Negatif', sa.negative_sentences, 'negatif')}
+        </div>`;
 }
 
 function closeModal() {

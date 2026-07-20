@@ -1,5 +1,6 @@
 # Web Framework
 Flask
+Flask-Session
 gunicorn
 Werkzeug
 Jinja2

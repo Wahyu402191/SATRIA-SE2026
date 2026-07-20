@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar — SATRIA SE2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: white;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        .bg-image {
+            position: fixed; inset: 0;
+            background-image: url('/static/img/bps-bangkalan-ai.jpg');
+            background-size: cover; background-position: center bottom; background-repeat: no-repeat;
+            z-index: 0; background-color: #0a1628;
+        }
+        .bg-overlay {
+            position: fixed; inset: 0;
+            background: linear-gradient(160deg, rgba(8,18,35,0.94) 0%, rgba(10,22,40,0.88) 55%, rgba(8,18,35,0.94) 100%);
+            z-index: 1;
+        }
+        .grid-bg {
+            position: fixed; inset: 0;
+            background-image:
+                linear-gradient(rgba(200, 151, 58, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(200, 151, 58, 0.04) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 2;
+        }
+
+        .page-wrap {
+            position: relative; z-index: 10;
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 48px 20px;
+        }
+
+        .auth-card {
+            width: 100%; max-width: 460px;
+            background: rgba(18, 30, 50, 0.55);
+            border: 1px solid rgba(200, 151, 58, 0.25);
+            border-radius: 20px;
+            padding: 40px 36px;
+            backdrop-filter: blur(18px);
+            box-shadow: 0 24px 64px rgba(0,0,0,0.45);
+            animation: fadeInUp .6s ease-out both;
+        }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+        .auth-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; }
+        .auth-brand img { width: 42px; height: 42px; filter: drop-shadow(0 4px 12px rgba(200,151,58,0.5)); }
+        .auth-brand-text .org { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+        .auth-brand-text .name {
+            font-size: 20px; font-weight: 900; letter-spacing: -.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #f4d799 50%, #c8973a 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .auth-title { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+        .auth-subtitle { font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 26px; line-height: 1.6; }
+
+        .flash {
+            padding: 11px 16px; border-radius: 10px; font-size: 12.5px; margin-bottom: 18px;
+            border-left: 3px solid;
+        }
+        .flash-error { background: rgba(231,76,60,0.12); border-color: #e74c3c; color: #ff9d92; }
+        .flash-success { background: rgba(39,174,96,0.12); border-color: #27ae60; color: #7be0a4; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-field { margin-bottom: 16px; }
+        .form-field label { display: block; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.7); margin-bottom: 7px; letter-spacing: .3px; }
+        .form-field .optional { font-weight: 400; color: rgba(255,255,255,0.35); text-transform: none; letter-spacing: 0; }
+        .form-field input {
+            width: 100%; padding: 13px 16px; border-radius: 12px;
+            border: 1.5px solid rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.06);
+            color: #fff; font-size: 14px; font-family: inherit;
+            transition: border-color .2s, background .2s, box-shadow .2s;
+        }
+        .form-field input::placeholder { color: rgba(255,255,255,0.3); }
+        .form-field input:focus {
+            outline: none; border-color: #c8973a; background: rgba(255,255,255,0.09);
+            box-shadow: 0 0 0 3px rgba(200,151,58,0.18);
+        }
+        .form-hint { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 6px; }
+
+        .btn-submit {
+            width: 100%; padding: 14px; margin-top: 6px;
+            font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700;
+            color: #0a1628; letter-spacing: 1px; text-transform: uppercase;
+            background: linear-gradient(135deg, #f4d799 0%, #e8b96a 50%, #c8973a 100%);
+            border: none; border-radius: 12px; cursor: pointer;
+            box-shadow: 0 8px 24px rgba(200,151,58,0.35);
+            transition: all .3s ease;
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(200,151,58,0.5); }
+        .btn-submit:active { transform: translateY(0); }
+
+        .auth-switch { text-align: center; margin-top: 22px; font-size: 13px; color: rgba(255,255,255,0.5); }
+        .auth-switch a { color: #f4d799; font-weight: 600; text-decoration: none; }
+        .auth-switch a:hover { text-decoration: underline; }
+
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            position: fixed; top: 24px; left: 28px; z-index: 20;
+            font-size: 12.5px; color: rgba(255,255,255,0.5); text-decoration: none;
+            transition: color .2s;
+        }
+        .back-link:hover { color: #f4d799; }
+
+        @media (max-width: 480px) {
+            .auth-card { padding: 30px 22px; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-image"></div>
+    <div class="bg-overlay"></div>
+    <div class="grid-bg"></div>
+
+    <a href="/" class="back-link">&larr; Kembali ke beranda</a>
+
+    <div class="page-wrap">
+        <div class="auth-card">
+            <div class="auth-brand">
+                <img src="{{ url_for('static', filename='img/bps-logo.png') }}" alt="Logo BPS">
+                <div class="auth-brand-text">
+                    <div class="org">Badan Pusat Statistik &middot; Kab. Bangkalan</div>
+                    <div class="name">SATRIA SE2026</div>
+                </div>
+            </div>
+
+            <h1 class="auth-title">Buat Akun Baru</h1>
+            <p class="auth-subtitle">Daftar untuk mulai mengakses dashboard analisis sentimen SATRIA SE2026.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('do_register') }}">
+                <div class="form-field">
+                    <label for="name">Nama Lengkap</label>
+                    <input type="text" id="name" name="name" placeholder="mis. Budi Santoso"
+                           value="{{ name or '' }}" required autofocus>
+                </div>
+                <div class="form-field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="nama@instansi.go.id"
+                           value="{{ email or '' }}" required>
+                </div>
+                <div class="form-field">
+                    <label for="instansi">Instansi <span class="optional">(opsional)</span></label>
+                    <input type="text" id="instansi" name="instansi" placeholder="mis. BPS Kabupaten Bangkalan"
+                           value="{{ instansi or '' }}">
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="password">Kata Sandi</label>
+                        <input type="password" id="password" name="password" placeholder="••••••••" minlength="6" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="password_confirm">Konfirmasi</label>
+                        <input type="password" id="password_confirm" name="password_confirm" placeholder="••••••••" minlength="6" required>
+                    </div>
+                </div>
+                <p class="form-hint" style="margin-top:-8px; margin-bottom:16px;">Minimal 6 karakter.</p>
+                <button type="submit" class="btn-submit">Daftar</button>
+            </form>
+
+            <div class="auth-switch">
+                Sudah punya akun? <a href="{{ url_for('login') }}">Masuk di sini</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

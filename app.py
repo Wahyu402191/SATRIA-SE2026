@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, jsonify, send_file, session, Response
+from flask import Flask, render_template, request, jsonify, send_file, session, Response, redirect, url_for, flash
+from flask_session import Session
 from jinja2 import ChoiceLoader, FileSystemLoader
 from youtube_scraper import YouTubeScraper
 from sentiment_analyzer import SentimentAnalyzer
@@ -7,6 +8,7 @@ from media_massa_analyzer import MediaMassaAnalyzer
 from media_massa_storage import MediaMassaStorage
 from se_news_storage import SeNewsStorage
 from se_news_analyzer import SeNewsAnalyzer
+from auth_storage import AuthStorage
 import os
 from dotenv import load_dotenv
 import pandas as pd
@@ -18,6 +20,7 @@ from queue import Queue
 import threading
 from datetime import datetime, date
 from zoneinfo import ZoneInfo
+import hashlib
 
 try:
     from livereload import Server
@@ -36,7 +39,14 @@ app.jinja_loader = ChoiceLoader([
     FileSystemLoader(os.path.join(base_dir, 'templates_news')),
 ])
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-here-change-this-in-production')
+# Server-side sessions: the default Flask session lives entirely in a signed
+# browser cookie (~4KB limit), which a base64 profile photo would blow past
+# instantly. SESSION_TYPE alone is a no-op without Flask-Session installed
+# and initialized — Session(app) below is what actually makes it apply.
 app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = os.path.join(base_dir, 'flask_session')
+app.config['SESSION_PERMANENT'] = False
+Session(app)
 
 # Hoisted to module level (not just inside `if __name__ == '__main__':`) so it's
 # available under gunicorn too, which never executes that block.
@@ -58,6 +68,46 @@ media_storage = MediaMassaStorage()
 # Berita SE2026 components (auto-discovery via Google News RSS)
 se_news_storage = SeNewsStorage()
 se_news_analyzer = SeNewsAnalyzer()
+
+# Auth (user accounts)
+auth_storage = AuthStorage()
+
+# Jinja2 template filter untuk MD5 (untuk Gravatar)
+@app.template_filter('md5')
+def md5_filter(s):
+    """Generate MD5 hash for Gravatar"""
+    return hashlib.md5(s.lower().encode('utf-8')).hexdigest()
+
+# Jinja2 template filter untuk avatar color berdasarkan karakter pertama email
+@app.template_filter('avatar_color')
+def avatar_color_filter(email):
+    """Generate consistent color for avatar based on first character of email"""
+    if not email:
+        return '#2874A6'  # default blue
+    
+    first_char = email[0].upper()
+    
+    # Color palette - 36 colors untuk 0-9 dan A-Z
+    colors = [
+        '#E74C3C', '#E67E22', '#F39C12', '#F1C40F', '#27AE60',  # 0-4
+        '#16A085', '#2ECC71', '#3498DB', '#2874A6', '#5DADE2',  # 5-9
+        '#9B59B6', '#8E44AD', '#34495E', '#2C3E50', '#E91E63',  # A-E
+        '#FF5722', '#FF9800', '#FFC107', '#FFEB3B', '#CDDC39',  # F-J
+        '#8BC34A', '#4CAF50', '#009688', '#00BCD4', '#03A9F4',  # K-O
+        '#2196F3', '#3F51B5', '#673AB7', '#9C27B0', '#E91E63',  # P-T
+        '#F44336', '#FF5252', '#FF4081', '#E040FB', '#7C4DFF',  # U-Y
+        '#536DFE'  # Z
+    ]
+    
+    # Map character to index
+    if first_char.isdigit():
+        idx = int(first_char)
+    elif first_char.isalpha():
+        idx = ord(first_char) - ord('A') + 10
+    else:
+        idx = 8  # default
+    
+    return colors[idx % len(colors)]
 
 # Store data in memory (in production, use database)
 app_data = {
@@ -92,6 +142,169 @@ def landing():
 def selection():
     """Selection page - Pilihan aplikasi"""
     return render_template('selection.html')
+
+# ═══════════════════════════════════════════════════════════════════════════
+# AUTH ROUTES — login/register/logout/profile
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Endpoints reachable without being logged in. Everything else is gated by
+# require_login() below (the landing page stays public on purpose — it's
+# just branding/marketing; "masuk aplikasi" is what actually needs a login).
+_PUBLIC_ENDPOINTS = {'landing', 'login', 'do_login', 'register', 'do_register', 'logout', 'static'}
+
+
+@app.before_request
+def require_login():
+    if request.endpoint is None or request.endpoint in _PUBLIC_ENDPOINTS:
+        return
+    if 'user_id' not in session:
+        return redirect(url_for('login', next=request.path))
+
+
+@app.route('/login', methods=['GET'])
+def login():
+    if 'user_id' in session:
+        return redirect(url_for('selection'))
+    return render_template('login.html', next=request.args.get('next', ''))
+
+
+@app.route('/login', methods=['POST'])
+def do_login():
+    email = (request.form.get('email') or '').strip()
+    password = request.form.get('password') or ''
+    next_url = request.form.get('next') or url_for('selection')
+
+    user = auth_storage.get_by_email(email) if email else None
+    if not user or not auth_storage.verify_password(user, password):
+        flash('Email atau kata sandi salah.', 'error')
+        return render_template('login.html', next=next_url, prefill_email=email), 401
+
+    session['user_id'] = user['id']
+    session['user_name'] = user['name']
+    session['user_email'] = user['email']
+    session['user_photo'] = user.get('profile_photo')
+    auth_storage.touch_last_login(user['id'])
+
+    if not next_url.startswith('/'):
+        next_url = url_for('selection')
+    return redirect(next_url)
+
+
+@app.route('/register', methods=['GET'])
+def register():
+    if 'user_id' in session:
+        return redirect(url_for('selection'))
+    return render_template('register.html')
+
+
+@app.route('/register', methods=['POST'])
+def do_register():
+    name = (request.form.get('name') or '').strip()
+    email = (request.form.get('email') or '').strip()
+    instansi = (request.form.get('instansi') or '').strip()
+    password = request.form.get('password') or ''
+    password_confirm = request.form.get('password_confirm') or ''
+
+    form_back = {'name': name, 'email': email, 'instansi': instansi}
+
+    if not name or not email or not password:
+        flash('Nama, email, dan kata sandi wajib diisi.', 'error')
+        return render_template('register.html', **form_back), 400
+    if len(password) < 6:
+        flash('Kata sandi minimal 6 karakter.', 'error')
+        return render_template('register.html', **form_back), 400
+    if password != password_confirm:
+        flash('Konfirmasi kata sandi tidak cocok.', 'error')
+        return render_template('register.html', **form_back), 400
+    if auth_storage.get_by_email(email):
+        flash('Email ini sudah terdaftar. Silakan masuk.', 'error')
+        return render_template('register.html', **form_back), 400
+
+    user = auth_storage.create_user(name, email, password, instansi)
+    session['user_id'] = user['id']
+    session['user_name'] = user['name']
+    session['user_email'] = user['email']
+    session['user_photo'] = user.get('profile_photo')
+    auth_storage.touch_last_login(user['id'])
+    return redirect(url_for('selection'))
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+
+@app.route('/profile', methods=['GET'])
+def profile():
+    user = auth_storage.get_by_id(session['user_id'])
+    return render_template('profile.html', user=user)
+
+
+@app.route('/profile', methods=['POST'])
+def update_profile():
+    name = (request.form.get('name') or '').strip()
+    instansi = (request.form.get('instansi') or '').strip()
+    if not name:
+        flash('Nama tidak boleh kosong.', 'error')
+        return redirect(url_for('profile'))
+
+    auth_storage.update_profile(session['user_id'], name, instansi)
+    session['user_name'] = name
+
+    new_password = request.form.get('new_password') or ''
+    if new_password:
+        if len(new_password) < 6:
+            flash('Kata sandi baru minimal 6 karakter.', 'error')
+            return redirect(url_for('profile'))
+        auth_storage.update_password(session['user_id'], new_password)
+        flash('Profil dan kata sandi berhasil diperbarui.', 'success')
+    else:
+        flash('Profil berhasil diperbarui.', 'success')
+
+    return redirect(url_for('profile'))
+
+
+@app.route('/profile/upload-photo', methods=['POST'])
+def upload_profile_photo():
+    """Upload profile photo"""
+    try:
+        data = request.get_json()
+        photo_base64 = data.get('photo')
+        
+        if not photo_base64:
+            return jsonify({'success': False, 'message': 'Tidak ada foto yang diunggah'}), 400
+        
+        # Validate base64 image
+        if not photo_base64.startswith('data:image/'):
+            return jsonify({'success': False, 'message': 'Format foto tidak valid'}), 400
+
+        # Safety net behind the client-side resize — a raw/unresized photo
+        # can still be multi-MB, which is wasteful to store and re-send on
+        # every page load (it rides along in the session file + navbar).
+        if len(photo_base64) > 2_000_000:
+            return jsonify({'success': False, 'message': 'Ukuran foto terlalu besar (maks ~1.5MB)'}), 400
+
+        # Update database
+        auth_storage.update_profile_photo(session['user_id'], photo_base64)
+        
+        # Update session
+        session['user_photo'] = photo_base64
+        
+        return jsonify({'success': True, 'message': 'Foto profil berhasil diperbarui'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/profile/remove-photo', methods=['POST'])
+def remove_profile_photo():
+    """Remove profile photo"""
+    try:
+        auth_storage.update_profile_photo(session['user_id'], None)
+        session.pop('user_photo', None)
+        return jsonify({'success': True, 'message': 'Foto profil berhasil dihapus'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 # ═══════════════════════════════════════════════════════════════════════════
 # YOUTUBE DASHBOARD ROUTES
@@ -1205,6 +1418,7 @@ def news_api_article_detail(article_id):
     article = se_news_storage.get_article_by_id(article_id)
     if not article:
         return jsonify({'success': False, 'error': 'Artikel tidak ditemukan'}), 404
+    article['sentence_analysis'] = se_news_analyzer.explain_sentiment(article.get('content'))
     return jsonify({'success': True, 'article': article})
 
 
