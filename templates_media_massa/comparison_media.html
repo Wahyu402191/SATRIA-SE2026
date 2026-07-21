@@ -129,6 +129,72 @@
     .empty-state { text-align:center; padding:60px 24px; color:var(--text-muted); }
     .empty-state a { color:var(--primary); font-weight:600; text-decoration:none; }
 
+    /* Section intro — explains what a comparison means before showing it */
+    .section-intro { font-size:12.5px; color:var(--text-muted); line-height:1.7; margin:-8px 0 18px; max-width:760px; }
+
+    /* Confusion matrix grid (sequential blue ramp: magnitude = count) */
+    .cm-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; }
+    .cm-block { border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:16px; }
+    .cm-title { font-size:13px; font-weight:700; color:var(--primary); margin-bottom:4px; }
+    .cm-sub { font-size:11px; color:var(--text-muted); margin-bottom:12px; }
+    .cm-table { border-collapse:collapse; width:100%; }
+    .cm-table th { font-size:10px; color:var(--text-muted); font-weight:600; padding:4px 6px; text-align:center; }
+    .cm-table th.cm-corner { font-size:9px; text-align:left; }
+    .cm-table td {
+        text-align:center; font-size:13px; font-weight:700; padding:0;
+        width:52px; height:44px; position:relative; color:#fff;
+        border-radius:6px;
+    }
+    .cm-table td .cm-cell-inner {
+        display:flex; align-items:center; justify-content:center;
+        width:100%; height:100%; border-radius:6px; cursor:default;
+    }
+    .cm-axis-label { font-size:9px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.4px; }
+
+    /* Pairwise agreement heatmap (same sequential ramp, magnitude = % agree) */
+    .pw-table { border-collapse:collapse; }
+    .pw-table th { font-size:11px; color:var(--text-muted); font-weight:700; padding:6px 10px; text-align:center; }
+    .pw-table th.pw-corner { text-align:right; }
+    .pw-table td { padding:0; }
+    .pw-cell {
+        width:78px; height:44px; display:flex; align-items:center; justify-content:center;
+        font-size:13px; font-weight:700; color:#fff; border-radius:6px; margin:3px;
+        position:relative;
+    }
+    .pw-cell.diag { color:var(--text-muted); background:var(--bg) !important; font-weight:600; }
+    .pw-cell:hover::after {
+        content: attr(data-tip);
+        position:absolute; bottom:110%; left:50%; transform:translateX(-50%);
+        background:#1B4F72; color:#fff; padding:5px 9px; border-radius:6px;
+        font-size:11px; white-space:nowrap; z-index:5;
+    }
+    .heat-legend { display:flex; align-items:center; gap:6px; margin-top:14px; font-size:11px; color:var(--text-muted); }
+    .heat-legend .sw { width:16px; height:12px; border-radius:3px; }
+
+    /* Confidence score bars */
+    .conf-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
+    .conf-card { border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:18px; text-align:center; }
+    .conf-value { font-size:28px; font-weight:800; color:var(--primary); }
+    .conf-label { font-size:12px; color:var(--text-muted); margin-top:4px; }
+    .conf-bar { width:100%; height:6px; background:var(--bg); border-radius:99px; overflow:hidden; margin-top:10px; }
+    .conf-bar-fill { height:100%; border-radius:99px; background:var(--gradient-blue-green); }
+
+    /* Disagreement examples */
+    .disagree-item { padding:14px 16px; border:1.5px solid var(--border); border-radius:var(--radius); margin-bottom:10px; }
+    .disagree-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:8px; }
+    .disagree-badges { display:flex; gap:8px; flex-wrap:wrap; }
+    .disagree-badge { font-size:11px; padding:3px 10px; border-radius:99px; font-weight:600; }
+
+    /* Simple plain-language summary */
+    .simple-item {
+        display:flex; align-items:flex-start; gap:14px;
+        padding:14px 4px; border-bottom:1px solid var(--border);
+        font-size:14px; color:var(--text); line-height:1.6;
+    }
+    .simple-item:last-child { border-bottom:none; }
+    .simple-icon { font-size:20px; flex-shrink:0; line-height:1.3; }
+    .simple-item strong { color:var(--primary); }
+
     /* Month info badge */
     .month-badge {
         display:inline-flex; align-items:center; gap:8px;
@@ -149,7 +215,7 @@
     </div>
     <div class="page-header-content">
         <h1>Perbandingan Metode Analisis</h1>
-        <p>Komparasi hasil analisis sentimen berita dari 4 metode Machine Learning · Naive Bayes, SVM, LSTM, dan IndoBERT</p>
+        <p>Melihat hasil dari 4 cara analisis sentimen (Naive Bayes, SVM, LSTM, IndoBERT) berdampingan, supaya kelihatan mana yang sepakat dan mana yang beda pendapat.</p>
     </div>
 </div>
 
@@ -164,15 +230,24 @@
     <!-- Month info -->
     <div id="month-info"></div>
 
+    <!-- Simple, plain-language takeaway — read this first -->
+    <div class="card" id="simple-card" style="display:none;">
+        <div class="section-heading">Ringkasan Singkat</div>
+        <p class="section-intro">Inti perbandingannya, dalam bahasa sederhana — detail lengkapnya ada di bagian bawah.</p>
+        <div id="simple-summary"></div>
+    </div>
+
     <!-- Per-method summary -->
     <div class="card">
-        <div class="section-heading">Ringkasan per Metode</div>
+        <div class="section-heading">Hasil per Metode</div>
+        <p class="section-intro">Dari semua berita bulan ini, berapa persen yang dianggap Positif, Negatif, atau Netral oleh masing-masing metode.</p>
         <div class="method-summary-grid" id="summary-grid"></div>
     </div>
 
     <!-- Agreement / Accuracy -->
     <div class="card" id="accuracy-card" style="display:none;">
-        <div class="section-heading">Tingkat Kesepakatan (Agreement Rate)</div>
+        <div class="section-heading">Seberapa Cocok dengan Suara Terbanyak</div>
+        <p class="section-intro">Untuk tiap berita, kita lihat label apa yang paling banyak dipilih (oleh ke-4 metode). Angka di sini menunjukkan seberapa sering metode itu ikut memilih label yang sama dengan suara terbanyak tersebut.</p>
         <div id="accuracy-grid"></div>
     </div>
 
@@ -182,6 +257,53 @@
         <div class="comp-table-wrap">
             <table id="comp-table"></table>
         </div>
+    </div>
+
+    <!-- Pairwise agreement matrix -->
+    <div class="card" id="pairwise-card" style="display:none;">
+        <div class="section-heading">Seberapa Mirip Setiap Metode</div>
+        <p class="section-intro">
+            Bagian sebelumnya membandingkan tiap metode dengan suara terbanyak gabungan. Tabel ini beda —
+            langsung membandingkan <strong>dua metode</strong>, misalnya Naive Bayes dibanding SVM saja, tanpa
+            melibatkan yang lain. Kotak warna tua = kedua metode sering kasih label sama. Kotak warna terang = sering beda.
+        </p>
+        <div class="comp-table-wrap">
+            <table class="pw-table" id="pairwise-table"></table>
+        </div>
+        <div class="heat-legend" id="pairwise-legend"></div>
+    </div>
+
+    <!-- Confusion matrices -->
+    <div class="card" id="cm-card" style="display:none;">
+        <div class="section-heading">Tabel Ketepatan Setiap Metode</div>
+        <p class="section-intro">
+            Baris = label yang dipilih suara terbanyak, kolom = label yang dipilih metode tersebut sendiri.
+            Kalau angka besar ada di garis diagonal (kotak yang sejajar, dari kiri-atas ke kanan-bawah),
+            berarti metode itu sering sependapat dengan suara terbanyak. Kalau angka besar ada di luar
+            garis itu, berarti metode itu sering kasih label yang berbeda.
+        </p>
+        <div class="cm-grid" id="cm-grid"></div>
+    </div>
+
+    <!-- Confidence score -->
+    <div class="card" id="conf-card" style="display:none;">
+        <div class="section-heading">Seberapa Yakin Setiap Metode</div>
+        <p class="section-intro">
+            Tiap kali memberi label, metode juga punya "tingkat percaya diri" sendiri (0-100%). Persentase
+            tinggi <strong>bukan berarti jawabannya lebih benar</strong> — cuma menunjukkan metode itu lebih
+            yakin/tegas, sementara metode dengan angka rendah lebih ragu-ragu.
+        </p>
+        <div class="conf-grid" id="conf-grid"></div>
+    </div>
+
+    <!-- Disagreement examples -->
+    <div class="card" id="disagree-card" style="display:none;">
+        <div class="section-heading">Contoh Berita yang Bikin Metode Beda Pendapat</div>
+        <p class="section-intro">
+            Beberapa contoh nyata berita di mana ke-4 metode <strong>tidak kompak</strong> — supaya kelihatan
+            jenis berita seperti apa yang paling sering ditafsirkan berbeda oleh tiap metode.
+        </p>
+        <div id="disagree-list"></div>
     </div>
 
 </div>
@@ -255,7 +377,7 @@ async function loadComparison() {
             const name = m.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
             ag.innerHTML += `<div class="agree-card">
                 <div class="agree-pct" style="color:${col};">${pct}%</div>
-                <div><div class="agree-method">${name}</div><div class="agree-label">Kesepakatan dengan majority vote</div></div>
+                <div><div class="agree-method">${name}</div><div class="agree-label">Cocok dengan suara terbanyak</div></div>
             </div>`;
         }
     }
@@ -292,7 +414,245 @@ async function loadComparison() {
     }
     tbody += '</tbody>';
     document.getElementById('comp-table').innerHTML = thead + tbody;
+
+    // New, deeper comparisons — all computed from data already in this
+    // same response (results.articles has every method's per-article label
+    // + confidence score; results.confusion_matrices is already computed
+    // server-side but was never rendered anywhere before).
+    const methodKeys = Object.keys(METHOD_DISPLAY_NAME).filter(k => summary[METHOD_DISPLAY_NAME[k]]);
+    const articles = data.results.articles || [];
+    renderSimpleSummary(articles, methodKeys);
+    renderPairwiseAgreement(articles, methodKeys);
+    renderConfusionMatrices(data.results.confusion_matrices);
+    renderConfidence(articles, methodKeys);
+    renderDisagreements(articles, methodKeys);
 }
+
+// Plain-language takeaway, meant to be read BEFORE the detailed tables below —
+// no percentages tables or jargon, just short sentences a non-technical user
+// can act on immediately.
+function renderSimpleSummary(articles, methodKeys) {
+    if (!articles.length || methodKeys.length < 2) return;
+    document.getElementById('simple-card').style.display = 'block';
+
+    const total = articles.length;
+
+    // 1) How many articles do ALL methods fully agree on?
+    const fullAgreeCount = articles.filter(a => {
+        const labels = methodKeys.map(m => a[`${m}_sentiment`]).filter(Boolean);
+        return new Set(labels).size === 1;
+    }).length;
+    const fullAgreePct = Math.round(fullAgreeCount / total * 100);
+
+    // 2) Which pair of methods is most / least alike?
+    let bestPair = null, worstPair = null;
+    for (let i = 0; i < methodKeys.length; i++) {
+        for (let j = i + 1; j < methodKeys.length; j++) {
+            let agree = 0, cnt = 0;
+            for (const a of articles) {
+                const s1 = a[`${methodKeys[i]}_sentiment`], s2 = a[`${methodKeys[j]}_sentiment`];
+                if (s1 && s2) { cnt++; if (s1 === s2) agree++; }
+            }
+            if (!cnt) continue;
+            const pct = agree / cnt * 100;
+            const pair = { a: methodKeys[i], b: methodKeys[j], pct };
+            if (!bestPair || pct > bestPair.pct) bestPair = pair;
+            if (!worstPair || pct < worstPair.pct) worstPair = pair;
+        }
+    }
+
+    // 3) Which method is, on average, the most confident in its own answers?
+    let mostConfident = null;
+    for (const m of methodKeys) {
+        const scores = articles.map(a => a[`${m}_score`]).filter(v => typeof v === 'number');
+        if (!scores.length) continue;
+        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+        if (!mostConfident || avg > mostConfident.avg) mostConfident = { method: m, avg };
+    }
+
+    const items = [];
+    items.push({
+        icon: fullAgreePct >= 60 ? '✅' : '🤔',
+        text: `Dari <strong>${total} berita</strong> bulan ini, semua metode sepakat penuh (kasih label yang sama persis) pada <strong>${fullAgreeCount} berita (${fullAgreePct}%)</strong>.`
+    });
+    if (bestPair) {
+        items.push({
+            icon: '🤝',
+            text: `<strong>${METHOD_DISPLAY_NAME[bestPair.a]}</strong> dan <strong>${METHOD_DISPLAY_NAME[bestPair.b]}</strong> paling sering sependapat satu sama lain (${Math.round(bestPair.pct)}% berita sama).`
+        });
+    }
+    if (worstPair && worstPair !== bestPair) {
+        items.push({
+            icon: '⚡',
+            text: `<strong>${METHOD_DISPLAY_NAME[worstPair.a]}</strong> dan <strong>${METHOD_DISPLAY_NAME[worstPair.b]}</strong> paling sering beda pendapat (cuma ${Math.round(worstPair.pct)}% yang sama).`
+        });
+    }
+    if (mostConfident) {
+        items.push({
+            icon: '💪',
+            text: `<strong>${METHOD_DISPLAY_NAME[mostConfident.method]}</strong> adalah metode yang paling "percaya diri" — rata-rata ${Math.round(mostConfident.avg * 100)}% yakin dengan labelnya sendiri.`
+        });
+    }
+
+    document.getElementById('simple-summary').innerHTML = items.map(it => `
+        <div class="simple-item">
+            <div class="simple-icon">${it.icon}</div>
+            <div>${it.text}</div>
+        </div>`).join('');
+}
+
+const METHOD_DISPLAY_NAME = { naive_bayes: 'Naive Bayes', svm: 'SVM', lstm: 'LSTM', indobert: 'IndoBERT' };
+const HEAT_COLORS = ['#E0E6ED', '#cfe3f2', '#8fc0e0', '#4f9cca', '#1B4F72'];
+const HEAT_TEXT   = ['#5a6a7a', '#2C3E50', '#2C3E50', '#fff', '#fff'];
+function heatLevel(ratio) {
+    if (ratio >= 0.8) return 4;
+    if (ratio >= 0.55) return 3;
+    if (ratio >= 0.3) return 2;
+    if (ratio > 0) return 1;
+    return 0;
+}
+
+// Pairwise agreement: unlike "Tingkat Kesepakatan" (each method vs the
+// majority vote), this compares methods two at a time directly — e.g. "NB
+// and SVM gave the exact same label on X% of articles" — showing which
+// method-pairs think alike vs. which disagree most often.
+function renderPairwiseAgreement(articles, methodKeys) {
+    if (!articles.length || methodKeys.length < 2) return;
+    document.getElementById('pairwise-card').style.display = 'block';
+
+    const n = methodKeys.length;
+    const pct = [];
+    for (let i = 0; i < n; i++) {
+        pct.push([]);
+        for (let j = 0; j < n; j++) {
+            if (i === j) { pct[i].push(100); continue; }
+            let agree = 0, total = 0;
+            for (const a of articles) {
+                const s1 = a[`${methodKeys[i]}_sentiment`], s2 = a[`${methodKeys[j]}_sentiment`];
+                if (s1 && s2) { total++; if (s1 === s2) agree++; }
+            }
+            pct[i].push(total ? Math.round(agree / total * 100) : 0);
+        }
+    }
+
+    let thead = '<thead><tr><th class="pw-corner"></th>' +
+        methodKeys.map(m => `<th>${METHOD_DISPLAY_NAME[m]}</th>`).join('') + '</tr></thead>';
+    let tbody = '<tbody>';
+    for (let i = 0; i < n; i++) {
+        tbody += `<tr><th class="pw-corner">${METHOD_DISPLAY_NAME[methodKeys[i]]}</th>`;
+        for (let j = 0; j < n; j++) {
+            const isDiag = i === j, v = pct[i][j];
+            const lvl = heatLevel(v / 100);
+            const bg = isDiag ? 'var(--bg)' : HEAT_COLORS[lvl];
+            const col = isDiag ? 'var(--text-muted)' : HEAT_TEXT[lvl];
+            const tip = isDiag ? `${METHOD_DISPLAY_NAME[methodKeys[i]]}: sama dengan dirinya sendiri`
+                                : `${METHOD_DISPLAY_NAME[methodKeys[i]]} vs ${METHOD_DISPLAY_NAME[methodKeys[j]]}: ${v}% berita diberi label sama`;
+            tbody += `<td><div class="pw-cell${isDiag ? ' diag' : ''}" style="background:${bg};color:${col};" data-tip="${tip}">${v}%</div></td>`;
+        }
+        tbody += '</tr>';
+    }
+    tbody += '</tbody>';
+    document.getElementById('pairwise-table').innerHTML = thead + tbody;
+    document.getElementById('pairwise-legend').innerHTML = 'Rendah ' +
+        HEAT_COLORS.map(c => `<span class="sw" style="background:${c};"></span>`).join('') + ' Tinggi';
+}
+
+// Confusion matrix: majority-vote label (row) vs. this method's own label
+// (column) — shows exactly which sentiment classes a method tends to
+// confuse (e.g. calling Netral berita Positif), not just an overall % like
+// the agreement-rate card above.
+function renderConfusionMatrices(confusionMatrices) {
+    if (!confusionMatrices || !Object.keys(confusionMatrices).length) return;
+    document.getElementById('cm-card').style.display = 'block';
+    const grid = document.getElementById('cm-grid');
+    grid.innerHTML = '';
+
+    for (const [method, cm] of Object.entries(confusionMatrices)) {
+        const { matrix, labels } = cm;
+        const maxVal = Math.max(1, ...matrix.flat());
+
+        let rows = '';
+        for (let i = 0; i < labels.length; i++) {
+            rows += `<tr><th style="text-align:right;padding-right:8px;">${labels[i]}</th>`;
+            for (let j = 0; j < labels.length; j++) {
+                const val = matrix[i][j];
+                const lvl = heatLevel(val / maxVal);
+                rows += `<td><div class="cm-cell-inner" style="background:${HEAT_COLORS[lvl]};color:${HEAT_TEXT[lvl]};"
+                    title="Mayoritas bilang ${labels[i]}, ${METHOD_DISPLAY_NAME[method] || method} bilang ${labels[j]}: ${val} berita">${val}</div></td>`;
+            }
+            rows += '</tr>';
+        }
+
+        grid.innerHTML += `
+            <div class="cm-block">
+                <div class="cm-title">${METHOD_DISPLAY_NAME[method] || method}</div>
+                <div class="cm-sub">Baris: label mayoritas &middot; Kolom: label metode ini</div>
+                <table class="cm-table">
+                    <thead><tr><th class="cm-corner"></th>${labels.map(l => `<th>${l}</th>`).join('')}</tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>`;
+    }
+}
+
+// Average confidence: how sure each method is of its own labels, on
+// average, for this month's articles — independent of whether that
+// confidence is "correct".
+function renderConfidence(articles, methodKeys) {
+    if (!articles.length) return;
+    const grid = document.getElementById('conf-grid');
+    grid.innerHTML = '';
+    let any = false;
+    for (const m of methodKeys) {
+        const scores = articles.map(a => a[`${m}_score`]).filter(v => typeof v === 'number');
+        if (!scores.length) continue;
+        any = true;
+        const pct = (scores.reduce((a, b) => a + b, 0) / scores.length * 100).toFixed(1);
+        grid.innerHTML += `
+            <div class="conf-card">
+                <div class="conf-value">${pct}%</div>
+                <div class="conf-label">${METHOD_DISPLAY_NAME[m] || m}</div>
+                <div class="conf-bar"><div class="conf-bar-fill" style="width:${pct}%;"></div></div>
+            </div>`;
+    }
+    if (any) document.getElementById('conf-card').style.display = 'block';
+}
+
+// Disagreement spotlight: articles where the 4 methods didn't all land on
+// the same label, sorted by how split the opinions were — a quick way to
+// eyeball what kind of article content trips models up.
+function renderDisagreements(articles, methodKeys) {
+    if (!articles.length || methodKeys.length < 2) return;
+
+    const scored = articles.map(a => {
+        const labels = methodKeys.map(m => a[`${m}_sentiment`]).filter(Boolean);
+        return { article: a, varietyCount: new Set(labels).size };
+    }).filter(x => x.varietyCount > 1);
+
+    scored.sort((a, b) => b.varietyCount - a.varietyCount);
+    const top = scored.slice(0, 5);
+
+    document.getElementById('disagree-card').style.display = 'block';
+    const list = document.getElementById('disagree-list');
+
+    if (!top.length) {
+        list.innerHTML = `<div class="empty-state" style="padding:24px;">Semua metode kompak untuk seluruh berita bulan ini.</div>`;
+        return;
+    }
+
+    list.innerHTML = top.map(({ article }) => {
+        const badges = methodKeys.map(m => {
+            const label = article[`${m}_sentiment`] || '-';
+            const cls = label === 'Positif' ? 'badge-success' : label === 'Negatif' ? 'badge-danger' : 'badge-neutral';
+            return `<span class="badge disagree-badge ${cls}">${METHOD_DISPLAY_NAME[m] || m}: ${label}</span>`;
+        }).join('');
+        return `<div class="disagree-item">
+            <div class="disagree-title">${(article.title || '(tanpa judul)').replace(/</g, '&lt;')}</div>
+            <div class="disagree-badges">${badges}</div>
+        </div>`;
+    }).join('');
+}
+
 loadComparison();
 </script>
 {% endblock %}

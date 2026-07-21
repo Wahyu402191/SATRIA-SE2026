@@ -4,6 +4,7 @@ from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFacto
 from wordcloud import WordCloud
 import re
 import string
+import json
 import base64
 from io import BytesIO
 import matplotlib
@@ -40,7 +41,7 @@ class TextPreprocessor:
             'gak': 'tidak', 'ga': 'tidak', 'gk': 'tidak',
             'ngga': 'tidak', 'nggak': 'tidak',
             'udah': 'sudah', 'udh': 'sudah',
-            'bgt': 'banget', 'bgt': 'banget',
+            'bgt': 'banget',
             'bgus': 'bagus', 'bgs': 'bagus',
             'tp': 'tapi', 'tpi': 'tapi',
             'yg': 'yang', 'sy': 'saya',
@@ -51,7 +52,13 @@ class TextPreprocessor:
             'emg': 'emang', 'emng': 'emang',
             'bkn': 'bukan', 'ad': 'ada',
         }
-        
+        # Fill gaps from the ~15,500-entry slang->formal lexicon (kamus/
+        # colloquial-indonesian-lexicon.csv) — previously wired into the
+        # sentiment lexicon loader as if it were sentiment-labeled data,
+        # where it silently matched nothing (its columns are slang/formal,
+        # not sentiment/polarity). Hand-curated entries above always win.
+        self._load_colloquial_normalization()
+
         # Spelling correction dictionary (common typos)
         self.spelling_dict = {
             'dngn': 'dengan', 'mnurut': 'menurut', 'mnrt': 'menurut',
@@ -83,7 +90,49 @@ class TextPreprocessor:
         
         # Negation words
         self.negation_words = {'tidak', 'bukan', 'jangan', 'gak', 'ga', 'nggak', 'ngga'}
-    
+
+        # Full Indonesian stopword list (kamus/id.stopwords.02.01.2016.txt,
+        # 757 words) minus negation words — negation words must survive
+        # tokenization so ml_sentiment_analyzer.py's negation-flip logic can
+        # still see them; every other grammatical/function word (pada,
+        # sebagai, hanya, menurut, kata, ujar, ...) is dropped before
+        # sentiment scoring, since the tiny ~45-word set previously used
+        # here let most of them through.
+        self.stop_words_full = self._load_stopwords_file() - self.negation_words
+
+    def _load_stopwords_file(self):
+        import os
+        filepath = os.path.join('kamus', 'id.stopwords.02.01.2016.txt')
+        words = set()
+        if not os.path.exists(filepath):
+            return words
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip().lower()
+                    if line:
+                        words.add(line)
+        except Exception as e:
+            print(f"[WARNING] Error loading stopwords: {e}")
+        return words
+
+    def _load_colloquial_normalization(self):
+        import csv
+        import os
+        filepath = os.path.join('kamus', 'colloquial-indonesian-lexicon.csv')
+        if not os.path.exists(filepath):
+            return
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    slang = (row.get('slang') or '').strip().lower()
+                    formal = (row.get('formal') or '').strip().lower()
+                    if slang and formal and slang not in self.normalization_dict:
+                        self.normalization_dict[slang] = formal
+        except Exception as e:
+            print(f"[WARNING] Error loading colloquial normalization lexicon: {e}")
+
     def preprocess_detailed(self, text):
         """
         Preprocess text dengan menampilkan setiap step
@@ -188,17 +237,11 @@ class TextPreprocessor:
         combined = {**self.spelling_dict, **self.normalization_dict}
         tokens = [combined.get(t, t) for t in text.split()]
 
-        # Lightweight stopword removal using a fast set lookup
-        _stop = {
-            'yang','dan','di','ke','dari','ini','itu','ada','juga','dengan',
-            'untuk','adalah','sudah','akan','ya','nya','lah','pun','aja',
-            'deh','sih','bang','mas','pak','bu','kak','bro','sis','dong',
-            'yuk','nih','tuh','kan','saja','kita','kami','mereka','dia',
-            'aku','saya','kamu','kau','mu','ku','pun','si','para',
-            'bagi','atas','bawah','dalam','luar','antara','seperti','jika',
-            'karena','maka','namun','tetapi','tapi','atau','dan','serta',
-        }
-        tokens = [t for t in tokens if t and t not in _stop and len(t) > 1]
+        # Stopword removal — the full 757-word list (self.stop_words_full,
+        # built in __init__) minus negation words, so words like "pada",
+        # "sebagai", "menurut", "kata", "ujar" no longer reach the lexicon
+        # scorer, while "tidak"/"bukan" survive for negation-flip detection.
+        tokens = [t for t in tokens if t and t not in self.stop_words_full and len(t) > 1]
 
         return ' '.join(tokens)
 
@@ -263,67 +306,156 @@ class SentimentAnalyzer:
         print(f"[INFO] Loaded {len(self.boosterwords)} booster words, {len(self.emoticons)} emoticons")
         print(f"[INFO] Loaded {len(self.negation_words)} negation words, {len(self.idioms)} idioms")
     
+    # Common bureaucratic/administrative nouns that ended up net-negative in
+    # the source lexicons (apparently from the corpora they were built on)
+    # but carry no inherent sentiment in Indonesian news/government-statistics
+    # text — e.g. "data" and "petugas" appear in nearly every BPS article,
+    # and scoring them negative systematically biased classification toward
+    # Negatif regardless of the article's actual tone. Neutralized (removed
+    # from both sets) rather than moved to positive, since there's no
+    # evidence they're positive either — just not sentiment-bearing.
+    NEUTRALIZE_WORDS = {
+        'data', 'jamin', 'menjamin', 'petugas', 'instansi', 'wajib',
+        'kota', 'realisasi',
+        # Same issue, found while chasing why results still felt noisy after
+        # the first pass: ordinary census/reporting vocabulary that shows up
+        # in nearly every SE2026 article regardless of tone (e.g. "usaha" is
+        # literally the census's subject noun — a business/enterprise unit —
+        # not "effort"), so tagging it pos/neg injects near-random sentiment
+        # into almost every single article rather than reflecting real tone.
+        'unit', 'usaha', 'laporan', 'pelaksanaan', 'mitra', 'pendataan',
+        'capaian', 'kegiatan', 'pengumpulan', 'lapangan', 'koordinator',
+        # Institutional/descriptive nouns for this exact domain — "badan",
+        # "pusat", "statistik" are literally three of the four words in
+        # "Badan Pusat Statistik" itself, so of course they're in almost
+        # every article regardless of tone.
+        'statistik', 'kebijakan', 'pusat', 'badan', 'informasi', 'resmi',
+        'proses', 'tingkat', 'sosial',
+        # Manual word-by-word audit pass over the remaining sentiment-tagged
+        # words still showing up among the most frequent words in real
+        # articles. Checked each against actual usage in scraped content
+        # before deciding — plain neutral nouns/verbs/numbers, or words whose
+        # real usage here is a fixed neutral phrase rather than the
+        # standalone meaning the lexicon scored:
+        #   - "salah" is scored as negative ("wrong"), but by far its most
+        #     common appearance in these articles is inside "salah satu"
+        #     ("one of ...") — a completely neutral phrase.
+        #   - "kepentingan" only ever appears here as "untuk kepentingan X"
+        #     ("for the purposes of X") — bureaucratic phrasing, not the
+        #     emotionally-loaded sense of "self-interest".
+        #   - "potensi", "memahami" show up in genuinely mixed-tone contexts
+        #     in this corpus (e.g. "berpotensi tidak...", "belum memahami
+        #     tujuan..."), so a fixed positive score misrepresents them as
+        #     often as it fits.
+        #   - "kualitas" (the noun, "quality") is neutral on its own — good
+        #     or bad quality both use the same word — unlike "berkualitas"
+        #     ("high-quality", kept positive) which does inherently mean
+        #     good quality.
+        'persen', 'rumah', 'hasil', 'membaca', 'berita', 'dunia', 'keluarga',
+        'terkait', 'struktur', 'perubahan', 'perusahaan', 'mikro', 'fondasi',
+        'juta', 'perkembangan', 'bentuk', 'tugas', 'kerja', 'langsung',
+        'sesuai', 'menerima', 'memperoleh', 'salah', 'potensi', 'kualitas',
+        'kepentingan', 'memahami',
+    }
+
     def _load_all_lexicons(self):
         """
-        Load ALL lexicon files from kamus folder
+        Load ALL lexicon files from kamus folder.
+
+        Positive/negative word lists are merged by NET WEIGHT across every
+        source file rather than by plain set union: several source files
+        disagree on individual words (e.g. "usaha" is -4 in negative.tsv but
+        +1 in positive.tsv), and a plain union left ~1,150 words in BOTH
+        self.positive_words and self.negative_words simultaneously, silently
+        counting toward both tallies for any text containing them. Summing
+        each word's weight across all sources and keeping only the sign of
+        the total resolves this in a principled, data-driven way — a word
+        only ends up positive/negative if its sources agree on balance.
         """
         import os
         kamus_dir = 'kamus'
-        
-        # Load positive words from all sources
-        positive_files = ['positive.tsv', 'positive (1).tsv', '_json_inset-pos.txt']
-        for filename in positive_files:
-            filepath = os.path.join(kamus_dir, filename)
-            if os.path.exists(filepath):
-                words = self._load_lexicon(filepath)
-                self.positive_words.update(words)
-        
-        # Load negative words from all sources
-        negative_files = ['negative.tsv', 'negative (1).tsv', '_json_inset-neg.txt']
-        for filename in negative_files:
-            filepath = os.path.join(kamus_dir, filename)
-            if os.path.exists(filepath):
-                words = self._load_lexicon(filepath)
-                self.negative_words.update(words)
-        
-        # Load sentiwords
+
+        net_weight = {}
+
+        def accumulate(files, sign):
+            for filename in files:
+                filepath = os.path.join(kamus_dir, filename)
+                if not os.path.exists(filepath):
+                    continue
+                for word, weight in self._load_weighted_lexicon(filepath).items():
+                    # Files are inconsistent about whether "negative" weights
+                    # are already stored as negative numbers or as plain
+                    # magnitudes — normalize using abs() * sign so a file's
+                    # role (positive vs negative source) always wins over
+                    # whatever sign convention it happens to use internally.
+                    net_weight[word] = net_weight.get(word, 0.0) + sign * abs(weight)
+
+        accumulate(['positive.tsv', 'positive (1).tsv', '_json_inset-pos.txt'], +1)
+        accumulate(['negative.tsv', 'negative (1).tsv', '_json_inset-neg.txt'], -1)
+
+        # kamus/id.stopwords.02.01.2016.txt (757 grammatical/function words —
+        # "tidak", "pada", "sebagai", "hanya", "menurut", "kata", "ujar", ...)
+        # was sitting unused in the folder (no code referenced it anywhere).
+        # The pos/neg source files score plenty of these on their own (e.g.
+        # "tidak": -15, "pada": -9) despite them being pure grammar/reporting-
+        # verb vocabulary with no sentiment of their own — and since they're
+        # some of the most frequent words in any Indonesian sentence, that
+        # injected near-random noise into almost every single article. This
+        # includes negation words like "tidak"/"bukan" themselves: they still
+        # do their negation-flipping job via the separate self.negation_words
+        # set (used by ml_sentiment_analyzer.py to flip the NEXT word's
+        # score) — they just shouldn't ALSO carry an independent sentiment
+        # score of their own.
+        self.stopwords_all = self._load_simple_list(os.path.join(kamus_dir, 'id.stopwords.02.01.2016.txt'))
+
+        self.lexicon_weights = net_weight
+        self.positive_words = {w for w, s in net_weight.items() if s > 0} - self.NEUTRALIZE_WORDS - self.stopwords_all
+        self.negative_words = {w for w, s in net_weight.items() if s < 0} - self.NEUTRALIZE_WORDS - self.stopwords_all
+
+        # Load sentiwords (weighted, finer-grained than the pos/neg sets).
+        # _lexicon_score() in ml_sentiment_analyzer.py checks this dict
+        # BEFORE positive_words/negative_words, so it needs the exact same
+        # stopword/domain-noun cleanup or contamination leaks back in
+        # through this second path (e.g. "resmi": +4 and "sementara": -1
+        # were still here even after cleaning the pos/neg sets above).
         senti_files = ['sentiwords_id.txt', '_json_sentiwords_id.txt']
         for filename in senti_files:
             filepath = os.path.join(kamus_dir, filename)
             if os.path.exists(filepath):
-                words = self._load_sentiwords(filepath)
-                self.sentiwords.update(words)
-        
+                self.sentiwords.update(self._load_weighted_lexicon(filepath))
+        for w in (self.NEUTRALIZE_WORDS | self.stopwords_all):
+            self.sentiwords.pop(w, None)
+
         # Load boosterwords
         booster_file = os.path.join(kamus_dir, 'boosterwords_id.txt')
         if os.path.exists(booster_file):
             self.boosterwords = self._load_weighted_words(booster_file)
-        
+
         # Load emoticons
         emoticon_file = os.path.join(kamus_dir, 'emoticon_id.txt')
         if os.path.exists(emoticon_file):
             self.emoticons = self._load_weighted_words(emoticon_file)
-        
+
         # Load negation words
         negation_file = os.path.join(kamus_dir, 'negatingword.txt')
         if os.path.exists(negation_file):
             self.negation_words = self._load_simple_list(negation_file)
-        
+
         # Load idioms
         idiom_file = os.path.join(kamus_dir, 'idioms_id.txt')
         if os.path.exists(idiom_file):
             self.idioms = self._load_weighted_words(idiom_file)
-        
+
         # Load question words
         question_file = os.path.join(kamus_dir, 'questionword.txt')
         if os.path.exists(question_file):
             self.question_words = self._load_simple_list(question_file)
-        
-        # Load colloquial words
-        colloquial_file = os.path.join(kamus_dir, 'colloquial-indonesian-lexicon.csv')
-        if os.path.exists(colloquial_file):
-            self._load_colloquial(colloquial_file)
-    
+
+        # colloquial-indonesian-lexicon.csv is a slang→formal normalization
+        # table (columns: slang, formal, ...), not a sentiment lexicon — it's
+        # loaded into TextPreprocessor.normalization_dict instead (see
+        # text_preprocessor.py), so there's nothing to load here anymore.
+
     def _load_simple_list(self, filepath):
         """
         Load simple word list (one word per line)
@@ -338,7 +470,7 @@ class SentimentAnalyzer:
         except Exception as e:
             print(f"[WARNING] Error loading {filepath}: {e}")
         return words
-    
+
     def _load_weighted_words(self, filepath):
         """
         Load words with weights (format: word:weight or word\tweight)
@@ -355,7 +487,7 @@ class SentimentAnalyzer:
                             parts = line.split('\t')
                         else:
                             continue
-                        
+
                         if len(parts) >= 2:
                             word = parts[0].strip().lower()
                             try:
@@ -366,82 +498,55 @@ class SentimentAnalyzer:
         except Exception as e:
             print(f"[WARNING] Error loading {filepath}: {e}")
         return words
-    
-    def _load_colloquial(self, filepath):
+
+    def _load_weighted_lexicon(self, filepath):
         """
-        Load colloquial Indonesian lexicon
+        Load a word->weight lexicon, auto-detecting the file's actual format
+        instead of assuming from its name/extension:
+          - JSON object (files like `_json_inset-pos.txt` are real JSON
+            despite the .txt extension — previously parsed as tab-separated,
+            which silently turned every entry into a garbage string like
+            '"jamin": -5,' that could never match any real word, discarding
+            roughly half of the merged lexicon's coverage without error)
+          - TSV with a header row (`word\\tweight`)
+          - `word:weight` (one per line)
         """
         try:
-            import csv
             with open(filepath, 'r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    # Add to positive/negative based on sentiment
-                    if 'sentiment' in row or 'polarity' in row:
-                        word = row.get('word', '').strip().lower()
-                        sentiment = row.get('sentiment', row.get('polarity', '')).strip().lower()
-                        
-                        if word:
-                            if sentiment in ['positive', 'positif', 'pos', '1']:
-                                self.positive_words.add(word)
-                            elif sentiment in ['negative', 'negatif', 'neg', '-1']:
-                                self.negative_words.add(word)
+                content = f.read()
         except Exception as e:
-            print(f"[WARNING] Error loading colloquial lexicon: {e}")
-        print(f"[INFO] Loaded {len(self.boosterwords)} booster words, {len(self.emoticons)} emoticons")
-        print(f"[INFO] Loaded {len(self.negation_words)} negation words, {len(self.idioms)} idioms")
-    
-    def _load_lexicon(self, filepath):
-        """
-        Load sentiment words from TSV file in kamus folder
-        Format: word\tweight
-        """
-        words = set()
-        try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                # Skip header
-                next(f)
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        parts = line.split('\t')
-                        if len(parts) >= 1:
-                            word = parts[0].strip().lower()
-                            if word:
-                                words.add(word)
-        except FileNotFoundError:
-            print(f"[WARNING] Lexicon file not found: {filepath}")
-        except Exception as e:
-            print(f"[ERROR] Failed to load lexicon from {filepath}: {e}")
-        
+            print(f"[WARNING] Error loading {filepath}: {e}")
+            return {}
+
+        stripped = content.lstrip()
+        if stripped.startswith('{'):
+            try:
+                data = json.loads(content)
+                return {str(k).strip().lower(): float(v) for k, v in data.items()}
+            except Exception as e:
+                print(f"[ERROR] Failed to parse {filepath} as JSON: {e}")
+                return {}
+
+        words = {}
+        lines = content.splitlines()
+        # Skip a literal "word\tweight" header row if present
+        if lines and lines[0].strip().lower() in ('word\tweight', 'word,weight'):
+            lines = lines[1:]
+        for line in lines:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            parts = line.split('\t') if '\t' in line else line.split(':')
+            if len(parts) < 2:
+                continue
+            word = parts[0].strip().lower()
+            try:
+                weight = float(parts[1].strip())
+            except ValueError:
+                continue
+            if word:
+                words[word] = weight
         return words
-    
-    def _load_sentiwords(self, filepath):
-        """
-        Load weighted sentiment words from sentiwords file
-        Format: word:score
-        """
-        sentiwords = {}
-        try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                for line in f:
-                    line = line.strip()
-                    if line and ':' in line:
-                        parts = line.split(':')
-                        if len(parts) == 2:
-                            word = parts[0].strip().lower()
-                            try:
-                                score = int(parts[1].strip())
-                                if word:
-                                    sentiwords[word] = score
-                            except ValueError:
-                                continue
-        except FileNotFoundError:
-            print(f"[WARNING] Sentiwords file not found: {filepath}")
-        except Exception as e:
-            print(f"[ERROR] Failed to load sentiwords from {filepath}: {e}")
-        
-        return sentiwords
     
     def naive_bayes_analysis(self, text):
         """

@@ -208,9 +208,16 @@ class MLSentimentAnalyzer:
                     if w in senti:      seq[j] = senti[w]
                     elif w in pos_set:  seq[j] = 3
                     elif w in neg_set:  seq[j] = -3
-                # weighted average: later words have more weight
+                # weighted average: later words have more weight.
+                # np.average(..., weights=...) already divides by the sum of
+                # weights (i.e. it IS the mean) — a further "/ wlen" here
+                # was shrinking the result by another ~wlen factor, so any
+                # article longer than a few words landed far below the
+                # +-0.15 threshold no matter how strongly positive/negative
+                # its words were. That's why LSTM almost always came out
+                # Netral regardless of the actual text.
                 weights = np.linspace(0.5, 1.0, wlen, dtype=np.float32)
-                avg = float(np.average(seq, weights=weights)) / wlen
+                avg = float(np.average(seq, weights=weights))
                 label, score = self._score_to_label(avg, 0.15, -0.15)
                 results[i]['lstm_sentiment'] = label
                 results[i]['lstm_score']     = score

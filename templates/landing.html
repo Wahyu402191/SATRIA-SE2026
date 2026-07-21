@@ -180,13 +180,74 @@
         }
 
         .description {
-            font-size: 14px;
-            color: rgba(255,255,255,0.5);
-            line-height: 1.75;
-            max-width: 500px;
-            margin-bottom: 44px;
+            font-size: 16px;
+            color: rgba(255,255,255,0.82);
+            line-height: 1.8;
+            max-width: 560px;
+            margin-bottom: 42px;
             animation: fadeInLeft 1s 0.3s ease-out both;
         }
+
+        .main-title {
+            font-size: 120px;
+            font-weight: 900;
+            line-height: 0.92;
+            letter-spacing: -4px;
+            margin-bottom: 18px;
+            background: linear-gradient(135deg, #ffffff 0%, #f4d799 40%, #c8973a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInLeft 1s 0.1s ease-out both;
+            position: relative;
+        }
+
+        .tagline {
+            font-size: 22px;
+            font-weight: 700;
+            color: #f4d799;
+            letter-spacing: 0.3px;
+            margin-bottom: 14px;
+            animation: fadeInLeft 1s 0.2s ease-out both;
+        }
+
+        .tagline strong {
+            color: inherit;
+            font-weight: inherit;
+        }
+
+        .btn-enter {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 52px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: #0a1628;
+            background: linear-gradient(135deg, #f4d799 0%, #e8b96a 50%, #c8973a 100%);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1.8px;
+            box-shadow: 0 8px 32px rgba(200,151,58,0.45), 0 0 0 0 rgba(200,151,58,0.3);
+            transition: all 0.35s ease;
+            animation: fadeInLeft 1s 0.4s ease-out both, ringPulse 2.5s 1.5s ease-in-out infinite;
+            overflow: hidden;
+        }
+
+        .btn-arrow {
+            width: 24px; height: 24px;
+            border: 2px solid rgba(10,22,40,0.5);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            transition: transform 0.3s;
+        }
+
+        .btn-enter:hover .btn-arrow { transform: translateX(5px); }
 
         /* CTA Button */
         .btn-enter {
@@ -387,8 +448,8 @@
 
             <!-- Deskripsi -->
             <p class="description">
-                Platform analisis sentimen berbasis AI untuk monitoring persepsi publik 
-                terhadap Sensus Ekonomi 2026 melalui media sosial dan media massa Indonesia.
+                Platform analisis sentimen cerdas untuk memantau persepsi publik tentang Sensus Ekonomi 2026,
+                menggabungkan data dari media sosial dan media massa Indonesia secara otomatis.
             </p>
 
             <!-- Tombol masuk -->
@@ -396,22 +457,6 @@
                 Masuk Aplikasi
                 <span class="btn-arrow">›</span>
             </button>
-
-            <!-- Stats -->
-            <div class="stats-bar">
-                <div class="stat-item">
-                    <div class="stat-value">4</div>
-                    <div class="stat-label">Metode ML</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">1.220</div>
-                    <div class="stat-label">Data Berita</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">3</div>
-                    <div class="stat-label">Modul Analisis</div>
-                </div>
-            </div>
 
         </div>
     </div>

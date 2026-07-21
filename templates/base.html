@@ -257,6 +257,27 @@
             height: 2px; background: var(--primary);
             border-radius: 2px 2px 0 0;
         }
+        .nav-links a.nav-quick-analysis {
+            background: transparent;
+            color: #2874A6;
+            border: 1px solid #2874A6;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            font-size: 12px;
+        }
+        .nav-links a.nav-quick-analysis:hover {
+            background: rgba(40, 116, 166, 0.08);
+            color: #2874A6;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18);
+        }
+        .nav-links a.nav-quick-analysis svg { fill: #2874A6; width: 16px; height: 16px; }
+        .nav-links a.nav-quick-analysis::after {
+            display: none;
+        }
         .nav-divider { width: 1px; height: 20px; background: var(--border); margin: 0 6px; }
 
         /* User Profile Avatar - Simple Circle */
@@ -359,6 +380,32 @@
         .nav-links a.btn-nav-cta { color: #fff; }
         .nav-links a.btn-nav-cta:hover { background: #fff; color: var(--primary); }
         .btn-nav-cta:hover svg { fill: var(--primary); }
+
+        /* ─── FLOATING QUICK ANALYSIS BUTTON ─── */
+        .fab-quick-analysis {
+            position: fixed; right: 28px; bottom: 28px; z-index: 950;
+            display: flex; align-items: center; gap: 10px;
+            height: 52px; padding: 0 20px 0 16px; border: none; border-radius: 99px;
+            background: var(--gradient-blue-orange); background-size: 200% 200%;
+            animation: waveMove 8s ease infinite;
+            color: #fff; cursor: pointer;
+            box-shadow: 0 6px 20px rgba(40,116,166,.4);
+            transition: transform .25s, box-shadow .25s, padding .25s;
+        }
+        .fab-quick-analysis svg { width: 22px; height: 22px; fill: #fff; flex-shrink: 0; }
+        .fab-quick-analysis .fab-label {
+            font-size: 13px; font-weight: 700; white-space: nowrap;
+            max-width: 140px; overflow: hidden;
+            transition: max-width .25s ease, opacity .2s ease;
+        }
+        .fab-quick-analysis:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 10px 28px rgba(40,116,166,.5);
+        }
+        @media (max-width: 768px) {
+            .fab-quick-analysis { right: 18px; bottom: 18px; height: 48px; width: 48px; padding: 0; justify-content: center; gap: 0; }
+            .fab-quick-analysis .fab-label { max-width: 0; opacity: 0; }
+        }
 
         /* ─── LAYOUT ─── */
         .container { max-width: 100%; margin: 0 auto; padding: 32px 32px; }
@@ -1118,12 +1165,18 @@
                         Tentang
                     </a>
                 </li>
+                <li>
+                    <a href="javascript:void(0)" class="nav-quick-analysis" onclick="showQuickAnalysis()">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+                        Analisis Cepat
+                    </a>
+                </li>
                 <li class="nav-divider"></li>
                 <li>
-                    <button class="btn-nav-cta" onclick="showQuickAnalysis()">
-                        <svg viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
-                        Analisis Cepat
-                    </button>
+                    <a href="/selection" class="btn-nav-cta" style="text-decoration:none;">
+                        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                        Kembali ke Menu
+                    </a>
                 </li>
             </ul>
         </div>

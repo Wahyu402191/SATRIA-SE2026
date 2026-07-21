@@ -88,7 +88,34 @@ class TextPreprocessor:
             'bagusss': 'bagus',
             'jelek': 'jelek',
         }
-    
+
+        # kamus/colloquial-indonesian-lexicon.csv is a ~15,500-entry
+        # slang -> formal Indonesian table. It was previously wired into
+        # sentiment_analyzer.py as if it were a sentiment lexicon (checking
+        # for 'sentiment'/'polarity' columns that don't exist in this file,
+        # so it silently contributed zero words there). It belongs here
+        # instead — more slang normalized before sentiment matching means
+        # more lexicon hits downstream. Loaded additively: the hand-curated
+        # entries above always win over the CSV for the same slang word.
+        self._load_colloquial_normalization()
+
+    def _load_colloquial_normalization(self):
+        import csv
+        import os
+        filepath = os.path.join('kamus', 'colloquial-indonesian-lexicon.csv')
+        if not os.path.exists(filepath):
+            return
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    slang = (row.get('slang') or '').strip().lower()
+                    formal = (row.get('formal') or '').strip().lower()
+                    if slang and formal and slang not in self.normalization_dict:
+                        self.normalization_dict[slang] = formal
+        except Exception as e:
+            print(f"[WARNING] Error loading colloquial normalization lexicon: {e}")
+
     def case_folding(self, text):
         """
         Convert text to lowercase
