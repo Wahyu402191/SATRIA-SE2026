@@ -5,40 +5,50 @@
 <style>
     .profile-wrap { max-width: 640px; margin: 0 auto; }
     .profile-header { display: flex; align-items: center; gap: 18px; margin-bottom: 8px; }
-
-    .profile-avatar-upload { position: relative; flex-shrink: 0; width: 64px; height: 64px; }
     .profile-avatar {
-        width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+        width: 96px; height: 96px; border-radius: 50%; flex-shrink: 0;
         display: flex; align-items: center; justify-content: center;
-        background: linear-gradient(135deg, var(--primary), var(--primary-light));
-        color: #fff; font-size: 24px; font-weight: 700;
+        color: #fff; font-size: 38px; font-weight: 700;
         box-shadow: var(--shadow-md);
+        position: relative;
+        cursor: pointer;
+        transition: transform .3s, box-shadow .3s;
         overflow: hidden;
+        background: linear-gradient(135deg, var(--avatar-color), var(--avatar-color)dd);
+    }
+    .profile-avatar:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 24px rgba(0,0,0,.2);
+    }
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .profile-avatar-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity .3s;
         cursor: pointer;
     }
-    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .profile-avatar-edit-badge {
-        position: absolute; bottom: -2px; right: -2px;
-        width: 24px; height: 24px; border-radius: 50%;
-        background: var(--accent); border: 2px solid var(--bg-card);
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer; box-shadow: var(--shadow-sm);
-        transition: transform .2s;
+    .profile-avatar:hover .profile-avatar-overlay {
+        opacity: 1;
     }
-    .profile-avatar-edit-badge:hover { transform: scale(1.1); }
-    .profile-avatar-edit-badge svg { width: 12px; height: 12px; fill: #fff; }
-
-    .visually-hidden { display: none; }
-
+    .profile-avatar-overlay svg {
+        width: 32px;
+        height: 32px;
+        fill: #fff;
+    }
     .profile-header-name { font-size: 20px; font-weight: 800; color: var(--text); }
     .profile-header-email { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
-    .profile-photo-remove {
-        display: inline-block; margin-top: 4px; font-size: 11.5px; font-weight: 600;
-        color: var(--danger); text-decoration: none; cursor: pointer; background: none; border: none; padding: 0;
-    }
-    .profile-photo-remove:hover { text-decoration: underline; }
-    .profile-photo-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-
+    .profile-header .action-row { margin-top: 10px; display: flex; gap: 8px; align-items: center; }
+    .profile-header .action-row .btn-sm { min-width: 88px; height: 28px; font-size: 11px; padding: 0 8px; }
+    .profile-header .action-row .btn-sm svg { width: 11px; height: 11px; margin-right: 5px; }
     .profile-meta { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
     .profile-meta-item { font-size: 12px; color: var(--text-muted); }
     .profile-meta-item strong { color: var(--text); font-weight: 600; }
@@ -51,14 +61,17 @@
     .flash-msg.success { background: #edf7f2; color: var(--success); border-color: var(--success); }
 
     .section-divider { margin: 8px 0 18px; font-size: 13px; font-weight: 700; color: var(--primary); }
+    
+    .btn-danger {
+        background: linear-gradient(135deg, #E74C3C, #EC7063);
+        color: #fff;
+    }
+    .btn-danger:hover {
+        background: linear-gradient(135deg, #C0392B, #E74C3C);
+    }
 
-    .profile-actions { display: flex; gap: 12px; margin-top: 8px; }
-    .profile-actions .btn,
-    .profile-actions .btn-ghost {
-        flex: 1 1 0;
-        min-width: 160px;
-        justify-content: center;
-        text-align: center;
+    input[type="file"] {
+        display: none;
     }
 </style>
 {% endblock %}
@@ -67,25 +80,39 @@
 <div class="profile-wrap">
     <div class="card reveal">
         <div class="profile-header">
-            <div class="profile-avatar-upload">
-                <label class="profile-avatar" id="avatar-preview" data-avatar-bg="{{ user.email|avatar_color }}" for="photo-input">
-                    {% if user.profile_photo %}
-                        <img src="{{ user.profile_photo }}" alt="Foto Profil" id="avatar-preview-img">
-                    {% else %}
-                        <span id="avatar-preview-initial">{{ (user.name or 'U')[0]|upper }}</span>
-                    {% endif %}
-                </label>
-                <label class="profile-avatar-edit-badge" for="photo-input" title="Ubah foto profil">
-                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                </label>
-                <input type="file" id="photo-input" accept="image/*" class="visually-hidden">
+            <div class="profile-avatar" id="avatar-container" style="--avatar-color: {{ session.user_email|avatar_color }};" onclick="document.getElementById('photo-input').click()">
+                {% if session.user_photo %}
+                    <img src="{{ session.user_photo }}" alt="Foto Profil" id="avatar-img">
+                {% else %}
+                    <span id="avatar-initial">{{ session.user_email[0]|upper }}</span>
+                {% endif %}
+                <div class="profile-avatar-overlay">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+                    </svg>
+                </div>
             </div>
-            <div>
+            <div style="flex: 1;">
                 <div class="profile-header-name">{{ user.name }}</div>
                 <div class="profile-header-email">{{ user.email }}</div>
-                <div class="profile-photo-hint" id="photo-status"></div>
-                <button type="button" class="profile-photo-remove{{ '' if user.profile_photo else ' visually-hidden' }}" id="remove-photo-btn">Hapus foto profil</button>
+                <div class="action-row">
+                    <button type="button" onclick="document.getElementById('photo-input').click()" class="btn btn-sm">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+                        </svg>
+                        Ubah Foto
+                    </button>
+                    {% if session.user_photo %}
+                    <button type="button" onclick="removePhoto()" class="btn btn-sm btn-danger">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                        </svg>
+                        Hapus Foto
+                    </button>
+                    {% endif %}
+                </div>
             </div>
+            <input type="file" id="photo-input" accept="image/*" onchange="uploadPhoto(event)">
         </div>
         <div class="profile-meta">
             <div class="profile-meta-item">Instansi: <strong>{{ user.instansi or '-' }}</strong></div>
@@ -121,98 +148,133 @@
                 <p class="form-hint">Minimal 6 karakter. Kosongkan bila tidak ingin mengubah kata sandi.</p>
             </div>
 
-            <div class="profile-actions">
-                <button type="submit" class="btn">Simpan Perubahan</button>
-                <a href="{{ url_for('logout') }}" class="btn btn-ghost">Keluar</a>
+            <div style="display: flex; gap: 12px; margin-top: 8px;">
+                <button type="submit" class="btn" style="flex: 1; height: 44px; justify-content: center;">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                    Simpan Perubahan
+                </button>
+                <a href="{{ url_for('logout') }}" class="btn btn-ghost" style="flex: 1; height: 44px; justify-content: center; text-decoration: none;">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;">
+                        <path d="M17 8l-1.41 1.41L18.17 11H9v2h9.17l-2.58 2.59L17 17l5-5-5-5zM5 5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h7v-2H5V5z"/>
+                    </svg>
+                    Keluar
+                </a>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-(function () {
-    const photoInput = document.getElementById('photo-input');
-    const avatarPreview = document.getElementById('avatar-preview');
-    const statusEl = document.getElementById('photo-status');
-    const removeBtn = document.getElementById('remove-photo-btn');
-
-    // No photo yet -> paint the per-user color from data-avatar-bg (kept out
-    // of the style="" attribute so editor CSS linters don't choke trying to
-    // parse the Jinja that generated it).
-    if (!document.getElementById('avatar-preview-img') && avatarPreview.dataset.avatarBg) {
-        avatarPreview.style.background = avatarPreview.dataset.avatarBg;
+function uploadPhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        alert('File harus berupa gambar');
+        return;
     }
-
-    function resizeToSquareJpeg(file, size = 320, quality = 0.85) {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            const reader = new FileReader();
-            reader.onerror = () => reject(new Error('Gagal membaca file'));
-            reader.onload = () => { img.src = reader.result; };
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = size;
-                canvas.height = size;
-                const ctx = canvas.getContext('2d');
-                // Cover-crop: scale so the shorter side fills `size`, center the rest.
-                const scale = Math.max(size / img.width, size / img.height);
-                const w = img.width * scale, h = img.height * scale;
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(0, 0, size, size);
-                ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-                resolve(canvas.toDataURL('image/jpeg', quality));
-            };
-            img.onerror = () => reject(new Error('File bukan gambar yang valid'));
-            reader.readAsDataURL(file);
-        });
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Ukuran file maksimal 5MB');
+        return;
     }
-
-    photoInput.addEventListener('change', async () => {
-        const file = photoInput.files[0];
-        if (!file) return;
-        if (!file.type.startsWith('image/')) {
-            statusEl.textContent = 'File harus berupa gambar.';
-            statusEl.style.color = 'var(--danger)';
-            return;
-        }
-
-        statusEl.textContent = 'Mengunggah...';
-        statusEl.style.color = 'var(--text-muted)';
-
-        try {
-            const dataUrl = await resizeToSquareJpeg(file);
-            const res = await fetch('{{ url_for("upload_profile_photo") }}', {
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            // Resize image to max 400x400
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const maxSize = 400;
+            
+            if (width > height) {
+                if (width > maxSize) {
+                    height *= maxSize / width;
+                    width = maxSize;
+                }
+            } else {
+                if (height > maxSize) {
+                    width *= maxSize / height;
+                    height = maxSize;
+                }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Convert to base64 (JPEG, quality 0.85)
+            const photoBase64 = canvas.toDataURL('image/jpeg', 0.85);
+            
+            // Upload to server
+            fetch('/profile/upload-photo', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ photo: dataUrl }),
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ photo: photoBase64 })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Update avatar display
+                    const container = document.getElementById('avatar-container');
+                    const initial = document.getElementById('avatar-initial');
+                    if (initial) initial.remove();
+                    
+                    let imgEl = document.getElementById('avatar-img');
+                    if (!imgEl) {
+                        imgEl = document.createElement('img');
+                        imgEl.id = 'avatar-img';
+                        imgEl.alt = 'Foto Profil';
+                        container.insertBefore(imgEl, container.firstChild);
+                    }
+                    imgEl.src = photoBase64;
+                    
+                    alert('Foto profil berhasil diperbarui!');
+                    location.reload();
+                } else {
+                    alert('Gagal mengupload foto: ' + data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Terjadi kesalahan saat mengupload foto');
             });
-            const data = await res.json();
-            if (!data.success) throw new Error(data.message || 'Gagal mengunggah foto');
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
 
-            avatarPreview.style.background = 'transparent';
-            avatarPreview.innerHTML = `<img src="${dataUrl}" alt="Foto Profil">`;
-            removeBtn.style.display = 'inline-block';
-            statusEl.textContent = 'Foto profil diperbarui.';
-            statusEl.style.color = 'var(--success)';
-            setTimeout(() => window.location.reload(), 500);
-        } catch (err) {
-            statusEl.textContent = err.message || 'Gagal mengunggah foto.';
-            statusEl.style.color = 'var(--danger)';
+function removePhoto() {
+    if (!confirm('Yakin ingin menghapus foto profil?')) return;
+    
+    fetch('/profile/remove-photo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
         }
-    });
-
-    removeBtn.addEventListener('click', async () => {
-        if (!confirm('Hapus foto profil?')) return;
-        try {
-            const res = await fetch('{{ url_for("remove_profile_photo") }}', { method: 'POST' });
-            const data = await res.json();
-            if (!data.success) throw new Error(data.message || 'Gagal menghapus foto');
-            window.location.reload();
-        } catch (err) {
-            statusEl.textContent = err.message || 'Gagal menghapus foto.';
-            statusEl.style.color = 'var(--danger)';
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Gagal menghapus foto: ' + data.message);
         }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Terjadi kesalahan saat menghapus foto');
     });
-})();
+}
 </script>
 {% endblock %}

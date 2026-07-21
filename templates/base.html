@@ -347,11 +347,18 @@
             box-shadow: 0 2px 8px rgba(26,58,92,.30);
         }
         .btn-nav-cta:hover {
-            background: var(--primary-light);
+            background: #fff;
+            color: var(--primary);
             transform: translateY(-2px);
             box-shadow: 0 5px 16px rgba(26,58,92,.35);
         }
-        .btn-nav-cta svg { width: 14px; height: 14px; fill: rgba(255,255,255,.8); }
+        .btn-nav-cta svg { width: 14px; height: 14px; fill: #fff; transition: fill .25s; }
+        /* .nav-links a is more specific than .btn-nav-cta alone (class+element
+           vs just class), so its gray var(--text-muted) was winning over the
+           white/blue set above — these re-assert it at higher specificity. */
+        .nav-links a.btn-nav-cta { color: #fff; }
+        .nav-links a.btn-nav-cta:hover { background: #fff; color: var(--primary); }
+        .btn-nav-cta:hover svg { fill: var(--primary); }
 
         /* ─── LAYOUT ─── */
         .container { max-width: 100%; margin: 0 auto; padding: 32px 32px; }

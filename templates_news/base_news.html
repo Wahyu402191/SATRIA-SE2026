@@ -140,8 +140,13 @@
         @keyframes navLineIn { from { transform: scaleX(0); } to { transform: scaleX(1); } }
         .nav-divider { width: 1px; height: 20px; background: var(--border); margin: 0 6px; }
         .btn-nav-cta { display: inline-flex; align-items: center; gap: 6px; background: var(--primary); color: #fff; padding: 8px 18px; border-radius: var(--radius); font-size: 12px; font-weight: 700; letter-spacing: .3px; text-decoration: none; border: none; cursor: pointer; transition: all .25s; box-shadow: 0 2px 8px rgba(26,58,92,.30); }
-        .btn-nav-cta:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 5px 16px rgba(26,58,92,.35); }
-        .btn-nav-cta svg { width: 14px; height: 14px; fill: rgba(255,255,255,.8); }
+        .btn-nav-cta:hover { background: #fff; color: var(--primary); transform: translateY(-2px); box-shadow: 0 5px 16px rgba(26,58,92,.35); }
+        .btn-nav-cta svg { width: 14px; height: 14px; fill: #fff; transition: fill .25s; }
+        .btn-nav-cta:hover svg { fill: var(--primary); }
+        /* .nav-links a is more specific than .btn-nav-cta alone, so its gray
+           var(--text-muted) was winning over the white/blue set above. */
+        .nav-links a.btn-nav-cta { color: #fff; }
+        .nav-links a.btn-nav-cta:hover { background: #fff; color: var(--primary); }
 
         /* User Profile Avatar - Simple Circle */
         .user-menu-item { position: relative; }

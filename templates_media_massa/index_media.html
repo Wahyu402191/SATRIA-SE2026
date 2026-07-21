@@ -2,24 +2,43 @@
 
 {% block title %}Analisis Sentimen Media Massa — SATRIA SE2026{% endblock %}
 
+{% block extra_css %}
+<style>
+    .stat-icon {
+        width: 52px; height: 52px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 14px;
+        box-shadow: 0 6px 16px rgba(0,0,0,.14);
+    }
+    .stat-icon svg { width: 26px; height: 26px; fill: #fff; }
+    .stat-icon-primary { background: linear-gradient(135deg, var(--primary), var(--primary-light)); }
+    .stat-icon-accent  { background: linear-gradient(135deg, var(--accent), var(--accent-light)); }
+    .stat-icon-success { background: linear-gradient(135deg, var(--success), var(--success-light)); }
+    .stat-icon-info    { background: linear-gradient(135deg, var(--primary-light), #85C1E9); }
+    .eyebrow-icon { width: 13px; height: 13px; fill: var(--accent); vertical-align: -1px; margin-right: 4px; }
+    .hero-icon-badge svg { width: 60px; height: 60px; fill: #fff; }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- Hero Section -->
 <div class="card" style="background: var(--gradient-wave-cool); border: none; margin-bottom: 32px;">
     <div style="display: flex; align-items: center; gap: 28px;">
         <div style="flex: 1;">
             <div style="font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;">
-                📰 Analisis Media Massa Indonesia
+                <svg class="eyebrow-icon" viewBox="0 0 24 24"><path d="M20 11H4V3h16v8zm0 2H4v8h16v-8zm-9 2H6v1h5v-1zm7 0h-5v1h5v-1zm-7 3H6v1h5v-1zm7 0h-5v1h5v-1z"/></svg>
+                Analisis Media Massa Indonesia
             </div>
             <h1 style="font-size: 32px; font-weight: 800; color: var(--primary); line-height: 1.2; margin-bottom: 14px;">
                 Analisis Sentimen Berita <br>Sensus Ekonomi 2026
             </h1>
             <p style="font-size: 15px; color: var(--text-muted); line-height: 1.65; max-width: 650px;">
-                Platform analisis sentimen berita dari berbagai media massa Indonesia menggunakan 4 metode Machine Learning: 
+                Platform analisis sentimen berita dari berbagai media massa Indonesia menggunakan 4 metode Machine Learning:
                 <strong>Naive Bayes, SVM, LSTM, dan IndoBERT</strong>. Pilih data berita berdasarkan bulan dan dapatkan insight mendalam.
             </p>
         </div>
-        <div style="width: 140px; height: 140px; background: linear-gradient(135deg, var(--primary-light), var(--accent)); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 64px; box-shadow: var(--shadow-lg);">
-            📊
+        <div class="hero-icon-badge" style="width: 140px; height: 140px; background: linear-gradient(135deg, var(--primary-light), var(--accent)); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg);">
+            <svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5V9.2zm6.6-4.2h2.8v14h-2.8V5zm5.6 8H20v6h-2.8v-6z"/></svg>
         </div>
     </div>
 </div>
@@ -27,22 +46,22 @@
 <!-- Stats Cards -->
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 32px;" class="reveal-group">
     <div class="card reveal" style="text-align: center;">
-        <div style="font-size: 42px; margin-bottom: 10px;">📄</div>
+        <div class="stat-icon stat-icon-primary"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></div>
         <div style="font-size: 36px; font-weight: 800; color: var(--primary);" data-count="{{ total_articles }}">0</div>
         <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Total Berita</div>
     </div>
     <div class="card reveal" style="text-align: center;">
-        <div style="font-size: 42px; margin-bottom: 10px;">📅</div>
+        <div class="stat-icon stat-icon-accent"><svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg></div>
         <div style="font-size: 36px; font-weight: 800; color: var(--accent);" data-count="{{ total_months }}">0</div>
         <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Bulan Tersedia</div>
     </div>
     <div class="card reveal" style="text-align: center;">
-        <div style="font-size: 42px; margin-bottom: 10px;">🏢</div>
+        <div class="stat-icon stat-icon-success"><svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg></div>
         <div style="font-size: 36px; font-weight: 800; color: var(--success);" data-count="{{ total_sources }}">0</div>
         <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Media Massa</div>
     </div>
     <div class="card reveal" style="text-align: center;">
-        <div style="font-size: 42px; margin-bottom: 10px;">✅</div>
+        <div class="stat-icon stat-icon-info"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
         <div style="font-size: 36px; font-weight: 800; color: var(--primary-light);" data-count="{{ total_analyzed }}">0</div>
         <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Analisis Selesai</div>
     </div>

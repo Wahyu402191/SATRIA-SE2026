@@ -32,11 +32,15 @@ WORKERS = 6
 
 
 def fetch_all(conn):
+    """Only articles that don't already have real scraped content — never
+    re-touch a row that already succeeded. Newest first, since those are
+    the ones most likely to matter right now."""
     cur = conn.cursor(dictionary=True)
     cur.execute("""
         SELECT id, title, url, rss_snippet
         FROM se_news_articles
-        ORDER BY id
+        WHERE scrape_status != 'success'
+        ORDER BY published_date DESC
     """)
     return cur.fetchall()
 
