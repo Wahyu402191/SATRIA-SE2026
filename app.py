@@ -1149,6 +1149,202 @@ def media_get_analysis_results():
         })
     return jsonify({'success': False, 'error': 'Belum ada hasil analisis'}), 404
 
+
+@app.route('/media/processing_detail/<int:idx>', methods=['GET'])
+def media_processing_detail(idx):
+    """Return detailed processing info for a single analyzed article by index.
+
+    The response includes preprocessing steps, per-method labels & scores,
+    and per-method contributing terms (approximate for neural methods).
+    """
+    try:
+        if not media_data.get('analysis_results'):
+            return jsonify({'success': False, 'error': 'Belum ada hasil analisis'}), 404
+
+        articles = media_data['analysis_results'].get('articles', [])
+        if idx < 0 or idx >= len(articles):
+            return jsonify({'success': False, 'error': 'Index artikel tidak valid'}), 400
+
+        article = articles[idx]
+        text = article.get('content', '') or article.get('title', '') or ''
+
+        # Preprocessing (detailed) using TextPreprocessor
+        from text_preprocessor import TextPreprocessor
+        pre = TextPreprocessor()
+        final_text, steps = pre.preprocess_detailed(text)
+
+        # Prepare response skeleton
+        resp = {
+            'success': True,
+            'index': idx,
+            'id': article.get('id'),
+            'title': article.get('title'),
+            'source': article.get('source'),
+            'published_date': article.get('published_date'),
+            'original': text,
+            'preprocessing_steps': steps,
+            'methods': {},
+            'aggregation': {}
+        }
+
+        # Access ML internals to compute contributions where possible
+        ml = analyzer.ml_analyzer
+        # Ensure models trained / vectorizer fitted
+        try:
+            ml._train_models()
+        except Exception:
+            pass
+
+        # Build TF-IDF vector for the (simple) preprocessed text
+        try:
+            X = ml.tfidf_vectorizer.transform([ml.tfidf_vectorizer.preprocessor if hasattr(ml.tfidf_vectorizer, 'preprocessor') else final_text])
+        except Exception:
+            # fallback: transform final_text directly
+            X = ml.tfidf_vectorizer.transform([final_text])
+
+        feature_names = []
+        try:
+            feature_names = ml.tfidf_vectorizer.get_feature_names_out()
+        except Exception:
+            try:
+                feature_names = ml.tfidf_vectorizer.get_feature_names()
+            except Exception:
+                feature_names = []
+
+        import numpy as np
+
+        # Helper to extract top-k features from a contribution dict
+        def top_k_terms(contrib_map, k=6):
+            items = sorted(contrib_map.items(), key=lambda x: abs(x[1]), reverse=True)
+            return [{'term': t, 'contribution': float(round(v, 6))} for t, v in items[:k]]
+
+        # Naive Bayes contributions (approx): use feature_log_prob_
+        if ml.nb_model is not None:
+            try:
+                nb = ml.nb_model
+                probs = nb.feature_log_prob_  # shape (n_classes, n_features)
+                # Get predicted class index from earlier stored result if present
+                nb_label = article.get('naive_bayes_sentiment')
+                class_map = {'Negatif':0, 'Netral':1, 'Positif':2}
+                pred_idx = class_map.get(nb_label, None)
+                row = X.toarray()[0]
+                if pred_idx is None:
+                    # choose class with highest likelihood approximate
+                    pred_idx = np.argmax(nb.class_log_prior_)
+                # contribution = tfidf_value * (feat_logprob[class] - mean_feat_logprob)
+                mean_log = np.mean(probs, axis=0)
+                contrib = {}
+                for j, fn in enumerate(feature_names):
+                    if row[j] > 0:
+                        contrib[fn] = float(row[j] * (probs[pred_idx, j] - mean_log[j]))
+                resp['methods']['Naive Bayes'] = {
+                    'label': article.get('naive_bayes_sentiment'),
+                    'score': article.get('naive_bayes_score'),
+                    'contributing_terms': top_k_terms(contrib, 6),
+                    'notes': 'Kontribusi dihitung dari TF-IDF x selisih log-prob fitur untuk kelas terpilih (aproksimasi)'
+                }
+            except Exception as e:
+                resp['methods']['Naive Bayes'] = {'label': article.get('naive_bayes_sentiment'), 'score': article.get('naive_bayes_score'), 'contributing_terms': [], 'notes': f'Error computing contributions: {e}'}
+
+        # SVM contributions: coef_ * tfidf
+        if ml.svm_model is not None:
+            try:
+                svm = ml.svm_model
+                coef = svm.coef_  # shape (n_classes, n_features) or (n_features,) for binary
+                svm_label = article.get('svm_sentiment')
+                class_map = {'Negatif':0, 'Netral':1, 'Positif':2}
+                pred_idx = class_map.get(svm_label, None)
+                row = X.toarray()[0]
+                contrib = {}
+                if coef.ndim == 1:
+                    weights = coef
+                else:
+                    if pred_idx is None or pred_idx >= coef.shape[0]:
+                        # fallback: take argmax of decision_function
+                        df = svm.decision_function(X)[0]
+                        pred_idx = int(np.argmax(np.abs(df))) if hasattr(df, '__len__') else 0
+                    weights = coef[pred_idx]
+                for j, fn in enumerate(feature_names):
+                    if row[j] > 0:
+                        contrib[fn] = float(row[j] * weights[j])
+                resp['methods']['SVM'] = {
+                    'label': article.get('svm_sentiment'),
+                    'score': article.get('svm_score'),
+                    'contributing_terms': top_k_terms(contrib, 6),
+                    'notes': 'Kontribusi dihitung dari TF-IDF x bobot SVM (coef)'
+                }
+            except Exception as e:
+                resp['methods']['SVM'] = {'label': article.get('svm_sentiment'), 'score': article.get('svm_score'), 'contributing_terms': [], 'notes': f'Error computing contributions: {e}'}
+
+        # LSTM contributions: approximate using sentiwords/pos/neg sets
+        try:
+            senti = analyzer.sentiwords
+            pos_set = analyzer.positive_words
+            neg_set = analyzer.negative_words
+            tokens = final_text.split()
+            token_contrib = {}
+            for j, w in enumerate(tokens):
+                if w in senti:
+                    val = senti[w]
+                elif w in pos_set:
+                    val = 3.0
+                elif w in neg_set:
+                    val = -3.0
+                else:
+                    continue
+                # weight by position similar to LSTM averaged weights
+                weight = 0.5 + (j / max(1, len(tokens))) * 0.5
+                token_contrib[w] = token_contrib.get(w, 0.0) + val * weight
+            resp['methods']['LSTM'] = {
+                'label': article.get('lstm_sentiment'),
+                'score': article.get('lstm_score'),
+                'contributing_terms': top_k_terms(token_contrib, 6),
+                'notes': 'Kontribusi aproksimasi dari skor leksikon + posisi (bukan attribution model asli)'
+            }
+        except Exception as e:
+            resp['methods']['LSTM'] = {'label': article.get('lstm_sentiment'), 'score': article.get('lstm_score'), 'contributing_terms': [], 'notes': f'Error computing contributions: {e}'}
+
+        # IndoBERT contributions: similar approximation
+        try:
+            senti = analyzer.sentiwords
+            pos_set = analyzer.positive_words
+            neg_set = analyzer.negative_words
+            tokens = final_text.split()
+            token_contrib = {}
+            for j, w in enumerate(tokens):
+                if w in senti:
+                    val = senti[w]
+                elif w in pos_set:
+                    val = 3.0
+                elif w in neg_set:
+                    val = -3.0
+                else:
+                    continue
+                mult = 1.0
+                if j > 0 and tokens[j-1] in ('sangat','banget','sekali'):
+                    mult = 1.4
+                token_contrib[w] = token_contrib.get(w, 0.0) + val * mult
+            resp['methods']['IndoBERT'] = {
+                'label': article.get('indobert_sentiment'),
+                'score': article.get('indobert_score'),
+                'contributing_terms': top_k_terms(token_contrib, 6),
+                'notes': 'Kontribusi aproksimasi berbasis leksikon + intensifier (bukan attribution BERT asli)'
+            }
+        except Exception as e:
+            resp['methods']['IndoBERT'] = {'label': article.get('indobert_sentiment'), 'score': article.get('indobert_score'), 'contributing_terms': [], 'notes': f'Error computing contributions: {e}'}
+
+        # Aggregation explanation
+        resp['aggregation'] = {
+            'final_explanation': 'Metode berbeda menggunakan fitur/arsitektur berbeda. NB/SVM berbasis TF-IDF & bobot fitur, sedangkan LSTM/IndoBERT menggunakan konteks dan intensifier. Hasil akhir dapat berbeda karena perbedaan fitur, threshold, dan penanganan negasi.'
+        }
+
+        return jsonify(resp)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/media/word_trend', methods=['GET'])
 def media_word_trend():
     """API endpoint: top words per week from analyzed articles"""

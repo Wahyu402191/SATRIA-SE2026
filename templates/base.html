@@ -381,32 +381,6 @@
         .nav-links a.btn-nav-cta:hover { background: #fff; color: var(--primary); }
         .btn-nav-cta:hover svg { fill: var(--primary); }
 
-        /* ─── FLOATING QUICK ANALYSIS BUTTON ─── */
-        .fab-quick-analysis {
-            position: fixed; right: 28px; bottom: 28px; z-index: 950;
-            display: flex; align-items: center; gap: 10px;
-            height: 52px; padding: 0 20px 0 16px; border: none; border-radius: 99px;
-            background: var(--gradient-blue-orange); background-size: 200% 200%;
-            animation: waveMove 8s ease infinite;
-            color: #fff; cursor: pointer;
-            box-shadow: 0 6px 20px rgba(40,116,166,.4);
-            transition: transform .25s, box-shadow .25s, padding .25s;
-        }
-        .fab-quick-analysis svg { width: 22px; height: 22px; fill: #fff; flex-shrink: 0; }
-        .fab-quick-analysis .fab-label {
-            font-size: 13px; font-weight: 700; white-space: nowrap;
-            max-width: 140px; overflow: hidden;
-            transition: max-width .25s ease, opacity .2s ease;
-        }
-        .fab-quick-analysis:hover {
-            transform: translateY(-3px) scale(1.03);
-            box-shadow: 0 10px 28px rgba(40,116,166,.5);
-        }
-        @media (max-width: 768px) {
-            .fab-quick-analysis { right: 18px; bottom: 18px; height: 48px; width: 48px; padding: 0; justify-content: center; gap: 0; }
-            .fab-quick-analysis .fab-label { max-width: 0; opacity: 0; }
-        }
-
         /* ─── LAYOUT ─── */
         .container { max-width: 100%; margin: 0 auto; padding: 32px 32px; }
 
@@ -1111,7 +1085,7 @@
                     </div>
                 </div>
 
-            <a href="/" class="navbar-brand">
+            <a href="/youtube/" class="navbar-brand" id="brand-link">
                 <div class="brand-mark">
                     <img src="/static/img/bps-logo.png"
                          alt="Logo BPS"
@@ -1425,6 +1399,23 @@
     // choke trying to parse the Jinja that generated the color.
     document.querySelectorAll('[data-avatar-bg]').forEach(el => {
         if (!el.querySelector('img')) el.style.background = el.dataset.avatarBg;
+    });
+
+    // ── Prevent refresh on logo click if already on target page ──
+    document.addEventListener('DOMContentLoaded', function() {
+        const brandLink = document.getElementById('brand-link');
+        if (brandLink) {
+            brandLink.addEventListener('click', function(e) {
+                const currentPath = window.location.pathname;
+                const targetPath = this.getAttribute('href');
+                // If already on the target page, prevent navigation
+                if (currentPath === targetPath || currentPath === targetPath + '/') {
+                    e.preventDefault();
+                    // Optional: scroll to top smoothly instead
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+        }
     });
 
     // ── 4. Button Ripple Effect ─────────────────────────

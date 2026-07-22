@@ -41,7 +41,7 @@ class TextPreprocessor:
             'gak': 'tidak', 'ga': 'tidak', 'gk': 'tidak',
             'ngga': 'tidak', 'nggak': 'tidak',
             'udah': 'sudah', 'udh': 'sudah',
-            'bgt': 'banget',
+            'bgt': 'banget', 'bngtt': 'banget', 'bngeet': 'banget',
             'bgus': 'bagus', 'bgs': 'bagus',
             'tp': 'tapi', 'tpi': 'tapi',
             'yg': 'yang', 'sy': 'saya',
@@ -51,6 +51,19 @@ class TextPreprocessor:
             'dgn': 'dengan', 'sm': 'sama',
             'emg': 'emang', 'emng': 'emang',
             'bkn': 'bukan', 'ad': 'ada',
+            # Common YouTube comment slang
+            'keren': 'keren', 'mantap': 'mantap', 'mantul': 'mantap',
+            'anjay': 'hebat', 'anjir': 'hebat', 'anjrit': 'hebat',
+            'wkwk': 'lucu', 'wkwkw': 'lucu', 'haha': 'lucu', 'hehe': 'lucu',
+            'wow': 'hebat', 'wah': 'hebat', 'woow': 'hebat',
+            'ampun': 'hebat', 'dah': 'hebat',
+            'jelek': 'jelek', 'jlek': 'jelek', 'buruk': 'buruk',
+            'parah': 'buruk', 'ancur': 'buruk', 'hancur': 'buruk',
+            'gila': 'hebat', 'gilak': 'hebat', 'gilaa': 'hebat',
+            'kece': 'bagus', 'cakep': 'bagus', 'cantik': 'bagus',
+            'seru': 'menarik', 'asik': 'menarik', 'asyik': 'menarik',
+            'bosen': 'membosankan', 'boring': 'membosankan',
+            'males': 'malas', 'malesin': 'malas',
         }
         # Fill gaps from the ~15,500-entry slang->formal lexicon (kamus/
         # colloquial-indonesian-lexicon.csv) — previously wired into the
@@ -225,6 +238,10 @@ class TextPreprocessor:
         Sastrawi is ~1-2s per call which makes bulk analysis unusably slow.
         Simple regex + dict normalization is ~1000x faster and nearly as accurate
         for lexicon-based sentiment scoring.
+        
+        For SHORT texts (YouTube comments, tweets), uses minimal stopword removal
+        to preserve sentiment-bearing context. For LONG texts (news articles),
+        uses full stopword list to reduce noise.
         """
         text = text.lower()
         text = re.sub(r'http\S+|www\S+|https\S+', '', text)
@@ -236,12 +253,27 @@ class TextPreprocessor:
         # Spelling + slang normalization (combined dict lookup — O(n) per token)
         combined = {**self.spelling_dict, **self.normalization_dict}
         tokens = [combined.get(t, t) for t in text.split()]
-
-        # Stopword removal — the full 757-word list (self.stop_words_full,
-        # built in __init__) minus negation words, so words like "pada",
-        # "sebagai", "menurut", "kata", "ujar" no longer reach the lexicon
-        # scorer, while "tidak"/"bukan" survive for negation-flip detection.
-        tokens = [t for t in tokens if t and t not in self.stop_words_full and len(t) > 1]
+        
+        # Count words to determine if text is short (comment) or long (article)
+        word_count = len(tokens)
+        
+        if word_count <= 30:
+            # SHORT TEXT (YouTube comments): minimal stopword removal
+            # Only remove pure grammar words, keep intensifiers and sentiment carriers
+            minimal_stopwords = {
+                'yang', 'di', 'ke', 'dari', 'untuk', 'pada', 'dengan', 'oleh',
+                'adalah', 'ini', 'itu', 'dan', 'atau', 'serta', 'tetapi',
+                'karena', 'jika', 'maka', 'akan', 'telah', 'sudah', 'sedang',
+                'bila', 'jadi', 'namun', 'lalu', 'kemudian', 'saat', 'ketika',
+                'bagi', 'antara', 'atas', 'bawah', 'dalam', 'luar', 'kami',
+                'kita', 'mereka', 'ia', 'dia', 'nya', 'mu', 'ku', 'nya'
+            }
+            # PRESERVE negation and intensifiers
+            tokens = [t for t in tokens if t and (t not in minimal_stopwords or t in self.negation_words) and len(t) > 1]
+        else:
+            # LONG TEXT (news articles): full stopword removal
+            # Use full 757-word list minus negation words
+            tokens = [t for t in tokens if t and t not in self.stop_words_full and len(t) > 1]
 
         return ' '.join(tokens)
 
@@ -407,6 +439,29 @@ class SentimentAnalyzer:
         # score) — they just shouldn't ALSO carry an independent sentiment
         # score of their own.
         self.stopwords_all = self._load_simple_list(os.path.join(kamus_dir, 'id.stopwords.02.01.2016.txt'))
+
+        # Common YouTube comment sentiment words (often missing from formal lexicons)
+        youtube_positive = {
+            'keren': 3, 'mantap': 3, 'mantul': 3, 'anjay': 2, 'anjir': 2,
+            'hebat': 3, 'bagus': 3, 'lucu': 2, 'seru': 2, 'asik': 2, 'asyik': 2,
+            'wow': 2, 'wah': 2, 'gila': 2, 'gilak': 2, 'kece': 3, 'cakep': 3,
+            'cantik': 3, 'menarik': 2, 'top': 3, 'oke': 1, 'ok': 1, 'nice': 2,
+            'sukses': 3, 'berhasil': 3, 'sempurna': 3, 'terbaik': 3,
+            'senang': 2, 'suka': 2, 'cinta': 3, 'love': 3,
+        }
+        youtube_negative = {
+            'jelek': -3, 'jlek': -3, 'buruk': -3, 'parah': -3, 'ancur': -3,
+            'hancur': -3, 'bosen': -2, 'boring': -2, 'males': -2, 'malesin': -2,
+            'payah': -2, 'gagal': -3, 'mengecewakan': -3, 'kecewa': -3,
+            'sedih': -2, 'susah': -2, 'sulit': -2, 'ribet': -2,
+            'ngeselin': -2, 'kesel': -2, 'marah': -3, 'benci': -3,
+        }
+        
+        # Merge YouTube words into net_weight
+        for word, weight in youtube_positive.items():
+            net_weight[word] = net_weight.get(word, 0.0) + weight
+        for word, weight in youtube_negative.items():
+            net_weight[word] = net_weight.get(word, 0.0) + weight
 
         self.lexicon_weights = net_weight
         self.positive_words = {w for w, s in net_weight.items() if s > 0} - self.NEUTRALIZE_WORDS - self.stopwords_all

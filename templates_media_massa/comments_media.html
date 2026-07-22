@@ -93,6 +93,12 @@
         border-color:var(--primary-light);
     }
     .article-card:hover::before { opacity:1; }
+    .article-card.clickable { cursor:pointer; }
+    .article-link-hint {
+        font-size:11px; font-weight:600; color:var(--primary); opacity:0;
+        transition:opacity .2s; display:flex; align-items:center; gap:4px;
+    }
+    .article-card.clickable:hover .article-link-hint { opacity:1; }
     .article-header {
         display:flex; align-items:center; gap:10px;
         padding:10px 16px; background:var(--bg); border-bottom:1px solid var(--border);
@@ -299,8 +305,10 @@ function renderArticles(indexed) {
         }
         
         const contentPreview = (a.content||'').substring(0, 200) + ((a.content||'').length > 200 ? '...' : '');
-        
-        return `<div class="article-card">
+        const hasUrl = !!(a.url && a.url.trim());
+        const cardClick = hasUrl ? ` onclick="openArticleUrl('${escAttr(a.url)}')"` : '';
+
+        return `<div class="article-card${hasUrl ? ' clickable' : ''}"${cardClick} title="${hasUrl ? 'Klik untuk buka berita asli' : ''}">
             <div class="article-header">
                 <div class="article-source">${esc(a.source||'Unknown')}</div>
                 <div class="article-date">${a.published_date||'N/A'}</div>
@@ -312,7 +320,10 @@ function renderArticles(indexed) {
                     <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px;">#${i+1}</div>
                     <div class="sentiment-badges">${badges || '<span style="font-size:11px;color:var(--text-muted);">Belum dianalisis</span>'}</div>
                 </div>
-                <button class="btn-preprocess" onclick="showPP(${i})">Lihat Preprocessing</button>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    ${hasUrl ? '<span class="article-link-hint">Buka berita asli ↗</span>' : ''}
+                    <button class="btn-preprocess" onclick="event.stopPropagation(); showPP(${i})">Lihat Detail Proses</button>
+                </div>
             </div>
         </div>`;
     }).join('');
@@ -320,6 +331,17 @@ function renderArticles(indexed) {
 
 function esc(s) {
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Escapes a value for safe embedding inside a single-quoted HTML attribute
+// that itself contains inline JS (onclick="...('...')") — needs both HTML
+// entity escaping AND JS string escaping since it crosses both contexts.
+function escAttr(s) {
+    return esc(s).replace(/'/g, '&#39;').replace(/\\/g, '\\\\');
+}
+
+function openArticleUrl(url) {
+    if (url) window.open(url, '_blank', 'noopener');
 }
 
 // ── Preprocessing Modal ────────────────────────────────────

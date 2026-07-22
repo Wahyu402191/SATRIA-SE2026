@@ -121,7 +121,8 @@ class MLSentimentAnalyzer:
                 ws = -ws
             total += ws * b
 
-        return (total / len(words)) if matched else 0.0
+        # BUG FIX: divide by matched words, not all words
+        return (total / matched) if matched else 0.0
 
     def _score_to_label(self, score: float, pos_thr=0.1, neg_thr=-0.1):
         if score > pos_thr:  return 'Positif', round(abs(score), 3)
@@ -166,6 +167,7 @@ class MLSentimentAnalyzer:
                     # Low-confidence Netral → fallback to lexicon
                     if pred == 1 and score < 0.6:
                         ls = self._lexicon_score(texts[i])
+                        # Adjusted thresholds since _lexicon_score now divides by matched
                         if   ls > 0.15: label = 'Positif'
                         elif ls < -0.15: label = 'Negatif'
                     results[i]['naive_bayes_sentiment'] = label
@@ -186,6 +188,7 @@ class MLSentimentAnalyzer:
                     label = sentiment_map[pred]
                     if pred == 1 and score < 0.5:
                         ls = self._lexicon_score(texts[i])
+                        # Adjusted thresholds since _lexicon_score now divides by matched
                         if   ls > 0.15: label = 'Positif'
                         elif ls < -0.15: label = 'Negatif'
                     results[i]['svm_sentiment'] = label
@@ -204,27 +207,48 @@ class MLSentimentAnalyzer:
                     continue
                 wlen = len(words)
                 seq  = np.zeros(wlen, dtype=np.float32)
+                matched = 0
                 for j, w in enumerate(words):
-                    if w in senti:      seq[j] = senti[w]
-                    elif w in pos_set:  seq[j] = 3
-                    elif w in neg_set:  seq[j] = -3
-                # weighted average: later words have more weight.
-                # np.average(..., weights=...) already divides by the sum of
-                # weights (i.e. it IS the mean) — a further "/ wlen" here
-                # was shrinking the result by another ~wlen factor, so any
-                # article longer than a few words landed far below the
-                # +-0.15 threshold no matter how strongly positive/negative
-                # its words were. That's why LSTM almost always came out
-                # Netral regardless of the actual text.
+                    if w in senti:      
+                        seq[j] = senti[w]
+                        matched += 1
+                    elif w in pos_set:  
+                        seq[j] = 3
+                        matched += 1
+                    elif w in neg_set:  
+                        seq[j] = -3
+                        matched += 1
+                
+                # Skip if no sentiment words found
+                if matched == 0:
+                    results[i]['lstm_sentiment'] = 'Netral'
+                    results[i]['lstm_score']     = 0.0
+                    continue
+                
+                # Use sum divided by MATCHED words, not all words
+                # This prevents dilution from non-sentiment words
                 weights = np.linspace(0.5, 1.0, wlen, dtype=np.float32)
-                avg = float(np.average(seq, weights=weights))
-                label, score = self._score_to_label(avg, 0.15, -0.15)
+                total = float(np.sum(seq * weights))
+                weight_sum = float(np.sum(weights[seq != 0]))
+                avg = total / weight_sum if weight_sum > 0 else 0.0
+                
+                # Dynamic thresholds based on text length and matched words
+                # SHORT text (comments): more lenient to capture sentiment
+                # LONG text (articles): stricter to avoid false positives
+                if wlen <= 30:  # Short text (YouTube comments)
+                    pos_thr = 0.03 if matched > 3 else 0.05
+                    neg_thr = -0.03 if matched > 3 else -0.05
+                else:  # Long text (articles)
+                    pos_thr = 0.05 if matched > 5 else 0.08
+                    neg_thr = -0.05 if matched > 5 else -0.08
+                
+                label, score = self._score_to_label(avg, pos_thr, neg_thr)
                 results[i]['lstm_sentiment'] = label
-                results[i]['lstm_score']     = score
+                results[i]['lstm_score'] = score
 
         # ── IndoBERT batch (vectorised with numpy) ────────────────────────
         if 'indobert' in methods:
-            intensifiers = {'sangat':1.5,'amat':1.5,'sekali':1.3,'banget':1.3}
+            intensifiers = {'sangat':1.5,'amat':1.5,'sekali':1.3,'banget':1.3,'bgt':1.3}
             neg_words_ib = {'tidak','bukan','jangan','gak','ga','nggak','ngga'}
             senti        = self.sentiwords
             pos_set      = self.positive_words
@@ -235,20 +259,46 @@ class MLSentimentAnalyzer:
                     results[i]['indobert_sentiment'] = 'Netral'
                     results[i]['indobert_score']     = 0.0
                     continue
+                wlen = len(words)
                 total = 0.0
+                matched = 0
                 for j, word in enumerate(words):
                     mult  = intensifiers.get(words[j-1], 1.0) if j > 0 else 1.0
                     negated = j > 0 and words[j-1] in neg_words_ib
-                    if word in senti:       ws = senti[word]
-                    elif word in pos_set:   ws = 3
-                    elif word in neg_set_ib:ws = -3
-                    else:                   continue
+                    if word in senti:       
+                        ws = senti[word]
+                        matched += 1
+                    elif word in pos_set:   
+                        ws = 3
+                        matched += 1
+                    elif word in neg_set_ib:
+                        ws = -3
+                        matched += 1
+                    else:                   
+                        continue
                     if negated: ws = -ws
                     total += ws * mult
-                avg = total / len(words)
-                label, score = self._score_to_label(avg, 0.1, -0.1)
+                
+                # Skip if no sentiment words found
+                if matched == 0:
+                    results[i]['indobert_sentiment'] = 'Netral'
+                    results[i]['indobert_score']     = 0.0
+                    continue
+                
+                # Divide by matched words only, not all words
+                avg = total / matched
+                
+                # Dynamic thresholds based on text length
+                if wlen <= 30:  # Short text (YouTube comments)
+                    pos_thr = 0.2 if matched > 3 else 0.35
+                    neg_thr = -0.2 if matched > 3 else -0.35
+                else:  # Long text (articles)
+                    pos_thr = 0.3 if matched > 5 else 0.5
+                    neg_thr = -0.3 if matched > 5 else -0.5
+                
+                label, score = self._score_to_label(avg, pos_thr, neg_thr)
                 results[i]['indobert_sentiment'] = label
-                results[i]['indobert_score']     = score
+                results[i]['indobert_score'] = score
 
         return results
 

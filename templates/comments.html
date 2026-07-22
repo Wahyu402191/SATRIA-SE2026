@@ -214,7 +214,7 @@ async function loadComments() {
     const data = await res.json();
 
     if (!data.success) {
-        el.innerHTML = `<div class="empty-state"><p>Belum ada data. <a href="/">Lakukan scraping terlebih dahulu</a>.</p></div>`;
+        el.innerHTML = `<div class="empty-state"><p>Belum ada data. <a href="/youtube/">Lakukan scraping terlebih dahulu</a>.</p></div>`;
         return;
     }
 

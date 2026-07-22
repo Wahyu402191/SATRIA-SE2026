@@ -1022,7 +1022,7 @@
                 </div>
             </div>
 
-            <a href="/media/" class="navbar-brand">
+            <a href="/media/" id="brand-link" class="navbar-brand">
                 <div class="brand-mark">
                     <img src="/static/img/bps-logo.png"
                          alt="Logo BPS"
@@ -1324,6 +1324,23 @@
     document.addEventListener('DOMContentLoaded', watchCounters);
     // Also watch for dynamically added counters
     new MutationObserver(watchCounters).observe(document.body, { childList: true, subtree: true });
+
+    // ── 8. Prevent refresh on logo click (same page) ────
+    document.addEventListener('DOMContentLoaded', () => {
+        const brandLink = document.getElementById('brand-link');
+        if (brandLink) {
+            brandLink.addEventListener('click', function(e) {
+                const currentPath = window.location.pathname;
+                const targetPath = this.getAttribute('href');
+                
+                // If already on the target page, prevent refresh and scroll to top instead
+                if (currentPath === targetPath) {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+        }
+    });
 
     </script>
 </body>

@@ -625,6 +625,190 @@
         75%  { content: '...'; }
         100% { content: ''; }
     }
+
+    /* ═══ CUSTOM ALERT MODAL (Keren & Smooth) ═══ */
+    .custom-alert-overlay {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at center, rgba(231,76,60,.08), rgba(10,20,35,.85));
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+        padding: 20px;
+        animation: alertOverlayIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    
+    .custom-alert-overlay.show {
+        display: flex;
+    }
+    
+    @keyframes alertOverlayIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .custom-alert-box {
+        background: linear-gradient(180deg, #ffffff, #fcfcfc);
+        border-radius: 16px;
+        padding: 0;
+        max-width: 480px;
+        width: 100%;
+        box-shadow: 0 32px 120px rgba(0,0,0,.35), 0 0 0 1px rgba(231,76,60,.15);
+        position: relative;
+        overflow: hidden;
+        animation: alertBoxIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    @keyframes alertBoxIn {
+        from { 
+            opacity: 0;
+            transform: scale(0.8) translateY(40px);
+        }
+        to { 
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+    
+    .custom-alert-header {
+        background: linear-gradient(135deg, #E74C3C 0%, #C0392B 100%);
+        padding: 24px 28px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .custom-alert-header::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 30% 40%, rgba(255,255,255,.15), transparent 50%);
+        pointer-events: none;
+    }
+    
+    .custom-alert-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.2);
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        position: relative;
+        animation: iconPulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes iconPulse {
+        0%, 100% { 
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(255,255,255,.4);
+        }
+        50% { 
+            transform: scale(1.05);
+            box-shadow: 0 0 0 12px rgba(255,255,255,0);
+        }
+    }
+    
+    .custom-alert-icon svg {
+        width: 32px;
+        height: 32px;
+        fill: #fff;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,.2));
+    }
+    
+    .custom-alert-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: #fff;
+        text-align: center;
+        margin: 0;
+        position: relative;
+        text-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    
+    .custom-alert-body {
+        padding: 32px 28px;
+        text-align: center;
+    }
+    
+    .custom-alert-message {
+        font-size: 15px;
+        line-height: 1.7;
+        color: var(--text);
+        margin-bottom: 24px;
+    }
+    
+    .custom-alert-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+    }
+    
+    .custom-alert-btn {
+        padding: 12px 28px;
+        border: none;
+        border-radius: var(--radius);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .custom-alert-btn-primary {
+        background: linear-gradient(135deg, #2874A6, #1ABC9C);
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(40,116,166,.3);
+    }
+    
+    .custom-alert-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(40,116,166,.4);
+    }
+    
+    .custom-alert-btn-secondary {
+        background: transparent;
+        color: var(--text-muted);
+        border: 2px solid var(--border);
+    }
+    
+    .custom-alert-btn-secondary:hover {
+        background: var(--bg);
+        border-color: var(--primary);
+        color: var(--primary);
+        transform: translateY(-2px);
+    }
+    
+    .custom-alert-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    /* Floating particles animation */
+    .alert-particle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.6);
+        pointer-events: none;
+        animation: particleFloat 4s ease-in-out infinite;
+    }
+    
+    .alert-particle:nth-child(1) { left: 10%; top: 20%; animation-delay: 0s; }
+    .alert-particle:nth-child(2) { left: 85%; top: 30%; animation-delay: 1s; }
+    .alert-particle:nth-child(3) { left: 25%; top: 70%; animation-delay: 2s; }
+    .alert-particle:nth-child(4) { left: 70%; top: 60%; animation-delay: 1.5s; }
+    
+    @keyframes particleFloat {
+        0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
+        50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+    }
 </style>
 {% endblock %}
 
@@ -750,6 +934,40 @@
 
 <!-- Toast container -->
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
+
+<!-- Custom Alert Modal (Keren di tengah layar) -->
+<div class="custom-alert-overlay" id="custom-alert">
+    <div class="custom-alert-box">
+        <div class="custom-alert-header">
+            <div class="alert-particle"></div>
+            <div class="alert-particle"></div>
+            <div class="alert-particle"></div>
+            <div class="alert-particle"></div>
+            <div class="custom-alert-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+            </div>
+            <h2 class="custom-alert-title" id="alert-title">Perhatian</h2>
+        </div>
+        <div class="custom-alert-body">
+            <p class="custom-alert-message" id="alert-message">
+                Ini adalah pesan default.
+            </p>
+            <div class="custom-alert-actions">
+                <button class="custom-alert-btn custom-alert-btn-primary" onclick="window.location.href='/youtube/'">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>
+                    Kembali ke Beranda
+                </button>
+                <button class="custom-alert-btn custom-alert-btn-secondary" onclick="closeCustomAlert()">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Loading -->
 <div class="loading" id="loading">
@@ -949,6 +1167,38 @@ function showToast(msg, type='') {
     toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
 }
 
+// ── Custom Alert Modal (Keren di tengah) ───────────────────
+function showCustomAlert(title, message) {
+    const overlay = document.getElementById('custom-alert');
+    const titleEl = document.getElementById('alert-title');
+    const messageEl = document.getElementById('alert-message');
+    
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    
+    overlay.classList.add('show');
+    
+    // Close on overlay click
+    overlay.onclick = function(e) {
+        if (e.target === overlay) {
+            closeCustomAlert();
+        }
+    };
+    
+    // Close on Escape key
+    document.addEventListener('keydown', function escapeHandler(e) {
+        if (e.key === 'Escape') {
+            closeCustomAlert();
+            document.removeEventListener('keydown', escapeHandler);
+        }
+    });
+}
+
+function closeCustomAlert() {
+    const overlay = document.getElementById('custom-alert');
+    overlay.classList.remove('show');
+}
+
 // ── Tabs ───────────────────────────────────────────────────
 function switchTab(tab) {
     activeTab = tab;
@@ -1035,8 +1285,12 @@ async function startAnalysis() {
             const dr = await fetch('/youtube/get_scraped_data');
             const dd = await dr.json();
             if (!dd.success) {
-                showToast('Belum ada data. Lakukan scraping terlebih dahulu.', 'error');
-                setTimeout(() => window.location.href='/', 1500);
+                showCustomAlert(
+                    'Belum Ada Data Scraping', 
+                    'Anda belum melakukan scraping komentar YouTube. Silakan kembali ke halaman beranda untuk melakukan scraping terlebih dahulu, atau pilih file dari riwayat scraping yang tersimpan.'
+                );
+                statusEl.textContent = 'Belum ada data scraping. Pilih sumber data di atas.';
+                loading.style.display = 'none';
                 return;
             }
             comments = dd.data.comments;
