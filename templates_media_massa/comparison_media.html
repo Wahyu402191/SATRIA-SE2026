@@ -79,7 +79,8 @@
         transition:all .3s;
     }
     .insight-card:hover { border-color:var(--primary-light); transform:translateY(-2px); }
-    .insight-icon { font-size:20px; margin-bottom:10px; color:var(--primary); }
+    .insight-icon { margin-bottom:10px; }
+    .insight-icon svg { width:22px; height:22px; }
     .insight-value { font-size:28px; font-weight:800; color:var(--primary); margin-bottom:6px; }
     .insight-label { font-size:12px; color:var(--text-muted); line-height:1.5; }
 
@@ -109,9 +110,9 @@
     .pw-table { border-collapse:collapse; margin:0 auto; }
     .pw-table th { font-size:11px; color:var(--text-muted); font-weight:700; padding:6px 10px; text-align:center; }
     .pw-table th.pw-corner { text-align:right; font-size:10px; }
-    .pw-table td { padding:3px; }
+    .pw-table td { padding:3px; text-align:center; }
     .pw-cell {
-        min-width:70px; height:42px; display:flex; align-items:center; justify-content:center;
+        min-width:70px; height:42px; display:inline-flex; align-items:center; justify-content:center;
         font-size:13px; font-weight:700; color:#fff; border-radius:6px;
         cursor:help; position:relative;
     }
@@ -240,7 +241,7 @@
     <div class="card" id="pairwise-card" style="display:none;">
         <div class="section-heading">Matriks Kesepakatan Antar Metode</div>
         <p class="section-intro">
-            Tabel teknis yang menunjukkan tingkat kesepakatan antara dua metode (untuk pengguna advanced)
+            Tabel teknis yang menunjukkan tingkat kesepakatan antara dua metode secara berpasangan, untuk analisis yang lebih mendalam.
         </p>
         <div class="comp-table-wrap">
             <table class="pw-table" id="pairwise-table"></table>
@@ -377,22 +378,22 @@ function renderKeyInsights(articles, summary) {
     const grid = document.getElementById('insight-grid');
     grid.innerHTML = `
         <div class="insight-card">
-            <div class="insight-icon">▤</div>
+            <div class="insight-icon"><svg viewBox="0 0 24 24" fill="var(--primary)"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></div>
             <div class="insight-value">${totalBerita}</div>
             <div class="insight-label">Total berita media massa dianalisis bulan ini</div>
         </div>
         <div class="insight-card">
-            <div class="insight-icon">▲</div>
+            <div class="insight-icon"><svg viewBox="0 0 24 24" fill="var(--success)"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg></div>
             <div class="insight-value">${dominan} ${dominanPct}%</div>
             <div class="insight-label">Sentimen dominan yang paling banyak muncul</div>
         </div>
         <div class="insight-card">
-            <div class="insight-icon">◈</div>
+            <div class="insight-icon"><svg viewBox="0 0 24 24" fill="var(--primary)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
             <div class="insight-value">${mostConsistent ? mostConsistent.method : 'N/A'}</div>
             <div class="insight-label">Metode paling konsisten (${mostConsistent ? mostConsistent.pct + '% akurasi' : 'N/A'})</div>
         </div>
         <div class="insight-card">
-            <div class="insight-icon">⚖</div>
+            <div class="insight-icon"><svg viewBox="0 0 24 24" fill="var(--accent)"><path d="M9.01 14H2v2h7.01v3L13 15l-3.99-4v3zm5.98-1v-3H22V8h-7.01V5L11 9l3.99 4z"/></svg></div>
             <div class="insight-value">${ratioText}</div>
             <div class="insight-label">Rasio rata-rata berita positif vs negatif</div>
         </div>
@@ -518,13 +519,17 @@ function renderAccuracyComparison(accuracy) {
     for (const [m, pct] of sorted) {
         const col = pct >= 85 ? 'var(--success)' : pct >= 75 ? 'var(--primary)' : pct >= 65 ? 'var(--accent)' : 'var(--danger)';
         const name = m.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        const stars = '★'.repeat(Math.round(pct / 20)) + '☆'.repeat(5 - Math.round(pct / 20));
-        
+        const filledCount = Math.round(pct / 20);
+        const starPath = 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z';
+        const stars = Array.from({ length: 5 }, (_, i) => `
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="${i < filledCount ? 'var(--accent)' : 'var(--border)'}"><path d="${starPath}"/></svg>
+        `).join('');
+
         grid.innerHTML += `
             <div class="agree-card">
                 <div class="agree-pct" style="color:${col};">${pct}%</div>
                 <div class="agree-method">${name}</div>
-                <div class="agree-label">${stars}</div>
+                <div class="agree-label" style="display:flex; justify-content:center; gap:2px; margin:2px 0;">${stars}</div>
                 <div class="agree-label">Kesepakatan dengan mayoritas</div>
             </div>
         `;
@@ -638,22 +643,22 @@ function renderRanking(articles, summary, accuracy) {
     
     grid.innerHTML = `
         <div class="insight-card" style="border-top:3px solid var(--success);">
-            <div class="insight-icon">★</div>
+            <div class="insight-icon"><svg viewBox="0 0 24 24" fill="var(--success)"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div>
             <div class="insight-value">${best[0].replace(/_/g, ' ').toUpperCase()}</div>
             <div class="insight-label">Metode Terakurat (${best[1]}%)</div>
         </div>
         <div class="insight-card" style="border-top:3px solid var(--danger);">
-            <div class="insight-icon">☆</div>
+            <div class="insight-icon"><svg viewBox="0 0 24 24" fill="var(--danger)"><path d="M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03L22 9.24zM12 15.4l-3.76 2.27 1-4.28-3.32-2.88 4.38-.38L12 6.1l1.71 4.04 4.38.38-3.32 2.88 1 4.28L12 15.4z"/></svg></div>
             <div class="insight-value">${worst[0].replace(/_/g, ' ').toUpperCase()}</div>
             <div class="insight-label">Akurasi Terendah (${worst[1]}%)</div>
         </div>
         <div class="insight-card" style="border-top:3px solid var(--success);">
-            <div class="insight-icon">▲</div>
+            <div class="insight-icon"><svg viewBox="0 0 24 24" fill="var(--success)"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg></div>
             <div class="insight-value">${mostPos.method}</div>
             <div class="insight-label">Paling Positif (${mostPos.pct}% berita)</div>
         </div>
         <div class="insight-card" style="border-top:3px solid var(--neutral);">
-            <div class="insight-icon">▼</div>
+            <div class="insight-icon"><svg viewBox="0 0 24 24" fill="var(--text-muted)"><path d="M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6z"/></svg></div>
             <div class="insight-value">${leastPos.method}</div>
             <div class="insight-label">Paling Sedikit Positif (${leastPos.pct}% berita)</div>
         </div>

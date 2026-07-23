@@ -102,8 +102,14 @@ class MLSentimentAnalyzer:
         emot    = self.emoticons
 
         for i, word in enumerate(words):
+            # Window widened 2 -> 3 tokens back: real comments routinely put
+            # an adverb between the negation and its target ("nggak akan
+            # pernah jujur" — 3 tokens between "nggak" and "jujur"), which
+            # the old 2-token window missed entirely, leaving "jujur"
+            # scored as plain Positif instead of flipped to Negatif.
             negated = (i > 0 and words[i-1] in neg_set) or \
-                      (i > 1 and words[i-2] in neg_set)
+                      (i > 1 and words[i-2] in neg_set) or \
+                      (i > 2 and words[i-3] in neg_set)
             b = boost.get(words[i-1], 1.0) if i > 0 else 1.0
 
             if word in senti:
@@ -164,12 +170,17 @@ class MLSentimentAnalyzer:
                     pred  = preds[i]
                     score = float(probas[i][pred])
                     label = sentiment_map[pred]
-                    # Low-confidence Netral → fallback to lexicon
+                    # Low-confidence Netral → fallback to lexicon. Threshold
+                    # lowered (0.15 -> 0.08): short comments rarely carry
+                    # more than one or two matched lexicon words even before
+                    # counting the model's own signal, so requiring a strong
+                    # lexicon score on top of an already-uncertain NB
+                    # prediction left too many genuinely-toned comments
+                    # stuck at Netral.
                     if pred == 1 and score < 0.6:
                         ls = self._lexicon_score(texts[i])
-                        # Adjusted thresholds since _lexicon_score now divides by matched
-                        if   ls > 0.15: label = 'Positif'
-                        elif ls < -0.15: label = 'Negatif'
+                        if   ls > 0.08: label = 'Positif'
+                        elif ls < -0.08: label = 'Negatif'
                     results[i]['naive_bayes_sentiment'] = label
                     results[i]['naive_bayes_score']     = round(score, 3)
 
@@ -188,9 +199,8 @@ class MLSentimentAnalyzer:
                     label = sentiment_map[pred]
                     if pred == 1 and score < 0.5:
                         ls = self._lexicon_score(texts[i])
-                        # Adjusted thresholds since _lexicon_score now divides by matched
-                        if   ls > 0.15: label = 'Positif'
-                        elif ls < -0.15: label = 'Negatif'
+                        if   ls > 0.08: label = 'Positif'
+                        elif ls < -0.08: label = 'Negatif'
                     results[i]['svm_sentiment'] = label
                     results[i]['svm_score']     = round(score, 3)
 
@@ -232,12 +242,16 @@ class MLSentimentAnalyzer:
                 weight_sum = float(np.sum(weights[seq != 0]))
                 avg = total / weight_sum if weight_sum > 0 else 0.0
                 
-                # Dynamic thresholds based on text length and matched words
-                # SHORT text (comments): more lenient to capture sentiment
-                # LONG text (articles): stricter to avoid false positives
+                # Dynamic thresholds based on text length and matched words.
+                # Lowered again (comments: 0.03/0.05 -> 0.015/0.025; bar for
+                # the lenient tier: matched>3 -> matched>1): after cleaning
+                # the lexicon of filler words, most short comments now match
+                # only 1-3 real sentiment words, so the old "matched>3" tier
+                # rarely triggered and most comments landed on the stricter
+                # threshold right when they had the least signal to spare.
                 if wlen <= 30:  # Short text (YouTube comments)
-                    pos_thr = 0.03 if matched > 3 else 0.05
-                    neg_thr = -0.03 if matched > 3 else -0.05
+                    pos_thr = 0.015 if matched > 1 else 0.025
+                    neg_thr = -0.015 if matched > 1 else -0.025
                 else:  # Long text (articles)
                     pos_thr = 0.05 if matched > 5 else 0.08
                     neg_thr = -0.05 if matched > 5 else -0.08
@@ -264,7 +278,13 @@ class MLSentimentAnalyzer:
                 matched = 0
                 for j, word in enumerate(words):
                     mult  = intensifiers.get(words[j-1], 1.0) if j > 0 else 1.0
-                    negated = j > 0 and words[j-1] in neg_words_ib
+                    # Window widened 1 -> 3 tokens back, same reasoning as
+                    # the shared _lexicon_score() fix: negation + target are
+                    # rarely adjacent in natural comments ("nggak akan
+                    # pernah jujur").
+                    negated = (j > 0 and words[j-1] in neg_words_ib) or \
+                              (j > 1 and words[j-2] in neg_words_ib) or \
+                              (j > 2 and words[j-3] in neg_words_ib)
                     if word in senti:       
                         ws = senti[word]
                         matched += 1
@@ -288,10 +308,16 @@ class MLSentimentAnalyzer:
                 # Divide by matched words only, not all words
                 avg = total / matched
                 
-                # Dynamic thresholds based on text length
+                # Dynamic thresholds based on text length. Lowered
+                # (0.2/0.35 -> 0.08/0.15): IndoBERT's raw scores here run on
+                # the same -3..+5-ish per-word scale as LSTM's, so a 0.2+
+                # threshold was far stricter in practice than it looked —
+                # it demanded a much stronger average signal than LSTM ever
+                # required for the same comment, which is why IndoBERT's
+                # Netral share was consistently the highest of the four.
                 if wlen <= 30:  # Short text (YouTube comments)
-                    pos_thr = 0.2 if matched > 3 else 0.35
-                    neg_thr = -0.2 if matched > 3 else -0.35
+                    pos_thr = 0.08 if matched > 1 else 0.15
+                    neg_thr = -0.08 if matched > 1 else -0.15
                 else:  # Long text (articles)
                     pos_thr = 0.3 if matched > 5 else 0.5
                     neg_thr = -0.3 if matched > 5 else -0.5

@@ -42,6 +42,7 @@ CREATE TABLE videos (
     include_replies BOOLEAN DEFAULT FALSE,
     requested_comments INT DEFAULT 0,
     available_comments INT DEFAULT 0,
+    published_at DATETIME NULL,
     INDEX idx_video_id (video_id),
     INDEX idx_scraped_at (scraped_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

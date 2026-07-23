@@ -11,7 +11,7 @@
 
     .month-picker { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom: 6px; }
     .chart-wrap { position:relative; width:100%; }
-    canvas { width:100% !important; }
+    canvas { width:100% !important; height:100% !important; }
 
     table.daily-table { width:100%; border-collapse:collapse; margin-top:8px; font-size:13px; }
     table.daily-table th { text-align:left; padding:10px 14px; background:var(--bg); color:var(--text-muted); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid var(--border); }
@@ -54,7 +54,7 @@
 
 <div class="card reveal">
     <h2>Jumlah Berita per Hari</h2>
-    <div class="chart-wrap"><canvas id="daily-chart" height="280"></canvas></div>
+    <div class="chart-wrap" style="height:280px;"><canvas id="daily-chart"></canvas></div>
 </div>
 
 <div class="card reveal">
@@ -114,6 +114,7 @@ async function loadDaily() {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: { display: false },
                 tooltip: {

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set hide_navbar = true %}
 {% block title %}Profil Saya — SATRIA SE2026{% endblock %}
 
 {% block extra_css %}
@@ -150,16 +151,10 @@
 
             <div style="display: flex; gap: 12px; margin-top: 8px;">
                 <button type="submit" class="btn" style="flex: 1; height: 44px; justify-content: center;">
-                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                    </svg>
                     Simpan Perubahan
                 </button>
-                <a href="{{ url_for('logout') }}" class="btn btn-ghost" style="flex: 1; height: 44px; justify-content: center; text-decoration: none;">
-                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;">
-                        <path d="M17 8l-1.41 1.41L18.17 11H9v2h9.17l-2.58 2.59L17 17l5-5-5-5zM5 5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h7v-2H5V5z"/>
-                    </svg>
-                    Keluar
+                <a href="{{ request.args.get('next') or url_for('selection') }}" class="btn btn-ghost" style="flex: 1; height: 44px; justify-content: center; text-decoration: none;">
+                    Selesai
                 </a>
             </div>
         </form>

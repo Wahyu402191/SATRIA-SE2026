@@ -33,6 +33,19 @@
     .sentence-group-title.negatif { color:var(--danger); }
     .sentence-list { padding-left:20px; margin:0; display:flex; flex-direction:column; gap:8px; }
     .sentence-list li { font-size:13px; line-height:1.65; color:var(--text); }
+
+    /* Kenapa metode berbeda — word-level explanation */
+    .explain-heading { font-size:14px; font-weight:700; color:var(--primary); margin:22px 0 10px; padding-top:18px; border-top:1.5px dashed var(--border); }
+    .method-explain-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; }
+    .method-explain-card { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; }
+    .method-explain-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:8px; }
+    .method-explain-name { font-size:12.5px; font-weight:700; color:var(--primary); }
+    .method-explain-terms { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; min-height:22px; }
+    .term-chip { font-size:11px; font-weight:600; padding:3px 9px; border-radius:99px; white-space:nowrap; }
+    .term-chip.pos { background:#edf7f2; color:var(--success); }
+    .term-chip.neg { background:#fdf0f1; color:var(--danger); }
+    .method-explain-note { font-size:11px; color:var(--text-muted); line-height:1.5; }
+    .agreement-banner { background:linear-gradient(135deg,rgba(40,116,166,.08),rgba(230,126,34,.08)); border:1px solid var(--border); border-radius:var(--radius); padding:12px 16px; font-size:12.5px; color:var(--text); line-height:1.6; margin-top:14px; }
 </style>
 {% endblock %}
 
@@ -220,12 +233,65 @@ async function openModal(id) {
         </div>
         <p style="font-size:13.5px; line-height:1.8; color:var(--text); white-space:pre-wrap;">${escapeHtml(a.content || 'Belum ada isi.')}</p>
         ${renderSentenceAnalysis(a.sentence_analysis)}
+        <div id="method-explain-section"></div>
         <div style="margin-top:20px;">
             <a href="${a.resolved_url || a.url}" target="_blank" rel="noopener" class="btn btn-sm">Buka Berita Asli →</a>
         </div>
     `;
 
     document.getElementById('detail-modal').style.display = 'block';
+
+    if ((a.content || '').trim()) {
+        loadMethodExplain(a);
+    }
+}
+
+async function loadMethodExplain(a) {
+    const section = document.getElementById('method-explain-section');
+    section.innerHTML = `<div class="explain-heading">Kenapa Setiap Metode Menilai Berbeda?</div><p style="font-size:12.5px;color:var(--text-muted);">Memuat penjelasan...</p>`;
+    try {
+        const res = await fetch('/news/processing_detail', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: a.content,
+                naive_bayes_sentiment: a.naive_bayes_sentiment, naive_bayes_score: a.naive_bayes_score,
+                svm_sentiment: a.svm_sentiment, svm_score: a.svm_score,
+                lstm_sentiment: a.lstm_sentiment, lstm_score: a.lstm_score,
+                indobert_sentiment: a.indobert_sentiment, indobert_score: a.indobert_score
+            })
+        });
+        const d = await res.json();
+        section.innerHTML = d.success ? renderMethodExplain(d.methods, d.aggregation) : '';
+    } catch (e) {
+        section.innerHTML = '';
+    }
+}
+
+function renderMethodExplain(methods, aggregation) {
+    const order = ['naive_bayes', 'svm', 'lstm', 'indobert'];
+    const cards = order.filter(k => methods[k]).map(k => {
+        const m = methods[k];
+        const label = m.label || '-';
+        const cls = sentimentBadgeClass(label);
+        const terms = (m.contributing_terms || []).map(t => {
+            const isPos = t.contribution > 0;
+            return `<span class="term-chip ${isPos ? 'pos' : 'neg'}">${escapeHtml(t.term)} (${isPos ? '+' : ''}${t.contribution.toFixed(2)})</span>`;
+        }).join('') || '<span style="font-size:11px;color:var(--text-muted);">Tidak ada kata kunci menonjol</span>';
+        return `
+            <div class="method-explain-card">
+                <div class="method-explain-head">
+                    <span class="method-explain-name">${escapeHtml(m.display_name)}</span>
+                    <span class="badge ${cls}">${escapeHtml(label)}</span>
+                </div>
+                <div class="method-explain-terms">${terms}</div>
+                <div class="method-explain-note">${escapeHtml(m.notes||'')}</div>
+            </div>`;
+    }).join('');
+
+    return `
+        <div class="explain-heading">Kenapa Setiap Metode Menilai Berbeda?</div>
+        <div class="method-explain-grid">${cards}</div>
+        <div class="agreement-banner">${escapeHtml((aggregation||{}).final_explanation||'')}</div>`;
 }
 
 function renderSentenceAnalysis(sa) {

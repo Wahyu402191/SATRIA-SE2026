@@ -58,11 +58,32 @@
         box-shadow:0 2px 8px rgba(230,126,34,.3);
     }
     .chart-wrap { position:relative; width:100%; }
-    canvas { width:100% !important; }
+    canvas { width:100% !important; height:100% !important; }
     .legend-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; margin-top:16px; }
     .legend-item { display:flex; align-items:center; gap:8px; font-size:12px; }
     .legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
     .top-words-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin-top:4px; }
+
+    /* Video info card */
+    .video-info-card { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; }
+    .video-info-main { flex:1; min-width:220px; }
+    .video-info-title { font-size:16px; font-weight:700; color:var(--text); line-height:1.4; margin-bottom:8px; }
+    .video-info-meta { display:flex; gap:16px; flex-wrap:wrap; font-size:12.5px; color:var(--text-muted); }
+    .video-info-meta span strong { color:var(--text); font-weight:600; }
+
+    /* Month picker */
+    .month-picker-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:4px; }
+    .month-picker-row select {
+        padding:9px 14px; border:1.5px solid var(--border); border-radius:var(--radius);
+        font-size:13px; font-weight:600; color:var(--primary); background:var(--bg-card);
+        cursor:pointer; min-width:180px;
+    }
+    .month-picker-row select:focus { outline:none; border-color:var(--primary-light); }
+    .month-total-badge {
+        font-size:12px; font-weight:700; padding:5px 14px; border-radius:99px;
+        background:linear-gradient(135deg,rgba(230,126,34,.12),rgba(243,156,18,.12));
+        border:1.5px solid var(--accent-light); color:var(--accent);
+    }
     /* Word Chips - Enhanced */
     .word-chip {
         background:var(--bg); border:2px solid var(--border); border-radius:var(--radius-lg);
@@ -96,7 +117,7 @@
     </div>
     <div class="page-header-content">
         <h1>Trend Kata per Waktu</h1>
-        <p>Visualisasi kata paling sering muncul dalam komentar · Analisis distribusi frekuensi per bulan dengan grafik interaktif</p>
+        <p>Visualisasi kata paling sering muncul dalam komentar · Pilih bulan, lihat frekuensi kata per tanggal dalam bulan itu</p>
     </div>
 </div>
 
@@ -108,17 +129,63 @@
 
 <div id="main-content" style="display:none;">
 
+    <!-- Video Picker -->
+    <div class="card">
+        <div class="section-heading">Pilih Video</div>
+        <p class="card-sub" style="margin-bottom:14px;">
+            Ganti video yang ditampilkan — memuat data yang sudah tersimpan di database, <strong>tidak scraping ulang</strong>.
+            Setelah dipilih, tombol "Refresh Komentar" di bawah akan mengambil komentar baru khusus untuk video ini.
+        </p>
+        <div class="month-picker-row">
+            <select id="video-select" onchange="switchVideo(this.value)"></select>
+        </div>
+    </div>
+
+    <!-- Video Info -->
+    <div class="card">
+        <div class="section-heading">Video yang Dianalisis</div>
+        <div class="video-info-card">
+            <div class="video-info-main">
+                <div class="video-info-title" id="video-title">-</div>
+                <div class="video-info-meta">
+                    <span>Channel: <strong id="video-channel">-</strong></span>
+                    <span>Diupload: <strong id="video-published">-</strong></span>
+                </div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                <button class="btn btn-accent btn-sm" id="refresh-btn" onclick="refreshComments()">
+                    <svg viewBox="0 0 24 24" fill="white"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08a5.99 5.99 0 01-5.65 4c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                    Refresh Komentar
+                </button>
+                <span style="font-size:11px; color:var(--text-muted);" id="refresh-status"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Month Picker -->
+    <div class="card">
+        <div class="section-heading">Pilih Bulan</div>
+        <p class="card-sub" style="margin-bottom:14px;">
+            Pilihan bulan mengikuti rentang sejak video ini diupload sampai bulan sekarang —
+            semakin lama video sudah tayang, semakin banyak pilihan bulannya.
+        </p>
+        <div class="month-picker-row">
+            <select id="month-select" onchange="loadTrend(this.value)"></select>
+            <span class="month-total-badge" id="month-total-badge"></span>
+        </div>
+    </div>
+
     <!-- Top Words -->
     <div class="card">
-        <div class="section-heading">Kata Paling Sering Muncul</div>
+        <div class="section-heading">Kata Paling Sering Muncul Bulan Ini</div>
         <div class="top-words-grid" id="top-words-grid"></div>
     </div>
 
     <!-- Line Chart -->
     <div class="card">
-        <div class="section-heading">Trend Frekuensi Kata per Bulan</div>
-        <div class="chart-wrap">
-            <canvas id="trend-chart" height="320"></canvas>
+        <div class="section-heading">Trend Frekuensi Kata per Hari</div>
+        <div class="chart-wrap" style="height:320px;">
+            <canvas id="trend-chart"></canvas>
         </div>
         <div class="legend-grid" id="chart-legend"></div>
     </div>
@@ -126,8 +193,8 @@
     <!-- Bar Chart per Word -->
     <div class="card">
         <div class="section-heading">Distribusi Total per Kata</div>
-        <div class="chart-wrap">
-            <canvas id="bar-chart" height="240"></canvas>
+        <div class="chart-wrap" style="height:240px;">
+            <canvas id="bar-chart"></canvas>
         </div>
     </div>
 
@@ -143,19 +210,68 @@ const PALETTE = [
 ];
 
 let trendChart = null, barChart = null;
+let currentVideoId = null;
 
-async function loadTrend() {
+async function loadSavedVideos() {
     try {
-        const res = await fetch('/youtube/word_trend');
+        const res = await fetch('/youtube/saved_files');
+        const data = await res.json();
+        const select = document.getElementById('video-select');
+        if (!data.files || !data.files.length) {
+            select.innerHTML = '<option value="">Belum ada video tersimpan</option>';
+            return;
+        }
+        select.innerHTML = data.files.map(f => `
+            <option value="${f.video_id}" ${f.video_id === currentVideoId ? 'selected' : ''}>
+                ${f.video_title} (${f.total_comments.toLocaleString('id-ID')} komentar)
+            </option>`).join('');
+    } catch (e) {
+        console.error('Gagal memuat daftar video:', e);
+    }
+}
+
+async function switchVideo(videoId) {
+    if (!videoId || videoId === currentVideoId) return;
+    try {
+        const res = await fetch('/youtube/load_file/' + videoId);
+        const data = await res.json();
+        if (!data.success) { alert('Gagal memuat video ini'); return; }
+        await loadTrend();  // no month arg -> backend picks the latest month for the new video
+    } catch (e) {
+        alert('Terjadi kesalahan: ' + e);
+    }
+}
+
+async function loadTrend(month) {
+    try {
+        const url = month ? `/youtube/word_trend?month=${encodeURIComponent(month)}` : '/youtube/word_trend';
+        const res = await fetch(url);
         const data = await res.json();
 
-        if (data.error || !data.months || !data.months.length) {
+        if (data.error || !data.days || !data.days.length) {
             document.getElementById('no-data').style.display = 'block';
             return;
         }
+        currentVideoId = data.video_id;
+        loadSavedVideos();
         document.getElementById('main-content').style.display = 'block';
 
-        const { months, words, data: series } = data;
+        const { days, words, data: series, video_info, available_months, selected_month, month_total_comments } = data;
+
+        // Video info
+        document.getElementById('video-title').textContent = video_info.title || 'Tidak diketahui';
+        document.getElementById('video-channel').textContent = video_info.channel || 'Tidak diketahui';
+        document.getElementById('video-published').textContent = video_info.published_at
+            ? new Date(video_info.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+            : 'Tidak diketahui';
+
+        // Month dropdown — rebuilt each load so it always reflects the
+        // currently loaded video, but keeps whichever month is selected
+        const monthSelect = document.getElementById('month-select');
+        monthSelect.innerHTML = available_months.map(m =>
+            `<option value="${m.value}" ${m.value === selected_month ? 'selected' : ''}>${m.label}</option>`
+        ).join('');
+        document.getElementById('month-total-badge').textContent = `${month_total_comments} komentar bulan ini`;
 
         // Top words chips — calculate totals
         const totals = {};
@@ -163,18 +279,18 @@ async function loadTrend() {
         const sorted = [...words].sort((a,b)=>totals[b]-totals[a]);
 
         const topGrid = document.getElementById('top-words-grid');
-        topGrid.innerHTML = sorted.map((w,i) => `
-            <div class="word-chip" style="border-top:3px solid ${PALETTE[i%PALETTE.length]};">
-                <div class="word-chip-word">${w}</div>
-                <div class="word-chip-count">${totals[w]} kemunculan</div>
-            </div>`).join('');
+        if (!sorted.length) {
+            topGrid.innerHTML = `<p style="color:var(--text-muted); font-size:13px; grid-column:1/-1;">Tidak ada komentar pada bulan ini.</p>`;
+        } else {
+            topGrid.innerHTML = sorted.map((w,i) => `
+                <div class="word-chip" style="border-top:3px solid ${PALETTE[i%PALETTE.length]};">
+                    <div class="word-chip-word">${w}</div>
+                    <div class="word-chip-count">${totals[w]} kemunculan</div>
+                </div>`).join('');
+        }
 
-        // Format month labels
-        const labels = months.map(m => {
-            const [y,mo] = m.split('-');
-            const names = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-            return `${names[parseInt(mo)-1]} ${y}`;
-        });
+        // X-axis = day-of-month (1, 2, 3, ...)
+        const labels = days.map(d => `Tgl ${d}`);
 
         // Line Chart
         const lineCtx = document.getElementById('trend-chart').getContext('2d');
@@ -197,6 +313,7 @@ async function loadTrend() {
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 interaction: { mode:'index', intersect:false },
                 plugins: {
                     legend: { display: false },
@@ -247,6 +364,7 @@ async function loadTrend() {
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: { display:false },
                     tooltip: {
@@ -266,6 +384,33 @@ async function loadTrend() {
     } catch(e) {
         console.error(e);
         document.getElementById('no-data').style.display = 'block';
+    }
+}
+
+async function refreshComments() {
+    const btn = document.getElementById('refresh-btn');
+    const status = document.getElementById('refresh-status');
+    btn.disabled = true;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="white"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Mengambil komentar baru...';
+    status.textContent = '';
+
+    try {
+        const res = await fetch('/youtube/refresh_comments', { method: 'POST' });
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+            alert(data.error || 'Gagal refresh komentar');
+        } else if (data.new_comments_count > 0) {
+            status.textContent = `+${data.new_comments_count} komentar baru, diambil ${new Date(data.refreshed_at).toLocaleTimeString('id-ID')}`;
+            await loadTrend();  // reload with the latest month so new data shows up
+        } else {
+            status.textContent = `Sudah paling baru — dicek ${new Date(data.refreshed_at).toLocaleTimeString('id-ID')}`;
+        }
+    } catch (e) {
+        alert('Terjadi kesalahan: ' + e);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="white"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08a5.99 5.99 0 01-5.65 4c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> Refresh Komentar';
     }
 }
 

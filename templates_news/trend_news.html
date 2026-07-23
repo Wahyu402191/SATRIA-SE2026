@@ -10,7 +10,7 @@
     .page-header p { font-size:13px; color:var(--text-muted); line-height:1.6; }
 
     .chart-wrap { position:relative; width:100%; }
-    canvas { width:100% !important; }
+    canvas { width:100% !important; height:100% !important; }
     .filter-bar { display:flex; align-items:flex-end; gap:14px; flex-wrap:wrap; margin-bottom:10px; }
     .filter-group { display:flex; flex-direction:column; gap:6px; }
     .filter-group label { margin-bottom:0; font-size:12px; }
@@ -99,12 +99,12 @@
 
 <div class="card reveal">
     <h2>Trend Sentimen Harian</h2>
-    <div class="chart-wrap"><canvas id="sentiment-chart" height="280"></canvas></div>
+    <div class="chart-wrap" style="height:280px;"><canvas id="sentiment-chart"></canvas></div>
 </div>
 
 <div class="card reveal">
     <h2>Sumber Media Terbanyak</h2>
-    <div class="chart-wrap"><canvas id="source-chart" height="280"></canvas></div>
+    <div class="chart-wrap" style="height:280px;"><canvas id="source-chart"></canvas></div>
 </div>
 
 <div class="card reveal">
@@ -153,6 +153,7 @@ async function loadSentimentTrend() {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             interaction: { mode:'index', intersect:false },
             scales: { y: { beginAtZero:true, ticks:{ precision:0 } } }
         }
@@ -180,6 +181,7 @@ async function loadSourceBreakdown() {
         options: {
             indexAxis: 'y',
             responsive: true,
+            maintainAspectRatio: false,
             plugins: { legend: { display:false } },
             scales: { x: { beginAtZero:true, ticks:{ precision:0 } } }
         }

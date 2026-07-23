@@ -128,6 +128,41 @@
 
     .empty-state { text-align:center; padding:60px 24px; color:var(--text-muted); }
     .empty-state a { color:var(--primary); font-weight:600; text-decoration:none; }
+
+    /* Simple plain-language summary */
+    .simple-item {
+        display:flex; align-items:flex-start; gap:14px;
+        padding:14px 4px; border-bottom:1px solid var(--border);
+        font-size:14px; color:var(--text); line-height:1.6;
+    }
+    .simple-item:last-child { border-bottom:none; }
+    .simple-tag {
+        flex-shrink:0; margin-top:2px;
+        font-size:10px; font-weight:800; letter-spacing:.4px; text-transform:uppercase;
+        padding:5px 11px; border-radius:99px; white-space:nowrap;
+    }
+    .simple-item strong { color:var(--primary); }
+
+    /* Pairwise agreement heatmap (sequential blue ramp: magnitude = % agree) */
+    .pw-table { border-collapse:collapse; }
+    .pw-table th { font-size:11px; color:var(--text-muted); font-weight:700; padding:6px 10px; text-align:center; }
+    .pw-table th.pw-corner { text-align:right; }
+    .pw-table td { padding:3px 0; text-align:center; }
+    .pw-cell {
+        width:78px; height:44px; display:inline-flex; align-items:center; justify-content:center;
+        font-size:13px; font-weight:700; color:#fff; border-radius:6px;
+        position:relative;
+    }
+    .pw-cell.diag { color:var(--text-muted); background:var(--bg) !important; font-weight:600; }
+    .pw-cell:hover::after {
+        content: attr(data-tip);
+        position:absolute; bottom:110%; left:50%; transform:translateX(-50%);
+        background:#1B4F72; color:#fff; padding:5px 9px; border-radius:6px;
+        font-size:11px; white-space:nowrap; z-index:5;
+    }
+    .heat-legend { display:flex; align-items:center; gap:6px; margin-top:14px; font-size:11px; color:var(--text-muted); }
+    .heat-legend .sw { width:16px; height:12px; border-radius:3px; }
+    .section-intro { font-size:12.5px; color:var(--text-muted); line-height:1.7; margin:-8px 0 18px; max-width:760px; }
 </style>
 {% endblock %}
 
@@ -150,6 +185,13 @@
 
 <div id="comparison-content" style="display:none;">
 
+    <!-- Simple, plain-language takeaway — read this first -->
+    <div class="card" id="simple-card" style="display:none;">
+        <div class="section-heading">Ringkasan Singkat</div>
+        <p class="section-intro">Poin-poin utama dari hasil perbandingan keempat metode, disajikan dalam bahasa yang mudah dipahami.</p>
+        <div id="simple-summary"></div>
+    </div>
+
     <!-- Per-method summary -->
     <div class="card">
         <div class="section-heading">Ringkasan per Metode</div>
@@ -158,7 +200,8 @@
 
     <!-- Agreement / Accuracy -->
     <div class="card" id="accuracy-card" style="display:none;">
-        <div class="section-heading">Tingkat Kesepakatan (Agreement Rate)</div>
+        <div class="section-heading">Seberapa Cocok dengan Suara Terbanyak</div>
+        <p class="section-intro">Untuk tiap komentar, label yang paling banyak dipilih oleh keempat metode dianggap sebagai suara terbanyak. Angka di bawah menunjukkan seberapa sering tiap metode memberi label yang sama dengan suara terbanyak tersebut.</p>
         <div id="accuracy-grid"></div>
     </div>
 
@@ -168,6 +211,20 @@
         <div class="comp-table-wrap">
             <table id="comp-table"></table>
         </div>
+    </div>
+
+    <!-- Pairwise agreement matrix -->
+    <div class="card" id="pairwise-card" style="display:none;">
+        <div class="section-heading">Seberapa Mirip Setiap Metode</div>
+        <p class="section-intro">
+            Tabel ini membandingkan langsung <strong>dua metode</strong> sekaligus, misalnya Naive Bayes dengan SVM saja,
+            tanpa melibatkan metode lain. Kotak warna tua berarti kedua metode sering memberi label yang sama;
+            kotak warna terang berarti sering berbeda.
+        </p>
+        <div class="comp-table-wrap">
+            <table class="pw-table" id="pairwise-table"></table>
+        </div>
+        <div class="heat-legend" id="pairwise-legend"></div>
     </div>
 
 </div>
@@ -223,7 +280,7 @@ async function loadComparison() {
             const name = m.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
             ag.innerHTML += `<div class="agree-card">
                 <div class="agree-pct" style="color:${col};">${pct}%</div>
-                <div><div class="agree-method">${name}</div><div class="agree-label">Kesepakatan dengan majority vote</div></div>
+                <div><div class="agree-method">${name}</div><div class="agree-label">Cocok dengan suara terbanyak</div></div>
             </div>`;
         }
     }
@@ -260,7 +317,127 @@ async function loadComparison() {
     }
     tbody += '</tbody>';
     document.getElementById('comp-table').innerHTML = thead + tbody;
+
+    // Deeper comparisons — computed from data already in this same response
+    // (results.comments has every method's per-comment label, keyed by the
+    // real YouTube comment_id).
+    const methodKeys = Object.keys(METHOD_DISPLAY_NAME).filter(k => summary[METHOD_DISPLAY_NAME[k]]);
+    const comments = data.results.comments || [];
+    renderSimpleSummary(comments, methodKeys);
+    renderPairwiseAgreement(comments, methodKeys);
 }
+
+const METHOD_DISPLAY_NAME = { naive_bayes: 'Naive Bayes', svm: 'SVM', lstm: 'LSTM', indobert: 'IndoBERT' };
+const HEAT_COLORS = ['#E0E6ED', '#cfe3f2', '#8fc0e0', '#4f9cca', '#1B4F72'];
+const HEAT_TEXT   = ['#5a6a7a', '#2C3E50', '#2C3E50', '#fff', '#fff'];
+function heatLevel(ratio) {
+    if (ratio >= 0.8) return 4;
+    if (ratio >= 0.55) return 3;
+    if (ratio >= 0.3) return 2;
+    if (ratio > 0) return 1;
+    return 0;
+}
+
+// Plain-language takeaway, meant to be read BEFORE the detailed tables below.
+function renderSimpleSummary(comments, methodKeys) {
+    if (!comments.length || methodKeys.length < 2) return;
+    document.getElementById('simple-card').style.display = 'block';
+
+    const total = comments.length;
+    const fullAgreeCount = comments.filter(c => {
+        const labels = methodKeys.map(m => c[`${m}_sentiment`]).filter(Boolean);
+        return new Set(labels).size === 1;
+    }).length;
+    const fullAgreePct = Math.round(fullAgreeCount / total * 100);
+
+    let bestPair = null, worstPair = null;
+    for (let i = 0; i < methodKeys.length; i++) {
+        for (let j = i + 1; j < methodKeys.length; j++) {
+            let agree = 0, cnt = 0;
+            for (const c of comments) {
+                const s1 = c[`${methodKeys[i]}_sentiment`], s2 = c[`${methodKeys[j]}_sentiment`];
+                if (s1 && s2) { cnt++; if (s1 === s2) agree++; }
+            }
+            if (!cnt) continue;
+            const pct = agree / cnt * 100;
+            const pair = { a: methodKeys[i], b: methodKeys[j], pct };
+            if (!bestPair || pct > bestPair.pct) bestPair = pair;
+            if (!worstPair || pct < worstPair.pct) worstPair = pair;
+        }
+    }
+
+    const items = [];
+    items.push({
+        tag: 'Kesepakatan',
+        color: fullAgreePct >= 60 ? 'var(--success)' : 'var(--accent)',
+        text: `Dari <strong>${total} komentar</strong>, semua metode sepakat penuh (kasih label yang sama persis) pada <strong>${fullAgreeCount} komentar (${fullAgreePct}%)</strong>.`
+    });
+    if (bestPair) {
+        items.push({
+            tag: 'Paling Mirip',
+            color: 'var(--primary)',
+            text: `<strong>${METHOD_DISPLAY_NAME[bestPair.a]}</strong> dan <strong>${METHOD_DISPLAY_NAME[bestPair.b]}</strong> paling sering sependapat satu sama lain (${Math.round(bestPair.pct)}% komentar sama).`
+        });
+    }
+    if (worstPair && worstPair !== bestPair) {
+        items.push({
+            tag: 'Paling Beda',
+            color: 'var(--danger)',
+            text: `<strong>${METHOD_DISPLAY_NAME[worstPair.a]}</strong> dan <strong>${METHOD_DISPLAY_NAME[worstPair.b]}</strong> paling sering beda pendapat (cuma ${Math.round(worstPair.pct)}% yang sama).`
+        });
+    }
+
+    document.getElementById('simple-summary').innerHTML = items.map(it => `
+        <div class="simple-item">
+            <div class="simple-tag" style="background:${it.color}18;color:${it.color};">${it.tag}</div>
+            <div>${it.text}</div>
+        </div>`).join('');
+}
+
+// Pairwise agreement: compares methods two at a time directly, instead of
+// each vs. the combined majority vote — shows which method-pairs think
+// alike vs. which disagree most often.
+function renderPairwiseAgreement(comments, methodKeys) {
+    if (!comments.length || methodKeys.length < 2) return;
+    document.getElementById('pairwise-card').style.display = 'block';
+
+    const n = methodKeys.length;
+    const pct = [];
+    for (let i = 0; i < n; i++) {
+        pct.push([]);
+        for (let j = 0; j < n; j++) {
+            if (i === j) { pct[i].push(100); continue; }
+            let agree = 0, total = 0;
+            for (const c of comments) {
+                const s1 = c[`${methodKeys[i]}_sentiment`], s2 = c[`${methodKeys[j]}_sentiment`];
+                if (s1 && s2) { total++; if (s1 === s2) agree++; }
+            }
+            pct[i].push(total ? Math.round(agree / total * 100) : 0);
+        }
+    }
+
+    let thead = '<thead><tr><th class="pw-corner"></th>' +
+        methodKeys.map(m => `<th>${METHOD_DISPLAY_NAME[m]}</th>`).join('') + '</tr></thead>';
+    let tbody = '<tbody>';
+    for (let i = 0; i < n; i++) {
+        tbody += `<tr><th class="pw-corner">${METHOD_DISPLAY_NAME[methodKeys[i]]}</th>`;
+        for (let j = 0; j < n; j++) {
+            const isDiag = i === j, v = pct[i][j];
+            const lvl = heatLevel(v / 100);
+            const bg = isDiag ? 'var(--bg)' : HEAT_COLORS[lvl];
+            const col = isDiag ? 'var(--text-muted)' : HEAT_TEXT[lvl];
+            const tip = isDiag ? `${METHOD_DISPLAY_NAME[methodKeys[i]]}: sama dengan dirinya sendiri`
+                                : `${METHOD_DISPLAY_NAME[methodKeys[i]]} vs ${METHOD_DISPLAY_NAME[methodKeys[j]]}: ${v}% komentar diberi label sama`;
+            tbody += `<td><div class="pw-cell${isDiag ? ' diag' : ''}" style="background:${bg};color:${col};" data-tip="${tip}">${v}%</div></td>`;
+        }
+        tbody += '</tr>';
+    }
+    tbody += '</tbody>';
+    document.getElementById('pairwise-table').innerHTML = thead + tbody;
+    document.getElementById('pairwise-legend').innerHTML = 'Rendah ' +
+        HEAT_COLORS.map(c => `<span class="sw" style="background:${c};"></span>`).join('') + ' Tinggi';
+}
+
 loadComparison();
 </script>
 {% endblock %}

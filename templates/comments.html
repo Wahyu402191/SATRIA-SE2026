@@ -54,6 +54,7 @@
     .search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); width:15px; height:15px; stroke:var(--text-muted); fill:none; stroke-width:2; }
 
     /* filter chips */
+    .filter-chips-row { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
     .filter-chips { display:flex; gap:6px; flex-wrap:wrap; }
     .chip {
         padding:5px 14px; border-radius:99px; font-size:12px; font-weight:600;
@@ -145,6 +146,19 @@
     .empty-state p { font-size:14px; }
     .empty-state a { color:var(--primary); font-weight:600; text-decoration:none; }
     .count-badge { background:var(--primary); color:#fff; font-size:11px; font-weight:700; padding:2px 9px; border-radius:99px; }
+
+    /* Kenapa metode berbeda — word-level explanation */
+    .explain-heading { font-size:13px; font-weight:800; color:var(--primary); margin:22px 0 10px; padding-top:18px; border-top:1.5px dashed var(--border); }
+    .method-explain-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; }
+    .method-explain-card { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; }
+    .method-explain-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:8px; }
+    .method-explain-name { font-size:12.5px; font-weight:700; color:var(--primary); }
+    .method-explain-terms { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; min-height:22px; }
+    .term-chip { font-size:11px; font-weight:600; padding:3px 9px; border-radius:99px; white-space:nowrap; }
+    .term-chip.pos { background:#edf7f2; color:var(--success); }
+    .term-chip.neg { background:#fdf0f1; color:var(--danger); }
+    .method-explain-note { font-size:11px; color:var(--text-muted); line-height:1.5; }
+    .agreement-banner { background:linear-gradient(135deg,rgba(40,116,166,.08),rgba(230,126,34,.08)); border:1px solid var(--border); border-radius:var(--radius); padding:12px 16px; font-size:12.5px; color:var(--text); line-height:1.6; margin-top:14px; }
 </style>
 {% endblock %}
 
@@ -175,13 +189,19 @@
         </select>
         <span id="comment-count" class="count-badge">0</span>
     </div>
-    <!-- Toolbar baris 2: filter chips -->
-    <div class="filter-chips" id="filter-chips" style="margin-bottom:16px;">
-        <div class="chip active" data-filter="all"    onclick="setFilter('all',this)">Semua</div>
-        <div class="chip pos"  data-filter="positif"  onclick="setFilter('positif',this)">Positif</div>
-        <div class="chip neg"  data-filter="negatif"  onclick="setFilter('negatif',this)">Negatif</div>
-        <div class="chip neu"  data-filter="netral"   onclick="setFilter('netral',this)">Netral</div>
-        <div class="chip"      data-filter="no_label" onclick="setFilter('no_label',this)">Belum Dianalisis</div>
+    <!-- Toolbar baris 2: filter chips + tombol analisis komentar baru -->
+    <div class="filter-chips-row">
+        <div class="filter-chips" id="filter-chips">
+            <div class="chip active" data-filter="all"    onclick="setFilter('all',this)">Semua</div>
+            <div class="chip pos"  data-filter="positif"  onclick="setFilter('positif',this)">Positif</div>
+            <div class="chip neg"  data-filter="negatif"  onclick="setFilter('negatif',this)">Negatif</div>
+            <div class="chip neu"  data-filter="netral"   onclick="setFilter('netral',this)">Netral</div>
+            <div class="chip"      data-filter="no_label" onclick="setFilter('no_label',this)">Belum Dianalisis</div>
+        </div>
+        <button class="btn btn-accent btn-sm" id="analyze-new-btn" onclick="analyzeUnanalyzed()" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="white"><path d="M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+            <span id="analyze-new-label">Analisis Semua yang Belum Dianalisis</span>
+        </button>
     </div>
 
     <div id="comments-list"></div>
@@ -208,6 +228,16 @@ let allComments = [];
 let analysisMap = {};
 let activeFilter = 'all';
 
+// Comments are matched to their analysis result by comment_id — NOT by
+// list position. Positional matching broke as soon as "Refresh Komentar"
+// started prepending new comments to the front of the list: the same
+// index `i` would then point at a different comment than whichever result
+// was originally computed for that slot. Comments without a comment_id at
+// all (only possible for data saved before comment IDs were captured) fall
+// back to an index-based key so they still work, just without the
+// robustness guarantee.
+function keyFor(c, i) { return c.comment_id || ('idx_' + i); }
+
 async function loadComments() {
     const el = document.getElementById('comments-list');
     const res = await fetch('/youtube/get_scraped_data');
@@ -219,21 +249,67 @@ async function loadComments() {
     }
 
     allComments = data.data.comments;
+    analysisMap = {};
 
     // Load analysis if available
     try {
         const ar = await fetch('/youtube/get_analysis_results');
         const ad = await ar.json();
-        if (ad.success) ad.results.comments.forEach((c,i) => { analysisMap[i] = c; });
+        if (ad.success) ad.results.comments.forEach((c,i) => { analysisMap[keyFor(c,i)] = c; });
     } catch(e) {}
 
+    updateAnalyzeNewButton();
     applyFilters();
 }
 
 function getSentiment(idx) {
-    const a = analysisMap[idx];
+    const c = allComments[idx];
+    const a = analysisMap[keyFor(c, idx)];
     if (!a) return null;
     return (a.naive_bayes_sentiment || a.svm_sentiment || a.lstm_sentiment || a.indobert_sentiment || null);
+}
+
+function updateAnalyzeNewButton() {
+    const unanalyzedCount = allComments.filter((c,i) => !analysisMap[keyFor(c,i)]).length;
+    const btn = document.getElementById('analyze-new-btn');
+    const label = document.getElementById('analyze-new-label');
+    if (unanalyzedCount > 0) {
+        label.textContent = `Analisis Semua yang Belum Dianalisis (${unanalyzedCount.toLocaleString('id-ID')})`;
+        btn.style.display = 'inline-flex';
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+async function analyzeUnanalyzed() {
+    const btn = document.getElementById('analyze-new-btn');
+    const label = document.getElementById('analyze-new-label');
+    const originalLabel = label.textContent;
+    btn.disabled = true;
+    label.textContent = 'Menganalisis komentar baru...';
+
+    try {
+        const res = await fetch('/youtube/analyze_unanalyzed', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ methods: ['naive_bayes', 'svm', 'lstm', 'indobert'] })
+        });
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+            alert(data.error || 'Gagal menganalisis komentar baru');
+        } else if (data.analyzed_count === 0) {
+            alert('Semua komentar sudah dianalisis.');
+        } else {
+            await loadComments();  // reload so the new sentiment badges show up
+            return;
+        }
+    } catch (e) {
+        alert('Terjadi kesalahan: ' + e);
+    } finally {
+        btn.disabled = false;
+        label.textContent = originalLabel;
+    }
 }
 
 function setFilter(f, el) {
@@ -291,7 +367,7 @@ function renderComments(indexed) {
     }
 
     el.innerHTML = indexed.map(({c, i}) => {
-        const analysis = analysisMap[i];
+        const analysis = analysisMap[keyFor(c, i)];
         let badges = '';
         if (analysis) {
             const map = {'NB':analysis.naive_bayes_sentiment,'SVM':analysis.svm_sentiment,'LSTM':analysis.lstm_sentiment,'BERT':analysis.indobert_sentiment};
@@ -328,17 +404,58 @@ function esc(s) {
 // ── Preprocessing Modal ────────────────────────────────────
 function showPP(index) {
     const c = allComments[index];
+    const analysis = analysisMap[keyFor(c, index)] || {};
     document.getElementById('pp-author').textContent = `Komentar #${index+1} — @${c.author}`;
     document.getElementById('pp-body').innerHTML = `<div style="text-align:center;padding:40px;"><div class="spinner"></div><p style="margin-top:14px;color:var(--text-muted);">Memproses...</p></div>`;
     document.getElementById('pp-modal').style.display = 'block';
 
-    fetch('/youtube/preprocess_text', {
+    fetch('/youtube/processing_detail', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({text: c.text})
+        body: JSON.stringify({
+            text: c.text,
+            naive_bayes_sentiment: analysis.naive_bayes_sentiment, naive_bayes_score: analysis.naive_bayes_score,
+            svm_sentiment: analysis.svm_sentiment, svm_score: analysis.svm_score,
+            lstm_sentiment: analysis.lstm_sentiment, lstm_score: analysis.lstm_score,
+            indobert_sentiment: analysis.indobert_sentiment, indobert_score: analysis.indobert_score
+        })
     })
     .then(r=>r.json())
-    .then(d => { if(d.success) renderPP(d.steps); else document.getElementById('pp-body').innerHTML='<p style="color:var(--danger);padding:20px;">Gagal memproses.</p>'; })
+    .then(d => {
+        if (d.success) {
+            renderPP(d.preprocessing_steps);
+            document.getElementById('pp-body').innerHTML += renderMethodExplain(d.methods, d.aggregation);
+        } else {
+            document.getElementById('pp-body').innerHTML='<p style="color:var(--danger);padding:20px;">Gagal memproses.</p>';
+        }
+    })
     .catch(()=>{ document.getElementById('pp-body').innerHTML='<p style="color:var(--danger);padding:20px;">Terjadi kesalahan.</p>'; });
+}
+
+function renderMethodExplain(methods, aggregation) {
+    const order = ['naive_bayes', 'svm', 'lstm', 'indobert'];
+    const cards = order.filter(k => methods[k]).map(k => {
+        const m = methods[k];
+        const label = m.label || '-';
+        const cls = sbClass(label);
+        const terms = (m.contributing_terms || []).map(t => {
+            const isPos = t.contribution > 0;
+            return `<span class="term-chip ${isPos ? 'pos' : 'neg'}">${esc(t.term)} (${isPos ? '+' : ''}${t.contribution.toFixed(2)})</span>`;
+        }).join('') || '<span style="font-size:11px;color:var(--text-muted);">Tidak ada kata kunci menonjol</span>';
+        return `
+            <div class="method-explain-card">
+                <div class="method-explain-head">
+                    <span class="method-explain-name">${esc(m.display_name)}</span>
+                    <span class="s-badge ${cls}">${esc(label)}</span>
+                </div>
+                <div class="method-explain-terms">${terms}</div>
+                <div class="method-explain-note">${esc(m.notes||'')}</div>
+            </div>`;
+    }).join('');
+
+    return `
+        <div class="explain-heading">Kenapa Setiap Metode Menilai Berbeda?</div>
+        <div class="method-explain-grid">${cards}</div>
+        <div class="agreement-banner">${esc((aggregation||{}).final_explanation||'')}</div>`;
 }
 
 function renderPP(s) {

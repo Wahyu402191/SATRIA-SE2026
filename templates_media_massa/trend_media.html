@@ -70,7 +70,7 @@
     .month-badge svg { width:16px; height:16px; fill:var(--primary); }
 
     .chart-wrap { position:relative; width:100%; }
-    canvas { width:100% !important; }
+    canvas { width:100% !important; height:100% !important; }
     .legend-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; margin-top:16px; }
     .legend-item { display:flex; align-items:center; gap:8px; font-size:12px; }
     .legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
@@ -132,8 +132,8 @@
     <!-- Line Chart -->
     <div class="card">
         <div class="section-heading">Trend Frekuensi Kata per Minggu</div>
-        <div class="chart-wrap">
-            <canvas id="trend-chart" height="320"></canvas>
+        <div class="chart-wrap" style="height:320px;">
+            <canvas id="trend-chart"></canvas>
         </div>
         <div class="legend-grid" id="chart-legend"></div>
     </div>
@@ -141,8 +141,8 @@
     <!-- Bar Chart per Word -->
     <div class="card">
         <div class="section-heading">Distribusi Total per Kata</div>
-        <div class="chart-wrap">
-            <canvas id="bar-chart" height="240"></canvas>
+        <div class="chart-wrap" style="height:240px;">
+            <canvas id="bar-chart"></canvas>
         </div>
     </div>
 
@@ -225,6 +225,7 @@ async function loadTrend() {
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 interaction: { mode:'index', intersect:false },
                 plugins: {
                     legend: { display: false },
@@ -275,6 +276,7 @@ async function loadTrend() {
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: { display:false },
                     tooltip: {

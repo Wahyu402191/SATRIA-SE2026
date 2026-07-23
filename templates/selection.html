@@ -330,6 +330,59 @@
             .page-wrap { padding: 0 16px; }
             .back-button { bottom: 16px; right: 16px; padding: 9px 18px; font-size: 12px; }
         }
+
+        /* Logout Confirm Modal */
+        .logout-modal-backdrop {
+            position: fixed; inset: 0; background: rgba(5,10,20,.65);
+            backdrop-filter: blur(4px);
+            z-index: 5000; opacity: 0; pointer-events: none; transition: opacity .25s;
+        }
+        .logout-modal-backdrop.open { opacity: 1; pointer-events: auto; }
+        .logout-modal {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -46%) scale(.94);
+            width: 360px; max-width: calc(100vw - 40px);
+            background: linear-gradient(165deg, #101f38, #0a1628);
+            border: 1.5px solid rgba(200,151,58,.3);
+            border-radius: 20px; padding: 34px 30px 26px;
+            box-shadow: 0 24px 70px rgba(0,0,0,.5);
+            z-index: 5001; opacity: 0; pointer-events: none;
+            transition: opacity .25s, transform .25s cubic-bezier(.22,1,.36,1);
+            text-align: center;
+        }
+        .logout-modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+        .logout-modal-icon {
+            width: 62px; height: 62px; border-radius: 50%; margin: 0 auto 18px;
+            background: linear-gradient(135deg, #f4d799, #c8973a);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 22px rgba(200,151,58,.35);
+        }
+        .logout-modal-icon svg { width: 28px; height: 28px; fill: #0a1628; }
+        .logout-modal h3 {
+            font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px;
+            font-family: 'Poppins', sans-serif;
+        }
+        .logout-modal p {
+            font-size: 13px; color: rgba(255,255,255,.55); line-height: 1.65; margin-bottom: 24px;
+        }
+        .logout-modal-actions { display: flex; gap: 10px; }
+        .logout-modal-actions button, .logout-modal-actions a {
+            flex: 1; padding: 12px; border-radius: 50px; font-size: 13px; font-weight: 700;
+            border: none; cursor: pointer; text-decoration: none;
+            font-family: 'Poppins', sans-serif;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: transform .2s, box-shadow .2s, background .2s;
+        }
+        .logout-btn-cancel {
+            background: rgba(255,255,255,.08); color: #fff;
+            border: 1.5px solid rgba(255,255,255,.18) !important;
+        }
+        .logout-btn-cancel:hover { background: rgba(255,255,255,.14); }
+        .logout-btn-confirm {
+            background: linear-gradient(135deg, #f4d799, #c8973a); color: #0a1628;
+            box-shadow: 0 4px 16px rgba(200,151,58,.35);
+        }
+        .logout-btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(200,151,58,.45); }
     </style>
 </head>
 <body>
@@ -353,8 +406,8 @@
             {% endif %}
         </span>
         <span class="user-badge-name">{{ session.user_name or 'Pengguna' }}</span>
-        <a href="{{ url_for('profile') }}" class="user-badge-link" title="Profil Saya">Profil</a>
-        <a href="{{ url_for('logout') }}" class="user-badge-link" title="Keluar">Keluar</a>
+        <a href="{{ url_for('profile', next=request.path) }}" class="user-badge-link" title="Profil Saya">Profil</a>
+        <a href="javascript:void(0)" onclick="confirmLogout(event)" class="user-badge-link" title="Keluar">Keluar</a>
     </div>
 
     <div class="page-wrap">
@@ -447,7 +500,34 @@
 
     </div>
 
+    <!-- Logout Confirm Modal -->
+    <div class="logout-modal-backdrop" id="logout-modal-backdrop" onclick="closeLogoutConfirm()"></div>
+    <div class="logout-modal" id="logout-modal">
+        <div class="logout-modal-icon">
+            <svg viewBox="0 0 24 24"><path d="M17 8l-1.41 1.41L18.17 11H9v2h9.17l-2.58 2.59L17 17l5-5-5-5zM5 5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h7v-2H5V5z"/></svg>
+        </div>
+        <h3>Keluar dari Aplikasi?</h3>
+        <p>Anda perlu masuk kembali untuk mengakses SATRIA SE2026.</p>
+        <div class="logout-modal-actions">
+            <button class="logout-btn-cancel" onclick="closeLogoutConfirm()">Batal</button>
+            <a class="logout-btn-confirm" href="{{ url_for('logout') }}">Ya, Keluar</a>
+        </div>
+    </div>
+
     <script>
+        function confirmLogout(e) {
+            if (e) e.preventDefault();
+            document.getElementById('logout-modal-backdrop')?.classList.add('open');
+            document.getElementById('logout-modal')?.classList.add('open');
+        }
+        function closeLogoutConfirm() {
+            document.getElementById('logout-modal-backdrop')?.classList.remove('open');
+            document.getElementById('logout-modal')?.classList.remove('open');
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLogoutConfirm();
+        });
+
         // Avatar background color (no photo set) — kept out of style="" in
         // the template so editor CSS linters don't choke on the Jinja that
         // generated it.

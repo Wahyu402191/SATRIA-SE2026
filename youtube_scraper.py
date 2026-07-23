@@ -54,7 +54,8 @@ class YouTubeScraper:
                     'channel': video['snippet']['channelTitle'],
                     'views': video['statistics'].get('viewCount', 0),
                     'likes': video['statistics'].get('likeCount', 0),
-                    'comments': video['statistics'].get('commentCount', 0)
+                    'comments': video['statistics'].get('commentCount', 0),
+                    'published_at': video['snippet'].get('publishedAt'),
                 }
             return None
         except Exception as e:
@@ -130,19 +131,31 @@ class YouTubeScraper:
                 for item in items:
                     comment = item['snippet']['topLevelComment']['snippet']
                     comment_data = {
+                        # Real YouTube comment ID (was missing entirely
+                        # before — data_storage.py fell back to a synthetic
+                        # "{video_id}_{position in list}" id, which isn't
+                        # tied to the actual comment at all: re-scraping the
+                        # same video, or fetching with a different `order`,
+                        # shifts positions around, so the same synthetic id
+                        # could silently point at a different real comment
+                        # between runs. A stable id is required for
+                        # get_new_comments() below to correctly tell "already
+                        # have this" apart from "genuinely new".
+                        'comment_id': item['snippet']['topLevelComment']['id'],
                         'author': comment['authorDisplayName'],
                         'text': comment['textDisplay'],
                         'likes': comment['likeCount'],
                         'published_at': comment['publishedAt'],
                         'reply_count': item['snippet']['totalReplyCount']
                     }
-                    
+
                     # Add replies if requested
                     if include_replies and 'replies' in item:
                         replies = []
                         for reply_item in item['replies']['comments']:
                             reply = reply_item['snippet']
                             replies.append({
+                                'comment_id': reply_item['id'],
                                 'author': reply['authorDisplayName'],
                                 'text': reply['textDisplay'],
                                 'likes': reply['likeCount'],
@@ -186,3 +199,84 @@ class YouTubeScraper:
         except Exception as e:
             print(f"Error getting comments: {e}")
             return comments if comments else []
+
+    def get_new_comments(self, video_id, known_comment_ids, max_pages=30):
+        """
+        Fetch only comments posted since the last scrape, without re-fetching
+        (or re-paying API quota for) anything already known.
+
+        Uses order='time' instead of get_comments()'s 'relevance', so results
+        come back newest-first — the moment a comment_id already present in
+        `known_comment_ids` is seen, everything after it in the feed is by
+        definition even older and already known too, so we can stop right
+        there instead of walking the entire comment history again.
+
+        Args:
+            video_id: YouTube video ID
+            known_comment_ids: set of comment_ids already stored for this video
+            max_pages: hard safety cap (100 comments/page) in case a video
+                has an unusually large number of genuinely new comments, so a
+                single refresh click can't run away indefinitely
+        """
+        new_comments = []
+        next_page_token = None
+        url = f"{self.base_url}/commentThreads"
+        headers = {'Referer': 'http://localhost:5000/'}
+
+        try:
+            for _ in range(max_pages):
+                params = {
+                    'part': 'snippet',
+                    'videoId': video_id,
+                    'maxResults': 100,
+                    'textFormat': 'plainText',
+                    'order': 'time',
+                    'key': self.api_key,
+                }
+                if next_page_token:
+                    params['pageToken'] = next_page_token
+
+                response = requests.get(url, params=params, headers=headers)
+                if response.status_code == 403:
+                    error_data = response.json()
+                    reason = error_data.get('error', {}).get('errors', [{}])[0].get('reason', '')
+                    if reason == 'commentsDisabled':
+                        return new_comments
+                    if reason == 'quotaExceeded':
+                        print("Warning: Quota exceeded during refresh")
+                        return new_comments
+                response.raise_for_status()
+                data = response.json()
+
+                items = data.get('items', [])
+                if not items:
+                    break
+
+                caught_up = False
+                for item in items:
+                    comment_id = item['snippet']['topLevelComment']['id']
+                    if comment_id in known_comment_ids:
+                        caught_up = True
+                        break
+                    comment = item['snippet']['topLevelComment']['snippet']
+                    new_comments.append({
+                        'comment_id': comment_id,
+                        'author': comment['authorDisplayName'],
+                        'text': comment['textDisplay'],
+                        'likes': comment['likeCount'],
+                        'published_at': comment['publishedAt'],
+                        'reply_count': item['snippet']['totalReplyCount'],
+                    })
+
+                if caught_up:
+                    break
+
+                next_page_token = data.get('nextPageToken')
+                if not next_page_token:
+                    break
+
+            return new_comments
+
+        except Exception as e:
+            print(f"Error refreshing comments: {e}")
+            return new_comments

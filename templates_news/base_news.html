@@ -56,11 +56,6 @@
             overflow: hidden;
             position: relative;
         }
-        .inst-header::before {
-            content: '';
-            position: absolute; inset: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        }
         .inst-header::after {
             content: '';
             position: absolute; bottom: 0; left: -100%; right: 0;
@@ -79,9 +74,9 @@
         .inst-photo-wrap {
             width: 160px; flex-shrink: 0;
             position: relative; overflow: hidden;
-            background: var(--primary-dark);
+            background: transparent; /* bps-logo.png sudah PNG transparan, tidak perlu samakan warna */
             display: flex; align-items: center; justify-content: center;
-            padding: 12px;
+            padding: 20px;
         }
         .inst-photo-wrap img {
             width: 100%; height: auto; max-height: 100%;
@@ -93,7 +88,7 @@
         }
         @keyframes kenBurns { from { transform: scale(1.00) translate(0, 0); } to { transform: scale(1.06) translate(-2%, -1%); } }
         .inst-photo-wrap:hover img { opacity: 1; transform: scale(1.04); }
-        .inst-body { flex: 1; padding: 20px 28px; display: flex; flex-direction: column; justify-content: center; }
+        .inst-body { flex: 1; padding: 20px 28px 20px 4px; display: flex; flex-direction: column; justify-content: center; }
         .inst-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
         .inst-title { font-size: 20px; font-weight: 800; color: #fff; line-height: 1.25; letter-spacing: -.3px; }
         .inst-subtitle { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 5px; font-weight: 400; letter-spacing: .2px; }
@@ -148,83 +143,141 @@
         .nav-links a.btn-nav-cta { color: #fff; }
         .nav-links a.btn-nav-cta:hover { background: #fff; color: var(--primary); }
 
-        /* User Profile Avatar - Simple Circle */
-        .user-menu-item { position: relative; }
-        .user-menu-trigger {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px;
-            border-radius: 50px;
-            cursor: pointer;
+        /* Sidebar toggle button (hamburger, top-left) */
+        .sidebar-toggle-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 40px; height: 40px; border-radius: 10px;
+            border: none; background: transparent; cursor: pointer;
             transition: background 0.2s;
-            border: none;
-            background: transparent;
         }
-        .user-menu-trigger:hover { background: rgba(40, 116, 166, 0.08); }
-        .profile-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
+        .sidebar-toggle-btn:hover { background: rgba(40, 116, 166, 0.08); }
+        .sidebar-toggle-btn svg { width: 22px; height: 22px; fill: var(--primary); }
+
+        /* App Sidebar */
+        .app-sidebar-backdrop {
+            position: fixed; inset: 0; background: rgba(8, 18, 35, 0.55);
+            z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+        }
+        .app-sidebar-backdrop.open { opacity: 1; pointer-events: auto; }
+        .app-sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; width: 290px;
+            background: linear-gradient(165deg, var(--primary-dark) 0%, var(--primary) 130%);
+            z-index: 2001; transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(.22,1,.36,1);
+            overflow-y: auto; padding: 28px 24px;
+            box-shadow: 8px 0 32px rgba(0,0,0,.3);
+        }
+        .app-sidebar::after {
+            content: '';
+            position: absolute; top: 0; right: 0; bottom: 0; width: 28px;
+            background: linear-gradient(90deg, transparent, rgba(0,0,0,.18));
+            pointer-events: none;
+        }
+        .app-sidebar.open { transform: translateX(0); }
+        .sidebar-close-btn {
+            position: absolute; top: 16px; right: 16px;
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(255,255,255,.1); border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s, transform 0.3s;
+        }
+        .sidebar-close-btn:hover { background: rgba(255,255,255,.2); transform: rotate(90deg); }
+        .sidebar-close-btn svg { width: 16px; height: 16px; fill: #fff; }
+        .sidebar-brand {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 24px; padding-bottom: 20px; padding-right: 28px;
+            border-bottom: 1px solid rgba(255,255,255,.15);
+        }
+        .sidebar-brand-logo {
+            width: 46px; height: 46px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,.3));
+        }
+        .sidebar-brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .sidebar-brand-text-main { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: .3px; }
+        .sidebar-brand-text-sub { font-size: 10.5px; color: rgba(255,255,255,.65); margin-top: 3px; line-height: 1.3; }
+        .sidebar-profile { text-align: center; margin-bottom: 8px; }
+        .sidebar-avatar {
+            width: 100px; height: 100px; border-radius: 50%;
+            margin: 0 auto 14px; overflow: hidden;
+            border: 3px solid var(--primary-light);
+            display: flex; align-items: center; justify-content: center;
             background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(40, 116, 166, 0.2);
-            transition: transform 0.2s;
+            box-shadow: 0 6px 20px rgba(0,0,0,.3);
         }
-        .user-menu-trigger:hover .profile-avatar { transform: scale(1.05); }
-        .profile-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .sidebar-avatar-initial { font-size: 32px; font-weight: 800; color: #fff; }
+        .sidebar-name { color: #fff; font-size: 17px; font-weight: 700; }
+        .sidebar-email { font-size: 11.5px; color: rgba(255,255,255,.55); margin-top: 3px; word-break: break-all; }
+        .sidebar-divider { height: 1px; background: rgba(255,255,255,.12); margin: 18px 0; }
+        .sidebar-eyebrow { font-size: 11px; color: rgba(255,255,255,.5); font-weight: 500; margin-bottom: 2px; }
+        .sidebar-app-link {
+            display: flex; align-items: center; gap: 14px;
+            padding: 12px; border-radius: 14px; margin-bottom: 8px;
+            text-decoration: none; color: #fff;
+            border-left: 3px solid transparent;
+            transition: background 0.2s, border-color 0.2s, transform 0.2s;
         }
-        .profile-avatar-initial {
-            font-size: 14px;
-            font-weight: 700;
-            color: #fff;
+        .sidebar-app-link:hover { background: rgba(255,255,255,.06); transform: translateX(4px); }
+        .sidebar-app-link.active { background: rgba(255,255,255,.07); border-left-color: var(--primary-light); }
+        .sidebar-app-icon {
+            width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.25s cubic-bezier(.22,1,.36,1);
         }
-        .dropdown-caret {
-            width: 14px;
-            height: 14px;
-            fill: var(--text-muted);
-            transition: transform 0.2s;
+        .sidebar-app-link:hover .sidebar-app-icon { transform: scale(1.1) rotate(-4deg); }
+        .sidebar-app-icon svg { width: 22px; height: 22px; fill: #fff; }
+        .sidebar-app-title { font-size: 14px; font-weight: 700; line-height: 1.3; }
+        .sidebar-foot-link {
+            display: flex; align-items: center; gap: 14px;
+            padding: 10px 6px; text-decoration: none; color: rgba(255,255,255,.85);
+            font-size: 14px; font-weight: 600;
         }
-        .user-menu-item.open .dropdown-caret { transform: rotate(180deg); }
-        .user-menu-dropdown {
-            display: none;
-            position: absolute;
-            top: calc(100% + 8px);
-            left: 0;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
-            min-width: 180px;
-            z-index: 1000;
-            animation: dropdownSlideIn 0.2s ease;
+        .sidebar-foot-link:hover { color: #fff; }
+        .sidebar-foot-icon {
+            width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,.08);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
-        @keyframes dropdownSlideIn {
-            from { opacity: 0; transform: translateY(-8px); }
-            to { opacity: 1; transform: translateY(0); }
+        .sidebar-foot-icon svg { width: 17px; height: 17px; fill: #fff; }
+
+        /* Logout Confirm Modal */
+        .logout-modal-backdrop {
+            position: fixed; inset: 0; background: rgba(8,18,35,.6);
+            backdrop-filter: blur(3px);
+            z-index: 5000; opacity: 0; pointer-events: none; transition: opacity .25s;
         }
-        .user-menu-item.open .user-menu-dropdown { display: block; }
-        .user-menu-dropdown a {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            color: var(--text);
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            transition: background 0.2s;
-            border-bottom: 1px solid var(--border);
+        .logout-modal-backdrop.open { opacity: 1; pointer-events: auto; }
+        .logout-modal {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -46%) scale(.94);
+            width: 340px; max-width: calc(100vw - 40px);
+            background: var(--bg-card); border-radius: 20px; padding: 32px 28px 24px;
+            box-shadow: 0 24px 60px rgba(0,0,0,.35);
+            z-index: 5001; opacity: 0; pointer-events: none;
+            transition: opacity .25s, transform .25s cubic-bezier(.22,1,.36,1);
+            text-align: center;
         }
-        .user-menu-dropdown a:last-child { border-bottom: none; }
-        .user-menu-dropdown a:hover { background: var(--bg); }
-        .user-menu-dropdown a svg { width: 16px; height: 16px; flex-shrink: 0; }
+        .logout-modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+        .logout-modal-icon {
+            width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 18px;
+            background: linear-gradient(135deg, var(--danger), #EC7063);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 20px rgba(231,76,60,.35);
+        }
+        .logout-modal-icon svg { width: 28px; height: 28px; fill: #fff; }
+        .logout-modal h3 { font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+        .logout-modal p { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 22px; }
+        .logout-modal-actions { display: flex; gap: 10px; }
+        .logout-modal-actions button, .logout-modal-actions a {
+            flex: 1; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 700;
+            border: none; cursor: pointer; text-decoration: none;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: transform .15s, box-shadow .15s, background .15s;
+        }
+        .logout-btn-cancel { background: var(--bg); color: var(--text); border: 1.5px solid var(--border) !important; }
+        .logout-btn-cancel:hover { background: var(--border); }
+        .logout-btn-confirm { background: linear-gradient(135deg, var(--danger), #EC7063); color: #fff; box-shadow: 0 4px 14px rgba(231,76,60,.3); }
+        .logout-btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(231,76,60,.4); }
 
         /* ─── LAYOUT ─── */
         .container { max-width: 100%; margin: 0 auto; padding: 32px 32px; }
@@ -423,6 +476,91 @@
 
     <canvas id="ambient-canvas"></canvas>
 
+    <!-- ─── APP SIDEBAR ─── -->
+    <div class="app-sidebar-backdrop" id="app-sidebar-backdrop" onclick="closeAppSidebar()"></div>
+    <aside class="app-sidebar" id="app-sidebar">
+        <button class="sidebar-close-btn" onclick="closeAppSidebar()" aria-label="Tutup Menu">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-logo">
+                <img src="/static/img/bps-logo.png" alt="Logo BPS" onerror="this.src='/static/img/bps-bangkalan.jpg'">
+            </div>
+            <div>
+                <div class="sidebar-brand-text-main">SATRIA SE2026</div>
+                <div class="sidebar-brand-text-sub">BPS Kabupaten Bangkalan</div>
+            </div>
+        </div>
+        <div class="sidebar-profile">
+            <div class="sidebar-avatar" data-avatar-bg="{{ session.user_email|avatar_color }}">
+                {% if session.user_photo %}
+                    <img src="{{ session.user_photo }}" alt="Foto Profil">
+                {% else %}
+                    <span class="sidebar-avatar-initial">{{ (session.user_name or 'U')[0]|upper }}</span>
+                {% endif %}
+            </div>
+            <div class="sidebar-name">{{ session.user_name or 'Pengguna' }}</div>
+            {% if session.user_email %}<div class="sidebar-email">{{ session.user_email }}</div>{% endif %}
+        </div>
+        <div class="sidebar-divider"></div>
+
+        <a href="{{ url_for('news_index') }}" class="sidebar-app-link{{ ' active' if request.path.startswith('/news') else '' }}">
+            <div class="sidebar-app-icon" style="background:linear-gradient(135deg,#2874A6,#5DADE2);">
+                <svg viewBox="0 0 24 24"><path d="M19,5H5C3.9,5,3,5.9,3,7v10c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V7C21,5.9,20.1,5,19,5z M19,17H5V7h14V17z M7,9h10v2H7V9z M7,12h7v2H7V12z M7,15h10v2H7V15z"/></svg>
+            </div>
+            <div>
+                <div class="sidebar-eyebrow">Aplikasi</div>
+                <div class="sidebar-app-title">Berita Sensus Ekonomi 2026</div>
+            </div>
+        </a>
+        <a href="{{ url_for('media_index') }}" class="sidebar-app-link{{ ' active' if request.path.startswith('/media') else '' }}">
+            <div class="sidebar-app-icon" style="background:linear-gradient(135deg,var(--success),var(--success-light));">
+                <svg viewBox="0 0 24 24"><path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M9,17H7v-7h2V17z M13,17h-2V7h2V17z M17,17h-2v-4h2V17z"/></svg>
+            </div>
+            <div>
+                <div class="sidebar-eyebrow">Aplikasi</div>
+                <div class="sidebar-app-title">Analisis Sentimen Media Massa</div>
+            </div>
+        </a>
+        <a href="{{ url_for('youtube_index') }}" class="sidebar-app-link{{ ' active' if request.path.startswith('/youtube') else '' }}">
+            <div class="sidebar-app-icon" style="background:linear-gradient(135deg,var(--accent),var(--accent-light));">
+                <svg viewBox="0 0 24 24"><path d="M21.58,7.19c-0.23-0.86-0.91-1.54-1.77-1.77C18.25,5,12,5,12,5S5.75,5,4.19,5.42C3.33,5.65,2.65,6.33,2.42,7.19C2,8.75,2,12,2,12s0,3.25,0.42,4.81c0.23,0.86,0.91,1.54,1.77,1.77C5.75,19,12,19,12,19s6.25,0,7.81-0.42c0.86-0.23,1.54-0.91,1.77-1.77C22,15.25,22,12,22,12S22,8.75,21.58,7.19z M10,15V9l5.2,3L10,15z"/></svg>
+            </div>
+            <div>
+                <div class="sidebar-eyebrow">Aplikasi</div>
+                <div class="sidebar-app-title">Scraping &amp; Analisis YouTube</div>
+            </div>
+        </a>
+
+        <div class="sidebar-divider"></div>
+        <a href="{{ url_for('profile', next=request.path) }}" class="sidebar-foot-link">
+            <div class="sidebar-foot-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+            Profil Saya
+        </a>
+        <a href="javascript:void(0)" onclick="confirmLogout(event)" class="sidebar-foot-link">
+            <div class="sidebar-foot-icon">
+                <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+            </div>
+            Keluar
+        </a>
+    </aside>
+
+    <!-- Logout Confirm Modal -->
+    <div class="logout-modal-backdrop" id="logout-modal-backdrop" onclick="closeLogoutConfirm()"></div>
+    <div class="logout-modal" id="logout-modal">
+        <div class="logout-modal-icon">
+            <svg viewBox="0 0 24 24"><path d="M17 8l-1.41 1.41L18.17 11H9v2h9.17l-2.58 2.59L17 17l5-5-5-5zM5 5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h7v-2H5V5z"/></svg>
+        </div>
+        <h3>Keluar dari Aplikasi?</h3>
+        <p>Anda perlu masuk kembali untuk mengakses SATRIA SE2026.</p>
+        <div class="logout-modal-actions">
+            <button class="logout-btn-cancel" onclick="closeLogoutConfirm()">Batal</button>
+            <a class="logout-btn-confirm" href="{{ url_for('logout') }}">Ya, Keluar</a>
+        </div>
+    </div>
+
     <header class="inst-header">
         <div class="inst-inner">
             <div class="inst-photo-wrap">
@@ -450,35 +588,10 @@
 
     <nav class="navbar">
         <div class="navbar-inner">
-            <!-- User Profile Menu - di kiri logo -->
-            <div class="user-menu-item" id="user-menu">
-                <button class="user-menu-trigger" onclick="toggleUserMenu(event)">
-                    <div class="profile-avatar" data-avatar-bg="{{ session.user_email|avatar_color }}">
-                        {% if session.user_photo %}
-                            <img src="{{ session.user_photo }}" alt="Foto Profil">
-                        {% else %}
-                            <span class="profile-avatar-initial">{{ (session.user_name or 'U')[0]|upper }}</span>
-                        {% endif %}
-                    </div>
-                    <svg class="dropdown-caret" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M7 10l5 5 5-5z"/>
-                    </svg>
-                </button>
-                <div class="user-menu-dropdown">
-                    <a href="{{ url_for('profile') }}">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                        </svg>
-                        Profil Saya
-                    </a>
-                    <a href="{{ url_for('logout') }}">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-                        </svg>
-                        Keluar
-                    </a>
-                </div>
-            </div>
+            <!-- Sidebar menu toggle - di kiri logo -->
+            <button class="sidebar-toggle-btn" onclick="toggleAppSidebar(event)" aria-label="Menu Aplikasi">
+                <svg viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+            </button>
 
             <a href="/news/" id="brand-link" class="navbar-brand">
                 <div class="brand-mark">
@@ -570,19 +683,27 @@
         if (!el.querySelector('img')) el.style.background = el.dataset.avatarBg;
     });
 
-    // Toggle user dropdown menu
-    function toggleUserMenu(event) {
-        event.stopPropagation();
-        const menu = document.getElementById('user-menu');
-        menu.classList.toggle('open');
+    // App Sidebar
+    function toggleAppSidebar(e) {
+        e.stopPropagation();
+        document.getElementById('app-sidebar')?.classList.toggle('open');
+        document.getElementById('app-sidebar-backdrop')?.classList.toggle('open');
     }
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(event) {
-        const menu = document.getElementById('user-menu');
-        if (menu && !menu.contains(event.target)) {
-            menu.classList.remove('open');
-        }
+    function closeAppSidebar() {
+        document.getElementById('app-sidebar')?.classList.remove('open');
+        document.getElementById('app-sidebar-backdrop')?.classList.remove('open');
+    }
+    function confirmLogout(e) {
+        if (e) e.preventDefault();
+        document.getElementById('logout-modal-backdrop')?.classList.add('open');
+        document.getElementById('logout-modal')?.classList.add('open');
+    }
+    function closeLogoutConfirm() {
+        document.getElementById('logout-modal-backdrop')?.classList.remove('open');
+        document.getElementById('logout-modal')?.classList.remove('open');
+    }
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { closeAppSidebar(); closeLogoutConfirm(); }
     });
 
     window.addEventListener('load', () => {

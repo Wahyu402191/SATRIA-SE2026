@@ -51,16 +51,26 @@ class DataStorage:
             timestamp = datetime.now()
             
             # ── Insert or Update Video Record ─────────────────────────────
+            published_at = None
+            if video_info.get('published_at'):
+                try:
+                    published_at = datetime.fromisoformat(
+                        video_info['published_at'].replace('Z', '+00:00')
+                    )
+                except Exception:
+                    published_at = None
+
             video_query = """
-                INSERT INTO videos 
-                (video_id, video_url, title, channel, views, likes, total_comments, 
-                 scraped_at, include_replies, requested_comments, available_comments)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO videos
+                (video_id, video_url, title, channel, views, likes, total_comments,
+                 scraped_at, include_replies, requested_comments, available_comments, published_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE
                     scraped_at = VALUES(scraped_at),
-                    total_comments = total_comments + VALUES(total_comments)
+                    total_comments = total_comments + VALUES(total_comments),
+                    published_at = COALESCE(VALUES(published_at), published_at)
             """
-            
+
             video_params = (
                 video_id,
                 video_url or f'https://www.youtube.com/watch?v={video_id}',
@@ -72,7 +82,8 @@ class DataStorage:
                 timestamp,
                 include_replies,
                 requested_comments or len(comments),
-                int(video_info.get('comments', len(comments)))
+                int(video_info.get('comments', len(comments))),
+                published_at,
             )
             
             execute_query(video_query, video_params)
@@ -262,7 +273,8 @@ class DataStorage:
                     'channel': video_info['channel'],
                     'views': video_info['views'],
                     'likes': video_info['likes'],
-                    'comments': video_info['total_comments']
+                    'comments': video_info['total_comments'],
+                    'published_at': video_info['published_at'].isoformat() if video_info.get('published_at') else None
                 },
                 'comments': comments,
                 'total_comments': len(comments),

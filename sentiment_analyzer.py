@@ -247,13 +247,23 @@ class TextPreprocessor:
         text = re.sub(r'http\S+|www\S+|https\S+', '', text)
         text = re.sub(r'@\w+|#\w+', '', text)
         text = re.sub(r'\d+', '', text)
+        # Collapse repeated letters ("parahhh", "mantappp", "sadiss") to a
+        # normal 1-2 letter run so these land on the same lexicon entry as
+        # their plain spelling — comments lean on letter-stretching for
+        # emphasis constantly and none of those variants existed in the
+        # lexicon as separate words.
+        text = re.sub(r'(.)\1{2,}', r'\1\1', text)
+        # Emoji glued directly onto a word with no space ("setuju👍👍👍")
+        # used to survive as one unmatchable token — give emoji their own
+        # whitespace boundary so the word underneath can still match.
+        text = re.sub(r'([\U0001F300-\U0001FAFF\U00002600-\U000027BF\U0001F1E6-\U0001F1FF])', r' \1 ', text)
         text = text.translate(str.maketrans('', '', string.punctuation))
         text = ' '.join(text.split())
 
         # Spelling + slang normalization (combined dict lookup — O(n) per token)
         combined = {**self.spelling_dict, **self.normalization_dict}
         tokens = [combined.get(t, t) for t in text.split()]
-        
+
         # Count words to determine if text is short (comment) or long (article)
         word_count = len(tokens)
         
@@ -388,6 +398,35 @@ class SentimentAnalyzer:
         'juta', 'perkembangan', 'bentuk', 'tugas', 'kerja', 'langsung',
         'sesuai', 'menerima', 'memperoleh', 'salah', 'potensi', 'kualitas',
         'kepentingan', 'memahami',
+        # Same audit repeated against real YouTube comment text (a very
+        # different register from news articles — short, informal,
+        # conversational filler words) after the YouTube dashboard showed a
+        # heavy, suspicious Negatif skew (56-66% across all 4 methods).
+        # Checked actual comment excerpts before deciding:
+        #   - "ya"/"kayak"/"biar"/"coba" are pure discourse fillers/
+        #     conjunctions here ("ya pak", "kayak gini", "biar bisa",
+        #     "coba jawab") — not expressing genuine sentiment — yet "ya"
+        #     alone carried +12 and appeared 155 times, the single largest
+        #     contributor to the whole dataset's positive/negative noise.
+        #   - "tau"/"cari"/"lihat"/"masuk" are neutral cognitive/action verbs
+        #     ("gak tau gunanya", "cari petugas yg cerdas", "masuk akal") —
+        #     same category as "memahami"/"menerima" already fixed above.
+        #   - "anak"/"hidup"/"jaman"/"pekerjaan"/"pendapatan" are plain nouns
+        #     (child, life, era, job, income) that only read as negative
+        #     because THIS video's comments are largely critical in tone —
+        #     the words themselves aren't sentiment-bearing.
+        #   - "suruh"/"tinggal"/"habis"/"mending" are neutral
+        #     command/temporal/comparative function words.
+        #   - "pejabat" (government official) is a job-title noun exactly
+        #     like "petugas" above — neutralized for the same reason, even
+        #     though it's used cynically in this particular comment section.
+        #   - "banget" was double-counted: it's correctly in boosterwords
+        #     (an intensifier that multiplies the NEXT word's score) but was
+        #     ALSO sitting in positive_words with its own +3, so it added
+        #     spurious positive weight on top of its multiplier role.
+        'ya', 'kayak', 'biar', 'coba', 'tau', 'cari', 'mencari', 'lihat',
+        'masuk', 'anak', 'hidup', 'jaman', 'pekerjaan', 'pendapatan', 'suruh',
+        'tinggal', 'habis', 'mending', 'pejabat', 'kekayaan', 'banget',
     }
 
     def _load_all_lexicons(self):
@@ -440,14 +479,31 @@ class SentimentAnalyzer:
         # score of their own.
         self.stopwords_all = self._load_simple_list(os.path.join(kamus_dir, 'id.stopwords.02.01.2016.txt'))
 
-        # Common YouTube comment sentiment words (often missing from formal lexicons)
+        # Common YouTube comment sentiment words (often missing from formal
+        # lexicons, which are mostly built from formal writing, not social
+        # media slang). Grouped by category below; only words with a clear,
+        # largely context-independent charge are included — pure sarcasm
+        # markers like "wkwk"/"haha" are deliberately left out, since people
+        # laugh both mockingly and genuinely and a lexicon can't tell those
+        # apart (tagging them would just trade one kind of noise for another).
         youtube_positive = {
-            'keren': 3, 'mantap': 3, 'mantul': 3, 'anjay': 2, 'anjir': 2,
-            'hebat': 3, 'bagus': 3, 'lucu': 2, 'seru': 2, 'asik': 2, 'asyik': 2,
-            'wow': 2, 'wah': 2, 'gila': 2, 'gilak': 2, 'kece': 3, 'cakep': 3,
-            'cantik': 3, 'menarik': 2, 'top': 3, 'oke': 1, 'ok': 1, 'nice': 2,
-            'sukses': 3, 'berhasil': 3, 'sempurna': 3, 'terbaik': 3,
-            'senang': 2, 'suka': 2, 'cinta': 3, 'love': 3,
+            # Quality / praise slang
+            'keren': 3, 'mantap': 3, 'mantul': 3, 'gokil': 2, 'gacor': 2,
+            'topcer': 3, 'jempolan': 3, 'sip': 2, 'sippp': 2, 'worth': 2,
+            'worthit': 3, 'memukau': 3, 'ciamik': 3, 'apik': 2,
+            'anjay': 2, 'anjir': 2, 'hebat': 3, 'bagus': 3, 'lucu': 2,
+            'seru': 2, 'asik': 2, 'asyik': 2, 'wow': 2, 'wah': 2, 'gila': 2,
+            'gilak': 2, 'kece': 3, 'cakep': 3, 'cantik': 3, 'menarik': 2,
+            'top': 3, 'oke': 1, 'ok': 1, 'nice': 2, 'sukses': 3,
+            'berhasil': 3, 'sempurna': 3, 'terbaik': 3,
+            # Emotion
+            'senang': 2, 'suka': 2, 'cinta': 3, 'love': 3, 'bahagia': 3,
+            'gembira': 3, 'bangga': 3, 'kagum': 2, 'terharu': 2,
+            'bersyukur': 3, 'syukur': 2,
+            # Trust / good governance (relevant to this survey's own domain)
+            'amanah': 3, 'adil': 3, 'keadilan': 2, 'transparan': 3,
+            'transparansi': 2, 'akuntabel': 2, 'tanggungjawab': 2,
+            'bertanggungjawab': 2,
         }
         youtube_negative = {
             'jelek': -3, 'jlek': -3, 'buruk': -3, 'parah': -3, 'ancur': -3,
@@ -455,6 +511,33 @@ class SentimentAnalyzer:
             'payah': -2, 'gagal': -3, 'mengecewakan': -3, 'kecewa': -3,
             'sedih': -2, 'susah': -2, 'sulit': -2, 'ribet': -2,
             'ngeselin': -2, 'kesel': -2, 'marah': -3, 'benci': -3,
+            # Found missing while auditing real comments that were landing
+            # Netral purely for lack of ANY matched lexicon word (not a
+            # threshold issue) — these are common in cynical/political
+            # comment threads like this dataset's ("koruptor", "percuma
+            # bertanya", "pejabat korup") but absent from every source file.
+            'koruptor': -3, 'korup': -3, 'percuma': -3, 'kritisi': -2,
+            'mengkritisi': -2, 'menipu': -3, 'tertipu': -3, 'bohong': -3,
+            'dibohongi': -3, 'zalim': -3,
+            # Corruption / distrust of officials — extremely common register
+            # in Indonesian government-related comment sections
+            'maling': -3, 'pencuri': -3, 'mencuri': -3, 'nyolong': -3,
+            'ditilep': -3, 'ditilap': -3, 'dipalak': -3, 'memalak': -3,
+            'memeras': -3, 'pemerasan': -3, 'culas': -3, 'licik': -3,
+            'munafik': -3, 'khianat': -3, 'mengkhianati': -3, 'penipu': -3,
+            'tipu': -2, 'pencitraan': -2, 'settingan': -2, 'sandiwara': -2,
+            'akting': -1, 'ingkar': -2, 'mangkrak': -2, 'molor': -2,
+            # Quality complaints / dismissive slang
+            'berantakan': -2, 'amburadul': -3, 'kacau': -2, 'ngaco': -2,
+            'gaje': -2, 'norak': -2, 'alay': -1, 'lebay': -1, 'receh': -1,
+            # Insults
+            'goblok': -3, 'tolol': -3, 'bego': -2, 'bodoh': -2,
+            'songong': -2, 'sombong': -2, 'angkuh': -2, 'arogan': -2,
+            # Futility / hardship
+            'siasia': -2, 'mubazir': -2, 'sengsara': -3, 'menderita': -3,
+            'melarat': -3, 'tercekik': -2, 'terjepit': -2,
+            # Anger (beyond what's already above)
+            'sebel': -2, 'sewot': -2, 'geram': -2, 'murka': -3,
         }
         
         # Merge YouTube words into net_weight

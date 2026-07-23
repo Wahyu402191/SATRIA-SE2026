@@ -454,6 +454,61 @@ def youtube_get_progress():
     """Endpoint to get scraping progress"""
     return jsonify(progress_data)
 
+@app.route('/youtube/refresh_comments', methods=['POST'])
+def refresh_comments():
+    """Fetch only comments posted since the last scrape/refresh, for
+    whichever video is currently loaded — lets the Trend page (or any other
+    page showing this video) catch up to "right now" without re-scraping
+    the video from scratch. New comments are merged into both the database
+    and the in-memory app_data so every other page reflects them immediately
+    too."""
+    try:
+        if not app_data.get('scraped_data'):
+            return jsonify({'error': 'Belum ada video yang dimuat. Scraping video terlebih dahulu.'}), 400
+
+        scraped = app_data['scraped_data']
+        video_id = scraped['video_id']
+        existing_comments = scraped.get('comments', [])
+        known_ids = {c['comment_id'] for c in existing_comments if c.get('comment_id')}
+
+        new_comments = scraper.get_new_comments(video_id, known_ids)
+
+        if new_comments:
+            # Merge into memory — newest first, matching get_new_comments' order
+            scraped['comments'] = new_comments + existing_comments
+            scraped['total_comments'] = len(scraped['comments'])
+
+            # Persist to DB (INSERT IGNORE de-dupes by comment_id automatically;
+            # video row's scraped_at/total_comments get updated too)
+            video_info = scraped.get('video_info', {})
+            storage.save_comments(
+                video_id, video_info, new_comments,
+                video_url=scraped.get('video_url', ''),
+                include_replies=scraped.get('include_replies', False),
+                requested_comments=scraped.get('requested_comments', 0)
+            )
+
+            # Deliberately NOT resetting app_data['analysis_results'] here:
+            # earlier this wiped out sentiment for every comment (including
+            # ones already analyzed before the refresh) just because new,
+            # not-yet-analyzed comments arrived. The new comments simply
+            # won't have an entry in analysis_results yet — the Comments
+            # page's "Belum Dianalisis" filter already surfaces exactly
+            # those, and the new "Analisis Semua" button analyzes just them
+            # without discarding anything already done.
+
+        return jsonify({
+            'success': True,
+            'new_comments_count': len(new_comments),
+            'total_comments': scraped['total_comments'],
+            'refreshed_at': datetime.now().isoformat(),
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/youtube/analyze', methods=['POST'])
 def analyze():
     try:
@@ -506,6 +561,70 @@ def analyze():
             response['confusion_matrices'] = confusion_matrix_images
         
         return jsonify(response)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/youtube/analyze_unanalyzed', methods=['POST'])
+def analyze_unanalyzed():
+    """Analyze only the comments that don't have sentiment results yet —
+    e.g. new comments pulled in by 'Refresh Komentar' — instead of
+    re-analyzing (or discarding results for) everything. Merges the new
+    results into the existing in-memory analysis rather than replacing it."""
+    try:
+        if not app_data.get('scraped_data'):
+            return jsonify({'error': 'Belum ada data scraping'}), 400
+
+        request_data = request.json or {}
+        selected_methods = request_data.get('methods', ['naive_bayes', 'svm', 'lstm', 'indobert'])
+
+        all_comments = app_data['scraped_data'].get('comments', [])
+        existing_results = app_data.get('analysis_results')
+
+        already_analyzed_ids = set()
+        if existing_results:
+            already_analyzed_ids = {
+                c.get('comment_id') for c in existing_results.get('comments', [])
+                if c.get('comment_id')
+            }
+
+        # Comments without a comment_id at all (only possible for data saved
+        # before comment IDs were captured) have no reliable way to tell if
+        # they were analyzed before — treat them as needing analysis too
+        # rather than silently skipping them forever.
+        new_comments = [
+            c for c in all_comments
+            if not c.get('comment_id') or c['comment_id'] not in already_analyzed_ids
+        ]
+
+        if not new_comments:
+            return jsonify({'success': True, 'analyzed_count': 0, 'message': 'Semua komentar sudah dianalisis'})
+
+        results = analyzer.analyze_multiple_methods(new_comments, selected_methods)
+
+        video_id = app_data['scraped_data'].get('video_id')
+        if video_id:
+            storage.save_analysis_results(video_id, results.get('comments', []), selected_methods)
+
+        if existing_results:
+            existing_results['comments'] = results['comments'] + existing_results['comments']
+            for method_name, counts in results['summary'].items():
+                bucket = existing_results['summary'].setdefault(
+                    method_name, {'positive': 0, 'negative': 0, 'neutral': 0})
+                for k, v in counts.items():
+                    bucket[k] = bucket.get(k, 0) + v
+            app_data['analysis_results'] = existing_results
+        else:
+            app_data['analysis_results'] = results
+
+        app_data['wordclouds'] = None  # stale now — regenerate lazily next time it's requested
+
+        return jsonify({
+            'success': True,
+            'analyzed_count': len(new_comments),
+            'summary': app_data['analysis_results']['summary'],
+        })
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -807,14 +926,60 @@ def export_pdf():
 
 @app.route('/youtube/word_trend', methods=['GET'])
 def word_trend():
-    """API endpoint: top words per month from scraped comments"""
+    """API endpoint: daily word frequency for a selected month, scoped to
+    whichever video is currently loaded in app_data['scraped_data'].
+
+    The month dropdown only ever offers months between the video's upload
+    date and today — there's no comment activity possible before the video
+    existed, and nothing after "now". If the video was scraped before the
+    published_at column existed, the earliest comment's month is used as a
+    best-effort stand-in for the upload month.
+    """
     try:
         if not app_data.get('scraped_data'):
             return jsonify({'error': 'Belum ada data scraping'}), 400
 
-        comments = app_data['scraped_data'].get('comments', [])
+        scraped = app_data['scraped_data']
+        video_info = scraped.get('video_info') or {}
+        comments = scraped.get('comments', [])
+
         from collections import Counter, defaultdict
+        from datetime import datetime as dt
         import re
+        import calendar as cal
+
+        def parse_iso(value):
+            if not value:
+                return None
+            try:
+                return dt.fromisoformat(str(value).replace('Z', '+00:00'))
+            except Exception:
+                return None
+
+        start_dt = parse_iso(video_info.get('published_at'))
+
+        comment_dates = [d for d in (parse_iso(c.get('published_at')) for c in comments) if d]
+        if start_dt is None and comment_dates:
+            start_dt = min(comment_dates)
+
+        now = dt.now(start_dt.tzinfo) if (start_dt and start_dt.tzinfo) else dt.now()
+
+        if start_dt is None:
+            available_months = [now.strftime('%Y-%m')]
+        else:
+            available_months = []
+            y, m = start_dt.year, start_dt.month
+            while (y, m) <= (now.year, now.month):
+                available_months.append(f'{y:04d}-{m:02d}')
+                m += 1
+                if m > 12:
+                    m = 1
+                    y += 1
+
+        requested_month = request.args.get('month')
+        selected_month = requested_month if requested_month in available_months else available_months[-1]
+        sel_year, sel_mo = (int(x) for x in selected_month.split('-'))
+        days_in_month = cal.monthrange(sel_year, sel_mo)[1]
 
         # Stopwords sederhana
         stopwords = {'yang', 'dan', 'di', 'ke', 'dari', 'ini', 'itu', 'ada',
@@ -823,40 +988,50 @@ def word_trend():
                      'sudah', 'akan', 'ya', 'nya', 'lah', 'pun', 'aja',
                      'deh', 'sih', 'gak', 'ga', 'bang', 'mas', 'pak'}
 
-        monthly = defaultdict(Counter)
+        daily = defaultdict(Counter)  # day-of-month -> Counter(word)
+        month_total_comments = 0
 
         for c in comments:
-            published = c.get('published_at', '')
-            if not published:
+            pd_ = parse_iso(c.get('published_at'))
+            if not pd_ or pd_.year != sel_year or pd_.month != sel_mo:
                 continue
-            try:
-                ym = published[:7]  # YYYY-MM
-            except Exception:
-                continue
+            month_total_comments += 1
 
             text = str(c.get('text', '')).lower()
             text = re.sub(r'http\S+|@\w+|#\w+|\d+|[^\w\s]', ' ', text)
             words = [w for w in text.split() if len(w) > 3 and w not in stopwords]
-            monthly[ym].update(words)
+            daily[pd_.day].update(words)
 
-        if not monthly:
-            return jsonify({'months': [], 'words': [], 'data': []})
-
-        # Sort months
-        months = sorted(monthly.keys())
-
-        # Top 8 words overall
         overall = Counter()
-        for cnt in monthly.values():
+        for cnt in daily.values():
             overall.update(cnt)
         top_words = [w for w, _ in overall.most_common(8)]
 
-        # Build series data
-        data = {}
-        for word in top_words:
-            data[word] = [monthly[m].get(word, 0) for m in months]
+        days = list(range(1, days_in_month + 1))
+        data = {word: [daily[d].get(word, 0) for d in days] for word in top_words}
 
-        return jsonify({'months': months, 'words': top_words, 'data': data})
+        month_names = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli',
+                       'Agustus', 'September', 'Oktober', 'November', 'Desember']
+        available_months_labeled = [
+            {'value': mv, 'label': f"{month_names[int(mv.split('-')[1]) - 1]} {mv.split('-')[0]}"}
+            for mv in available_months
+        ]
+
+        return jsonify({
+            'success': True,
+            'video_id': scraped.get('video_id'),
+            'video_info': {
+                'title': video_info.get('title', 'Tidak diketahui'),
+                'channel': video_info.get('channel', 'Tidak diketahui'),
+                'published_at': video_info.get('published_at'),
+            },
+            'available_months': available_months_labeled,
+            'selected_month': selected_month,
+            'month_total_comments': month_total_comments,
+            'days': days,
+            'words': top_words,
+            'data': data,
+        })
 
     except Exception as e:
         import traceback
@@ -926,84 +1101,75 @@ def analyze_single():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+def _compute_preprocessing_steps(text):
+    """Run the 12-step NLP pipeline on one piece of text and return every
+    intermediate result, used by /youtube/preprocess_text's step-by-step
+    viewer."""
+    from text_preprocessor import TextPreprocessor
+    preprocessor = TextPreprocessor()
+
+    steps = {}
+    steps['original'] = text
+    steps['original_words'] = len(text.split())
+
+    case_folded = preprocessor.case_folding(text)
+    steps['case_folding'] = case_folded
+
+    noise_removed = preprocessor.remove_noise(case_folded)
+    steps['noise_removal'] = noise_removed
+    steps['remove_numbers'] = noise_removed
+
+    no_punct = preprocessor.remove_punctuation(noise_removed)
+    steps['remove_punctuation'] = no_punct
+
+    corrected = preprocessor.normalize_text(no_punct)
+    steps['spelling_correction'] = corrected
+
+    tokens = preprocessor.tokenize(corrected)
+    steps['tokenization'] = tokens
+    steps['token_count'] = len(tokens)
+    steps['normalization'] = tokens
+
+    no_stopwords = preprocessor.remove_stopwords(tokens)
+    steps['stopword_removal'] = no_stopwords
+    steps['tokens_after_stopword'] = len(no_stopwords)
+
+    stemmed = preprocessor.stem_text(no_stopwords)
+    steps['stemming'] = stemmed
+
+    negation_handled = preprocessor.handle_negation(stemmed)
+    steps['negation_handling'] = negation_handled
+
+    final = ' '.join(negation_handled) if isinstance(negation_handled, list) else negation_handled
+    steps['final'] = final
+    steps['final_words'] = len(negation_handled) if isinstance(negation_handled, list) else len(final.split())
+
+    if steps['original_words'] > 0:
+        reduction = ((steps['original_words'] - steps['final_words']) / steps['original_words']) * 100
+        steps['reduction_rate'] = round(reduction, 1)
+    else:
+        steps['reduction_rate'] = 0
+
+    return steps
+
+
 @app.route('/youtube/preprocess_text', methods=['POST'])
 def preprocess_text():
     """Endpoint untuk mendapatkan detail preprocessing steps untuk satu text"""
     try:
         data = request.json
         text = data.get('text', '')
-        
+
         if not text:
             return jsonify({'success': False, 'error': 'Text is required'}), 400
-        
-        # Menggunakan text_preprocessor untuk mendapatkan detail steps
-        from text_preprocessor import TextPreprocessor
-        preprocessor = TextPreprocessor()
-        
-        # Get detailed steps
-        steps = {}
-        
-        # Original
-        steps['original'] = text
-        steps['original_words'] = len(text.split())
-        
-        # Case folding
-        case_folded = preprocessor.case_folding(text)
-        steps['case_folding'] = case_folded
-        
-        # Noise removal (URL, mentions, hashtags, numbers)
-        noise_removed = preprocessor.remove_noise(case_folded)
-        steps['noise_removal'] = noise_removed
-        
-        # Remove numbers (already in remove_noise)
-        steps['remove_numbers'] = noise_removed
-        
-        # Remove punctuation
-        no_punct = preprocessor.remove_punctuation(noise_removed)
-        steps['remove_punctuation'] = no_punct
-        
-        # Spelling correction (normalization)
-        corrected = preprocessor.normalize_text(no_punct)
-        steps['spelling_correction'] = corrected
-        
-        # Tokenization
-        tokens = preprocessor.tokenize(corrected)
-        steps['tokenization'] = tokens
-        steps['token_count'] = len(tokens)
-        
-        # Normalization (already done above in spelling_correction)
-        steps['normalization'] = tokens
-        
-        # Stopword removal
-        no_stopwords = preprocessor.remove_stopwords(tokens)
-        steps['stopword_removal'] = no_stopwords
-        steps['tokens_after_stopword'] = len(no_stopwords)
-        
-        # Stemming
-        stemmed = preprocessor.stem_text(no_stopwords)
-        steps['stemming'] = stemmed
-        
-        # Negation handling
-        negation_handled = preprocessor.handle_negation(stemmed)
-        steps['negation_handling'] = negation_handled
-        
-        # Final result
-        final = ' '.join(negation_handled) if isinstance(negation_handled, list) else negation_handled
-        steps['final'] = final
-        steps['final_words'] = len(negation_handled) if isinstance(negation_handled, list) else len(final.split())
-        
-        # Calculate reduction rate
-        if steps['original_words'] > 0:
-            reduction = ((steps['original_words'] - steps['final_words']) / steps['original_words']) * 100
-            steps['reduction_rate'] = round(reduction, 1)
-        else:
-            steps['reduction_rate'] = 0
-        
+
+        steps = _compute_preprocessing_steps(text)
+
         return jsonify({
             'success': True,
             'steps': steps
         })
-        
+
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -1078,6 +1244,20 @@ def media_index():
         available_months=available_months
     )
 
+@app.route('/media/refresh_current_month', methods=['POST'])
+def media_refresh_current_month():
+    """Pull newly-scraped full-text articles for the current calendar month
+    from the Berita SE2026 module into Media Massa's dataset."""
+    try:
+        result = media_storage.refresh_current_month()
+        if not result.get('success'):
+            return jsonify(result), 500
+        return jsonify(result)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/media/comments')
 def media_comments():
     """Media Massa dashboard - Data Berita"""
@@ -1149,201 +1329,6 @@ def media_get_analysis_results():
         })
     return jsonify({'success': False, 'error': 'Belum ada hasil analisis'}), 404
 
-
-@app.route('/media/processing_detail/<int:idx>', methods=['GET'])
-def media_processing_detail(idx):
-    """Return detailed processing info for a single analyzed article by index.
-
-    The response includes preprocessing steps, per-method labels & scores,
-    and per-method contributing terms (approximate for neural methods).
-    """
-    try:
-        if not media_data.get('analysis_results'):
-            return jsonify({'success': False, 'error': 'Belum ada hasil analisis'}), 404
-
-        articles = media_data['analysis_results'].get('articles', [])
-        if idx < 0 or idx >= len(articles):
-            return jsonify({'success': False, 'error': 'Index artikel tidak valid'}), 400
-
-        article = articles[idx]
-        text = article.get('content', '') or article.get('title', '') or ''
-
-        # Preprocessing (detailed) using TextPreprocessor
-        from text_preprocessor import TextPreprocessor
-        pre = TextPreprocessor()
-        final_text, steps = pre.preprocess_detailed(text)
-
-        # Prepare response skeleton
-        resp = {
-            'success': True,
-            'index': idx,
-            'id': article.get('id'),
-            'title': article.get('title'),
-            'source': article.get('source'),
-            'published_date': article.get('published_date'),
-            'original': text,
-            'preprocessing_steps': steps,
-            'methods': {},
-            'aggregation': {}
-        }
-
-        # Access ML internals to compute contributions where possible
-        ml = analyzer.ml_analyzer
-        # Ensure models trained / vectorizer fitted
-        try:
-            ml._train_models()
-        except Exception:
-            pass
-
-        # Build TF-IDF vector for the (simple) preprocessed text
-        try:
-            X = ml.tfidf_vectorizer.transform([ml.tfidf_vectorizer.preprocessor if hasattr(ml.tfidf_vectorizer, 'preprocessor') else final_text])
-        except Exception:
-            # fallback: transform final_text directly
-            X = ml.tfidf_vectorizer.transform([final_text])
-
-        feature_names = []
-        try:
-            feature_names = ml.tfidf_vectorizer.get_feature_names_out()
-        except Exception:
-            try:
-                feature_names = ml.tfidf_vectorizer.get_feature_names()
-            except Exception:
-                feature_names = []
-
-        import numpy as np
-
-        # Helper to extract top-k features from a contribution dict
-        def top_k_terms(contrib_map, k=6):
-            items = sorted(contrib_map.items(), key=lambda x: abs(x[1]), reverse=True)
-            return [{'term': t, 'contribution': float(round(v, 6))} for t, v in items[:k]]
-
-        # Naive Bayes contributions (approx): use feature_log_prob_
-        if ml.nb_model is not None:
-            try:
-                nb = ml.nb_model
-                probs = nb.feature_log_prob_  # shape (n_classes, n_features)
-                # Get predicted class index from earlier stored result if present
-                nb_label = article.get('naive_bayes_sentiment')
-                class_map = {'Negatif':0, 'Netral':1, 'Positif':2}
-                pred_idx = class_map.get(nb_label, None)
-                row = X.toarray()[0]
-                if pred_idx is None:
-                    # choose class with highest likelihood approximate
-                    pred_idx = np.argmax(nb.class_log_prior_)
-                # contribution = tfidf_value * (feat_logprob[class] - mean_feat_logprob)
-                mean_log = np.mean(probs, axis=0)
-                contrib = {}
-                for j, fn in enumerate(feature_names):
-                    if row[j] > 0:
-                        contrib[fn] = float(row[j] * (probs[pred_idx, j] - mean_log[j]))
-                resp['methods']['Naive Bayes'] = {
-                    'label': article.get('naive_bayes_sentiment'),
-                    'score': article.get('naive_bayes_score'),
-                    'contributing_terms': top_k_terms(contrib, 6),
-                    'notes': 'Kontribusi dihitung dari TF-IDF x selisih log-prob fitur untuk kelas terpilih (aproksimasi)'
-                }
-            except Exception as e:
-                resp['methods']['Naive Bayes'] = {'label': article.get('naive_bayes_sentiment'), 'score': article.get('naive_bayes_score'), 'contributing_terms': [], 'notes': f'Error computing contributions: {e}'}
-
-        # SVM contributions: coef_ * tfidf
-        if ml.svm_model is not None:
-            try:
-                svm = ml.svm_model
-                coef = svm.coef_  # shape (n_classes, n_features) or (n_features,) for binary
-                svm_label = article.get('svm_sentiment')
-                class_map = {'Negatif':0, 'Netral':1, 'Positif':2}
-                pred_idx = class_map.get(svm_label, None)
-                row = X.toarray()[0]
-                contrib = {}
-                if coef.ndim == 1:
-                    weights = coef
-                else:
-                    if pred_idx is None or pred_idx >= coef.shape[0]:
-                        # fallback: take argmax of decision_function
-                        df = svm.decision_function(X)[0]
-                        pred_idx = int(np.argmax(np.abs(df))) if hasattr(df, '__len__') else 0
-                    weights = coef[pred_idx]
-                for j, fn in enumerate(feature_names):
-                    if row[j] > 0:
-                        contrib[fn] = float(row[j] * weights[j])
-                resp['methods']['SVM'] = {
-                    'label': article.get('svm_sentiment'),
-                    'score': article.get('svm_score'),
-                    'contributing_terms': top_k_terms(contrib, 6),
-                    'notes': 'Kontribusi dihitung dari TF-IDF x bobot SVM (coef)'
-                }
-            except Exception as e:
-                resp['methods']['SVM'] = {'label': article.get('svm_sentiment'), 'score': article.get('svm_score'), 'contributing_terms': [], 'notes': f'Error computing contributions: {e}'}
-
-        # LSTM contributions: approximate using sentiwords/pos/neg sets
-        try:
-            senti = analyzer.sentiwords
-            pos_set = analyzer.positive_words
-            neg_set = analyzer.negative_words
-            tokens = final_text.split()
-            token_contrib = {}
-            for j, w in enumerate(tokens):
-                if w in senti:
-                    val = senti[w]
-                elif w in pos_set:
-                    val = 3.0
-                elif w in neg_set:
-                    val = -3.0
-                else:
-                    continue
-                # weight by position similar to LSTM averaged weights
-                weight = 0.5 + (j / max(1, len(tokens))) * 0.5
-                token_contrib[w] = token_contrib.get(w, 0.0) + val * weight
-            resp['methods']['LSTM'] = {
-                'label': article.get('lstm_sentiment'),
-                'score': article.get('lstm_score'),
-                'contributing_terms': top_k_terms(token_contrib, 6),
-                'notes': 'Kontribusi aproksimasi dari skor leksikon + posisi (bukan attribution model asli)'
-            }
-        except Exception as e:
-            resp['methods']['LSTM'] = {'label': article.get('lstm_sentiment'), 'score': article.get('lstm_score'), 'contributing_terms': [], 'notes': f'Error computing contributions: {e}'}
-
-        # IndoBERT contributions: similar approximation
-        try:
-            senti = analyzer.sentiwords
-            pos_set = analyzer.positive_words
-            neg_set = analyzer.negative_words
-            tokens = final_text.split()
-            token_contrib = {}
-            for j, w in enumerate(tokens):
-                if w in senti:
-                    val = senti[w]
-                elif w in pos_set:
-                    val = 3.0
-                elif w in neg_set:
-                    val = -3.0
-                else:
-                    continue
-                mult = 1.0
-                if j > 0 and tokens[j-1] in ('sangat','banget','sekali'):
-                    mult = 1.4
-                token_contrib[w] = token_contrib.get(w, 0.0) + val * mult
-            resp['methods']['IndoBERT'] = {
-                'label': article.get('indobert_sentiment'),
-                'score': article.get('indobert_score'),
-                'contributing_terms': top_k_terms(token_contrib, 6),
-                'notes': 'Kontribusi aproksimasi berbasis leksikon + intensifier (bukan attribution BERT asli)'
-            }
-        except Exception as e:
-            resp['methods']['IndoBERT'] = {'label': article.get('indobert_sentiment'), 'score': article.get('indobert_score'), 'contributing_terms': [], 'notes': f'Error computing contributions: {e}'}
-
-        # Aggregation explanation
-        resp['aggregation'] = {
-            'final_explanation': 'Metode berbeda menggunakan fitur/arsitektur berbeda. NB/SVM berbasis TF-IDF & bobot fitur, sedangkan LSTM/IndoBERT menggunakan konteks dan intensifier. Hasil akhir dapat berbeda karena perbedaan fitur, threshold, dan penanganan negasi.'
-        }
-
-        return jsonify(resp)
-
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/media/word_trend', methods=['GET'])
 def media_word_trend():

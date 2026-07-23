@@ -396,6 +396,85 @@ class MediaMassaStorage:
             import traceback
             traceback.print_exc()
     
+    def refresh_current_month(self):
+        """
+        Pull newly-scraped, full-text articles found by the Berita SE2026
+        module (se_news_articles) into Media Massa's own news_articles table,
+        for the current calendar month only. Only content_source='scraped'
+        rows are pulled — RSS-snippet-only or empty articles are skipped since
+        they're too short/ambiguous to analyze. Articles already copied over
+        (matched by url) are skipped so refreshing repeatedly doesn't duplicate.
+        """
+        if not self.use_mysql:
+            return {'success': False, 'error': 'MySQL not available'}
+
+        try:
+            now = datetime.now()
+            year, month = now.year, now.month
+
+            existing = execute_query(
+                "SELECT url FROM news_articles WHERE year = %s AND month = %s",
+                (year, month), fetch=True
+            )
+            existing_urls = {row['url'] for row in existing if row['url']}
+
+            source_rows = execute_query("""
+                SELECT title, content, url, source, published_date
+                FROM se_news_articles
+                WHERE content_source = 'scraped'
+                  AND content IS NOT NULL AND content <> ''
+                  AND YEAR(published_date) = %s AND MONTH(published_date) = %s
+                ORDER BY published_date ASC
+            """, (year, month), fetch=True)
+
+            new_rows = [r for r in source_rows if r['url'] and r['url'] not in existing_urls]
+
+            month_names = [
+                'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+            ]
+            month_value = f"{year}-{month:02d}"
+            month_label = f"{month_names[month-1]} {year}"
+
+            if not new_rows:
+                return {'success': True, 'added': 0, 'month': month_value, 'label': month_label}
+
+            sources = {(r['source'] or 'Tidak diketahui') for r in new_rows}
+            execute_many("INSERT IGNORE INTO news_sources (source_name) VALUES (%s)",
+                         [(s,) for s in sources])
+
+            timestamp = datetime.now()
+            insert_rows = [(
+                r['title'][:1000],
+                r['content'],
+                (r['url'] or '')[:1000],
+                r['source'] or 'Tidak diketahui',
+                r['published_date'],
+                month,
+                year,
+                timestamp
+            ) for r in new_rows]
+
+            # Small batches — a single executemany() over long article bodies
+            # can exceed MySQL's max_allowed_packet (seen during the initial
+            # bulk import from se_news_articles).
+            BATCH = 40
+            for i in range(0, len(insert_rows), BATCH):
+                batch = insert_rows[i:i + BATCH]
+                execute_many("""
+                    INSERT INTO news_articles (title, content, url, source, published_date, month, year, imported_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """, batch)
+
+            print(f"[✓] Refresh {month_label}: {len(insert_rows)} artikel baru ditambahkan.")
+            return {'success': True, 'added': len(insert_rows), 'month': month_value, 'label': month_label}
+
+        except Exception as e:
+            print(f"[✗] Error refreshing current month: {e}")
+            import traceback
+            traceback.print_exc()
+            return {'success': False, 'error': str(e)}
+
     def get_statistics(self):
         """
         Get general statistics for dashboard
