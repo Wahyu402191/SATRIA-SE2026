@@ -238,7 +238,19 @@ def logout():
 @app.route('/profile', methods=['GET'])
 def profile():
     user = auth_storage.get_by_id(session['user_id'])
-    return render_template('profile.html', user=user)
+
+    # Avatar pilihan diambil langsung dari isi folder static/avatar, jadi
+    # menambah/mengganti nama file di sana otomatis muncul di picker tanpa
+    # perlu ubah kode.
+    avatar_dir = os.path.join(base_dir, 'static', 'avatar')
+    avatar_files = []
+    if os.path.isdir(avatar_dir):
+        avatar_files = sorted(
+            f for f in os.listdir(avatar_dir)
+            if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp', '.gif'))
+        )
+
+    return render_template('profile.html', user=user, avatar_files=avatar_files)
 
 
 @app.route('/profile', methods=['POST'])
@@ -1573,6 +1585,26 @@ def news_refresh_status():
     })
 
 
+@app.route('/news/api/sources')
+def news_api_sources():
+    """Sources restricted to whatever q/date/sentiment filters are active,
+    so the Sumber Media dropdown only lists sources that actually have
+    matching articles."""
+    try:
+        sources = se_news_storage.get_available_sources(
+            q=request.args.get('q'),
+            date=request.args.get('date'),
+            date_from=request.args.get('date_from'),
+            date_to=request.args.get('date_to'),
+            sentiment=request.args.get('sentiment'),
+        )
+        return jsonify({'success': True, 'sources': sources})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/news/api/articles')
 def news_api_articles():
     try:
@@ -1669,6 +1701,26 @@ def news_api_source_breakdown():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/news/api/filter_summary')
+def news_api_filter_summary():
+    try:
+        date_to = request.args.get('date_to') or datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y-%m-%d')
+        date_from = request.args.get('date_from') or '2026-01-01'
+        method = request.args.get('method', 'naive_bayes')
+        summary = se_news_storage.get_sentiment_summary(date_from, date_to, method)
+        return jsonify({
+            'success': True,
+            'date_from': date_from,
+            'date_to': date_to,
+            'method': method,
+            'summary': summary,
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/news/api/sentiment_trend')
 def news_api_sentiment_trend():
     try:
@@ -1734,9 +1786,18 @@ def news_api_analyze():
 def news_export():
     """Export filtered articles + sentiment to Excel."""
     try:
-        date_from = request.args.get('date_from') or '2026-01-01'
-        date_to = request.args.get('date_to') or datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y-%m-%d')
-        articles = se_news_storage.get_articles(date_from=date_from, date_to=date_to, limit=5000)
+        date = request.args.get('date')
+        date_from = (request.args.get('date_from') or '2026-01-01') if not date else None
+        date_to = (request.args.get('date_to') or datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y-%m-%d')) if not date else None
+        articles = se_news_storage.get_articles(
+            date=date,
+            date_from=date_from,
+            date_to=date_to,
+            q=request.args.get('q'),
+            source=request.args.get('source'),
+            sentiment=request.args.get('sentiment'),
+            limit=5000,
+        )
 
         output = BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
@@ -1754,7 +1815,8 @@ def news_export():
                     writer, sheet_name='Berita & Sentimen', index=False)
 
         output.seek(0)
-        filename = f'SATRIA_SE2026_BeritaSE2026_{date_from}_{date_to}.xlsx'
+        range_label = date if date else f'{date_from}_{date_to}'
+        filename = f'SATRIA_SE2026_BeritaSE2026_{range_label}.xlsx'
         return send_file(
             output,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

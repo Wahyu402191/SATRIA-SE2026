@@ -226,13 +226,83 @@ class SeNewsStorage:
         """
         return execute_query(query, (method, date_from, date_to), fetch=True)
 
-    def get_available_sources(self):
+    def get_sentiment_summary(self, date_from, date_to, method='naive_bayes'):
+        """Return summary counts and percentages for a date range + selected method."""
+        if not self.use_mysql:
+            return {
+                'total': 0,
+                'positive': 0,
+                'negative': 0,
+                'neutral': 0,
+                'positive_pct': 0,
+                'negative_pct': 0,
+                'neutral_pct': 0,
+            }
+
+        query = """
+            SELECT
+                COUNT(*) AS total_articles,
+                SUM(CASE WHEN s.sentiment = 'Positif' THEN 1 ELSE 0 END) AS positive,
+                SUM(CASE WHEN s.sentiment = 'Negatif' THEN 1 ELSE 0 END) AS negative,
+                SUM(CASE WHEN s.sentiment = 'Netral' THEN 1 ELSE 0 END) AS neutral
+            FROM se_news_articles a
+            JOIN se_news_sentiment s ON s.article_id = a.id AND s.method_name = %s
+            WHERE a.published_day BETWEEN %s AND %s
+        """
+        row = execute_query(query, (method, date_from, date_to), fetch=True)
+        row = row[0] if row else None
+        total = int((row or {}).get('total_articles') or 0)
+        positive = int((row or {}).get('positive') or 0)
+        negative = int((row or {}).get('negative') or 0)
+        neutral = int((row or {}).get('neutral') or 0)
+
+        def pct(value):
+            return round((value / total) * 100, 1) if total else 0
+
+        return {
+            'total': total,
+            'positive': positive,
+            'negative': negative,
+            'neutral': neutral,
+            'positive_pct': pct(positive),
+            'negative_pct': pct(negative),
+            'neutral_pct': pct(neutral),
+        }
+
+    def get_available_sources(self, q=None, date=None, date_from=None, date_to=None,
+                                sentiment=None, method='naive_bayes'):
+        """Distinct sources among articles matching the given filters, so the
+        Sumber Media dropdown can narrow itself to the search/date/sentiment
+        currently applied instead of always listing every source."""
         if not self.use_mysql:
             return []
-        result = execute_query(
-            "SELECT DISTINCT source FROM se_news_articles WHERE source IS NOT NULL ORDER BY source",
-            fetch=True
-        )
+
+        where = ["a.source IS NOT NULL"]
+        params = []
+        join = ""
+
+        if sentiment:
+            alias = _METHOD_ALIAS.get(method, 'nb')
+            join = f" LEFT JOIN se_news_sentiment {alias} ON {alias}.article_id = a.id AND {alias}.method_name = '{method}'"
+            where.append(f"{alias}.sentiment = %s")
+            params.append(sentiment)
+        if date:
+            where.append("a.published_day = %s")
+            params.append(date)
+        if date_from:
+            where.append("a.published_day >= %s")
+            params.append(date_from)
+        if date_to:
+            where.append("a.published_day <= %s")
+            params.append(date_to)
+        if q:
+            where.append("(a.title LIKE %s OR a.content LIKE %s)")
+            like = f"%{q}%"
+            params.extend([like, like])
+
+        query = (f"SELECT DISTINCT a.source FROM se_news_articles a{join} "
+                 f"WHERE {' AND '.join(where)} ORDER BY a.source")
+        result = execute_query(query, tuple(params), fetch=True)
         return [r['source'] for r in result] if result else []
 
     def get_statistics(self):

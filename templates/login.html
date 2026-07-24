@@ -105,12 +105,33 @@
         .auth-switch a:hover { text-decoration: underline; }
 
         .back-link {
-            display: inline-flex; align-items: center; gap: 6px;
-            position: fixed; top: 24px; left: 28px; z-index: 20;
-            font-size: 12.5px; color: rgba(255,255,255,0.5); text-decoration: none;
-            transition: color .2s;
+            display: inline-flex; align-items: center; gap: 9px;
+            position: fixed; top: 28px; left: 28px; z-index: 20;
+            padding: 9px 18px 9px 12px;
+            border-radius: 50px;
+            background: rgba(18, 30, 50, 0.55);
+            border: 1px solid rgba(200, 151, 58, 0.25);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            font-size: 12.5px; font-weight: 600; letter-spacing: .2px;
+            color: rgba(255,255,255,0.75); text-decoration: none;
+            transition: all .25s ease;
         }
-        .back-link:hover { color: #f4d799; }
+        .back-link:hover {
+            color: #f4d799;
+            border-color: rgba(200,151,58,0.5);
+            background: rgba(18, 30, 50, 0.8);
+        }
+        .back-link-arrow {
+            display: flex; align-items: center; justify-content: center;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: rgba(200,151,58,0.15);
+            border: 1px solid rgba(200,151,58,0.3);
+            font-size: 13px;
+            transition: transform .25s ease, background .25s ease;
+        }
+        .back-link:hover .back-link-arrow { transform: translateX(-2px); background: rgba(200,151,58,0.3); }
     </style>
 </head>
 <body>
@@ -118,7 +139,7 @@
     <div class="bg-overlay"></div>
     <div class="grid-bg"></div>
 
-    <a href="/" class="back-link">&larr; Kembali ke beranda</a>
+    <a href="/" class="back-link"><span class="back-link-arrow">&larr;</span> Kembali ke Beranda</a>
 
     <div class="page-wrap">
         <div class="auth-card">

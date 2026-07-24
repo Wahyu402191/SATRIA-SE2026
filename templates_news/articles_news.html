@@ -80,8 +80,9 @@
                 {% endfor %}
             </select>
         </div>
-        <div class="filter-group">
+        <div class="filter-group" style="flex-direction:row; gap:8px;">
             <button class="btn" onclick="resetAndLoad()">Terapkan Filter</button>
+            <button class="btn btn-ghost" onclick="resetFilters()">Reset</button>
         </div>
     </div>
 
@@ -145,7 +146,40 @@ function setSentiment(val, el) {
 
 function resetAndLoad() {
     currentPage = 0;
+    refreshSources();
     loadArticles();
+}
+
+function resetFilters() {
+    document.getElementById('f-date').value = '';
+    document.getElementById('f-date-from').value = '2026-01-01';
+    document.getElementById('f-date-to').value = '';
+    document.getElementById('f-search').value = '';
+    document.getElementById('f-source').value = '';
+    currentSentiment = '';
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    document.querySelector('.chip[data-sentiment=""]').classList.add('active');
+    resetAndLoad();
+}
+
+async function refreshSources() {
+    const f = getFilters();
+    const params = new URLSearchParams();
+    if (f.date) params.set('date', f.date);
+    if (!f.date && f.date_from) params.set('date_from', f.date_from);
+    if (!f.date && f.date_to) params.set('date_to', f.date_to);
+    if (f.q) params.set('q', f.q);
+    if (f.sentiment) params.set('sentiment', f.sentiment);
+
+    const res = await fetch('/news/api/sources?' + params.toString());
+    const data = await res.json();
+    if (!data.success) return;
+
+    const select = document.getElementById('f-source');
+    const current = select.value;
+    select.innerHTML = '<option value="">Semua Sumber</option>' +
+        data.sources.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+    if (data.sources.includes(current)) select.value = current;
 }
 
 function changePage(delta) {
@@ -165,7 +199,14 @@ async function loadArticles() {
     params.set('limit', PAGE_SIZE);
     params.set('offset', currentPage * PAGE_SIZE);
 
-    document.getElementById('export-link').href = `/news/export?date_from=${f.date_from || '2026-01-01'}&date_to=${f.date_to || ''}`;
+    const exportParams = new URLSearchParams();
+    if (f.date) exportParams.set('date', f.date);
+    if (!f.date && f.date_from) exportParams.set('date_from', f.date_from);
+    if (!f.date && f.date_to) exportParams.set('date_to', f.date_to);
+    if (f.q) exportParams.set('q', f.q);
+    if (f.source) exportParams.set('source', f.source);
+    if (f.sentiment) exportParams.set('sentiment', f.sentiment);
+    document.getElementById('export-link').href = `/news/export?${exportParams.toString()}`;
 
     const res = await fetch('/news/api/articles?' + params.toString());
     const data = await res.json();
