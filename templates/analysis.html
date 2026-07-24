@@ -809,6 +809,12 @@
         0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
         50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
     }
+
+    /* Mobile: grid 2 kolom yang tidak pakai auto-fit jadi 1 kolom di layar sempit */
+    @media (max-width: 480px) {
+        .method-grid { grid-template-columns: 1fr; }
+        .wc-grid { grid-template-columns: 1fr; }
+    }
 </style>
 {% endblock %}
 

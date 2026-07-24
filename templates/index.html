@@ -494,6 +494,13 @@
         from { transform: translateY(0px); }
         to   { transform: translateY(-6px); }
     }
+
+    /* Mobile: dua kolom form (link + jumlah) ditumpuk di layar sempit */
+    @media (max-width: 480px) {
+        .options-row { flex-wrap: wrap; }
+        .options-row .form-group:first-child,
+        .options-row .form-group:last-child { flex: 1 1 160px; }
+    }
 </style>
 {% endblock %}
 
