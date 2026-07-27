@@ -119,11 +119,13 @@
 
     /* Badge hari */
     .day-badge {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         padding: 3px 0;
-        border-radius: 6px;
+        border-radius: 7px;
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 700;
         white-space: nowrap;
         width: 58px;
         text-align: center;
@@ -202,6 +204,13 @@
 
     @media (max-width: 768px) {
         .daily-split { grid-template-columns: 1fr !important; }
+        .widget-stats-grid { grid-template-columns: 1fr !important; }
+    }
+    @media (max-width: 480px) {
+        .mini-stats-row { grid-template-columns: 1fr !important; }
+    }
+    @media (max-width: 900px) {
+        .stats-placeholder-grid { grid-template-columns: 1fr !important; }
     }
 </style>
 {% endblock %}
@@ -350,10 +359,10 @@
     }
 </style>
 
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px; margin-top:4px;">
+<div class="widget-stats-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px; margin-top:4px;">
 
     <!-- Kolom kiri: Widget 1 & 2 bertumpuk -->
-    <div style="display:flex; flex-direction:column; gap:16px;">
+    <div id="widget-left-col" style="display:flex; flex-direction:column; gap:16px; align-self:stretch;">
 
         <!-- Widget 1: Berita Terbanyak & Tersedikit -->
         <div class="card reveal" style="margin-bottom:0;">
@@ -393,31 +402,131 @@
             </div>
         </div>
 
-        <!-- Widget 2: Rata-rata Berita -->
-        <div class="card reveal" style="margin-bottom:0;">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-                <div style="width:36px;height:36px;border-radius:10px;
-                            background:linear-gradient(135deg,var(--success),var(--success-light));
-                            display:flex;align-items:center;justify-content:center;flex-shrink:0;
-                            box-shadow:0 3px 10px rgba(39,174,96,.3);">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+        <!-- Widget 2: Total Berita (blob biru) + Rata-rata Harian (blob hijau), 1 kartu berdampingan -->
+        <div class="mini-stats-row" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+
+            <!-- Kiri: 1 kartu berisi 2 blob -->
+            <div class="card reveal" style="margin-bottom:0; display:flex; align-items:center; justify-content:center; gap:20px;">
+
+                <!-- Blob 1: Total Berita — biru -->
+                <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div style="width:28px;height:28px;border-radius:9px;
+                                    background:linear-gradient(135deg,var(--primary),var(--primary-light));
+                                    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                                    box-shadow:0 3px 8px rgba(40,116,166,.3);">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+                        </div>
+                        <div style="font-size:13px;font-weight:700;color:var(--primary);">Total Berita</div>
+                    </div>
+                    <div style="position:relative; width:104px; height:104px; display:flex; align-items:center; justify-content:center;">
+                        <!-- lapisan belakang: lebih besar, terawang/cerah -->
+                        <div style="position:absolute; inset:0;
+                                    border-radius:42% 58% 63% 37% / 41% 44% 56% 59%;
+                                    background:rgba(93,173,226,.4);
+                                    transform:rotate(10deg);"></div>
+                        <!-- lapisan depan: lebih kecil, biru tapi tidak terlalu tua -->
+                        <div style="position:absolute; inset:10px;
+                                    border-radius:58% 42% 39% 61% / 55% 60% 40% 45%;
+                                    background:#2874A6;
+                                    transform:rotate(-8deg);"></div>
+                        <!-- teks -->
+                        <div style="position:relative; z-index:1; display:flex; flex-direction:column; align-items:center;">
+                            <div id="w-total" style="font-size:26px;font-weight:800;color:#fff;line-height:1;">—</div>
+                            <div id="w-total-sub" style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:rgba(255,255,255,.9);margin-top:5px;text-align:center;max-width:68px;line-height:1.25;">—</div>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <div style="font-size:13px;font-weight:700;color:var(--success);">Rata-rata Harian</div>
-                    <div style="font-size:11px;color:var(--text-muted);">Total berita dibagi jumlah hari dalam bulan</div>
+
+                <!-- Blob 2: Rata-rata Harian — hijau -->
+                <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div style="width:28px;height:28px;border-radius:9px;
+                                    background:linear-gradient(135deg,var(--success),var(--success-light));
+                                    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                                    box-shadow:0 3px 8px rgba(39,174,96,.3);">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+                        </div>
+                        <div style="font-size:13px;font-weight:700;color:var(--success);">Rata-rata Harian</div>
+                    </div>
+                    <div style="position:relative; width:104px; height:104px; display:flex; align-items:center; justify-content:center;">
+                        <!-- lapisan belakang: lebih besar, terawang/cerah -->
+                        <div style="position:absolute; inset:0;
+                                    border-radius:42% 58% 63% 37% / 41% 44% 56% 59%;
+                                    background:rgba(82,190,128,.4);
+                                    transform:rotate(10deg);"></div>
+                        <!-- lapisan depan: lebih kecil, hijau solid -->
+                        <div style="position:absolute; inset:10px;
+                                    border-radius:58% 42% 39% 61% / 55% 60% 40% 45%;
+                                    background:#27AE60;
+                                    transform:rotate(-8deg);"></div>
+                        <!-- teks -->
+                        <div style="position:relative; z-index:1; display:flex; flex-direction:column; align-items:center;">
+                            <div id="w-avg" style="font-size:26px;font-weight:800;color:#fff;line-height:1;">—</div>
+                            <div id="w-avg-sub" style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:rgba(255,255,255,.9);margin-top:5px;text-align:center;max-width:68px;line-height:1.25;">—</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Kanan: Bulan Ini vs Bulan Lalu -->
+            <div class="card reveal" style="margin-bottom:0; display:flex; flex-direction:column;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+                    <div style="width:36px;height:36px;border-radius:10px;
+                                background:linear-gradient(135deg,var(--accent),var(--accent-light));
+                                display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                                box-shadow:0 3px 10px rgba(230,126,34,.3);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+                    </div>
+                    <div>
+                        <div style="font-size:13px;font-weight:700;color:var(--text);">Bulan Ini vs Bulan Lalu</div>
+                        <div style="font-size:11px;color:var(--text-muted);">Perbandingan performa keseluruhan</div>
+                    </div>
+                </div>
+                <div style="flex:1; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:4px 0;">
+
+                    <!-- Kolom Total Berita -->
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:8px; flex:1;">
+                        <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Total Berita</div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <!-- pil: atas hijau, bawah merah selalu ada; garis penanda bergerak sesuai naik/turun -->
+                            <div style="position:relative; width:56px; height:78px; flex-shrink:0; border-radius:28px; border:2px solid var(--text); overflow:hidden;
+                                        background:linear-gradient(to bottom, #6FCF57 0%, #27AE60 50%, #E74C3C 50%, #EC7063 100%);">
+                                <div id="mom-total-marker" style="position:absolute; left:-2px; right:-2px; top:50%; height:2px; background:#F4D799; transform:translateY(-50%); z-index:2; box-shadow:0 0 6px 1px rgba(244,215,153,.8), 0 0 0 1.5px rgba(0,0,0,.2); transition:top .5s cubic-bezier(.22,1,.36,1);"></div>
+                            </div>
+                            <div style="display:flex; flex-direction:column; align-items:flex-start; gap:3px;">
+                                <div id="mom-total-change" style="font-size:13px;font-weight:800; white-space:nowrap;">—</div>
+                                <div id="mom-total" style="font-size:11px;color:var(--text-muted); white-space:nowrap;">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kolom Rata-rata Harian -->
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:8px; flex:1;">
+                        <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Rata-rata/Hari</div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="position:relative; width:56px; height:78px; flex-shrink:0; border-radius:28px; border:2px solid var(--text); overflow:hidden;
+                                        background:linear-gradient(to bottom, #6FCF57 0%, #27AE60 50%, #E74C3C 50%, #EC7063 100%);">
+                                <div id="mom-avg-marker" style="position:absolute; left:-2px; right:-2px; top:50%; height:2px; background:#F4D799; transform:translateY(-50%); z-index:2; box-shadow:0 0 6px 1px rgba(244,215,153,.8), 0 0 0 1.5px rgba(0,0,0,.2); transition:top .5s cubic-bezier(.22,1,.36,1);"></div>
+                            </div>
+                            <div style="display:flex; flex-direction:column; align-items:flex-start; gap:3px;">
+                                <div id="mom-avg-change" style="font-size:13px;font-weight:800; white-space:nowrap;">—</div>
+                                <div id="mom-avg" style="font-size:11px;color:var(--text-muted); white-space:nowrap;">—</div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-            <div style="background:var(--bg);border-radius:10px;padding:16px;border:1px solid var(--border);text-align:center;">
-                <div id="w-avg" style="font-size:32px;font-weight:800;color:var(--text);line-height:1;">—</div>
-                <div id="w-avg-sub" style="font-size:12px;color:var(--text-muted);margin-top:8px;">—</div>
-            </div>
+
         </div>
 
     </div>
 
     <!-- Kolom kanan: Widget 3 Media Teraktif -->
-    <div class="card reveal" style="margin-bottom:0; display:flex; flex-direction:column;">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+    <div class="card reveal" id="media-teraktif-card" style="margin-bottom:0; display:flex; flex-direction:column; overflow:hidden; align-self:stretch;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
             <div style="width:36px;height:36px;border-radius:10px;
                         background:linear-gradient(135deg,var(--accent),var(--accent-light));
                         display:flex;align-items:center;justify-content:center;flex-shrink:0;
@@ -429,9 +538,65 @@
                 <div style="font-size:11px;color:var(--text-muted);">Sumber paling produktif bulan ini</div>
             </div>
         </div>
-        <div id="w-media-list" style="flex:1;">
+        <div id="w-media-list" style="flex:1; min-height:0; overflow-y:auto;">
             <div style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:13px;">Memuat data...</div>
         </div>
+    </div>
+
+</div>
+
+<!-- ═══ 3 KARTU STATISTIK BARU (placeholder, isinya menyusul) ═══ -->
+<div class="stats-placeholder-grid" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; margin-bottom:24px;">
+
+    <div class="card reveal" id="stat-placeholder-1" style="margin-bottom:0; min-height:190px; display:flex; flex-direction:column;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+            <div style="width:36px;height:36px;border-radius:10px;
+                        background:linear-gradient(135deg,var(--primary),var(--primary-light));
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                        box-shadow:0 3px 10px rgba(40,116,166,.3);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:700;color:var(--primary);">Kuantitas Berita per Hari</div>
+                <div style="font-size:11px;color:var(--text-muted);">Total berita Minggu–Sabtu bulan ini</div>
+            </div>
+        </div>
+        <div class="chart-wrap" style="height:100px;"><canvas id="weekday-chart"></canvas></div>
+        <div id="weekday-insight" style="font-size:11.5px; color:var(--text-muted); margin-top:10px; text-align:center; line-height:1.5;">—</div>
+    </div>
+
+    <div class="card reveal" id="stat-placeholder-2" style="margin-bottom:0; display:flex; flex-direction:column;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+            <div style="width:36px;height:36px;border-radius:10px;
+                        background:linear-gradient(135deg,var(--success),var(--success-light));
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                        box-shadow:0 3px 10px rgba(39,174,96,.3);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:700;color:var(--success);">Momentum Mingguan</div>
+                <div style="font-size:11px;color:var(--text-muted);">Total berita per pekan dalam bulan ini</div>
+            </div>
+        </div>
+        <div class="chart-wrap" style="height:100px;"><canvas id="momentum-chart"></canvas></div>
+        <div id="momentum-insight" style="font-size:11.5px; color:var(--text-muted); margin-top:10px; text-align:center; line-height:1.5;">—</div>
+    </div>
+
+    <div class="card reveal" id="stat-placeholder-3" style="margin-bottom:0; display:flex; flex-direction:column;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+            <div style="width:36px;height:36px;border-radius:10px;
+                        background:linear-gradient(135deg,var(--accent),var(--accent-light));
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                        box-shadow:0 3px 10px rgba(230,126,34,.3);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:700;color:var(--accent);">Jam Publikasi Tersibuk</div>
+                <div style="font-size:11px;color:var(--text-muted);">Sebaran jam terbit berita bulan ini</div>
+            </div>
+        </div>
+        <div class="chart-wrap" style="height:100px;"><canvas id="hourly-chart"></canvas></div>
+        <div id="hourly-insight" style="font-size:11.5px; color:var(--text-muted); margin-top:10px; text-align:center; line-height:1.5;">—</div>
     </div>
 
 </div>
@@ -442,6 +607,9 @@ const WEEKDAYS = ['Minggu','Senin','Selasa','Rabu','Kamis',"Jum'at",'Sabtu'];
 const WEEKDAY_CLASS = ['minggu','senin','selasa','rabu','kamis','jumat','sabtu'];
 const MONTH_NAMES = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 let dailyChart = null;
+let weekdayChart = null;
+let hourlyChart = null;
+let momentumChart = null;
 let lastData = null; // simpan untuk ekspor
 
 function currentMonthValue() {
@@ -590,6 +758,14 @@ async function loadDaily() {
 
     // ── Update widget statistik ──
     loadStatWidgets(monthValue, year, month, data.days);
+    renderWeekdayChart(year, month, data.days);
+    renderMomentumChart(year, month, data.days);
+    loadHourlyChart(year, month, daysInMonth);
+    loadMonthComparison(year, month, total);
+
+    // Ukur ulang setelah semua widget (termasuk "Bulan Ini vs Bulan Lalu"
+    // yang fetch-nya terpisah) benar-benar selesai render.
+    setTimeout(matchMediaCardHeight, 300);
 }
 
 // ── Ekspor CSV ──
@@ -639,6 +815,26 @@ function matchTableHeight() {
 window.addEventListener('load', matchTableHeight);
 window.addEventListener('resize', matchTableHeight);
 
+// Samakan tinggi kartu "Media Teraktif" persis dengan tinggi total kolom kiri
+// (Rekor Harian + Total/Rata-rata + Bulan Ini vs Bulan Lalu), apa pun isinya.
+function matchMediaCardHeight() {
+    const leftCol   = document.getElementById('widget-left-col');
+    const mediaCard = document.getElementById('media-teraktif-card');
+    if (!leftCol || !mediaCard) return;
+
+    mediaCard.style.height = 'auto';
+
+    // Di layar sempit .widget-stats-grid jadi 1 kolom (bertumpuk), jadi tidak
+    // perlu dipaksa sama tinggi — biarkan tinggi alami masing-masing.
+    if (window.innerWidth <= 768) return;
+
+    const targetH = leftCol.offsetHeight;
+    mediaCard.style.height = targetH + 'px';
+}
+
+window.addEventListener('load', matchMediaCardHeight);
+window.addEventListener('resize', matchMediaCardHeight);
+
 // ── Load widget statistik ──────────────────────────────────
 async function loadStatWidgets(monthValue, year, month, days) {
     const nonFuture = days.filter(d => !d.is_future);
@@ -659,11 +855,13 @@ async function loadStatWidgets(monthValue, year, month, days) {
     document.getElementById('w-min-date').textContent  = minDay
         ? `${minDay.day} ${MONTH_NAMES[month-1]} ${year} (${WEEKDAYS[minDate.getDay()]})` : '—';
 
-    // Widget 2 — Rata-rata
-    const avg = total / new Date(year, month, 0).getDate();
-    document.getElementById('w-avg').textContent = avg.toFixed(1) + ' berita/hari';
-    document.getElementById('w-avg-sub').textContent =
-        `Total ${total} berita ÷ ${new Date(year, month, 0).getDate()} hari`;
+    // Widget 2 — Total & Rata-rata
+    const daysInMonthW2 = new Date(year, month, 0).getDate();
+    const avg = total / daysInMonthW2;
+    document.getElementById('w-total').textContent = total;
+    document.getElementById('w-total-sub').textContent = `${daysInMonthW2} hari dalam bulan ini`;
+    document.getElementById('w-avg').textContent = avg.toFixed(1);
+    document.getElementById('w-avg-sub').textContent = 'berita per hari';
 
     // Widget 3 — Media Teraktif (dari API)
     const dateFrom = `${year}-${String(month).padStart(2,'0')}-01`;
@@ -673,15 +871,16 @@ async function loadStatWidgets(monthValue, year, month, days) {
     try {
         const res  = await fetch(`/news/api/source_breakdown?date_from=${dateFrom}&date_to=${dateTo}`);
         const data = await res.json();
-        const top3 = (data.sources || []).slice(0, 3);
-        renderMediaTeraktif(top3);
+        const top5 = (data.sources || []).slice(0, 5);
+        renderMediaTeraktif(top5);
+        matchMediaCardHeight();
     } catch(e) {
         document.getElementById('w-media-list').innerHTML =
             '<p style="color:var(--text-muted);font-size:13px;text-align:center;">Gagal memuat data sumber.</p>';
     }
 }
 
-function renderMediaTeraktif(top3) {
+function renderMediaTeraktif(top5) {
     const RANKS = [
         {
             crownClass: 'crown-gold rank-float',
@@ -689,7 +888,7 @@ function renderMediaTeraktif(top3) {
             crownBg: 'linear-gradient(135deg,#F59E0B,#FCD34D,#F59E0B)',
             crownBorder: '2px solid #D97706',
             crownShadow: '0 4px 16px rgba(245,158,11,.5), 0 0 0 3px rgba(245,158,11,.15)',
-            crownText: '#fff',
+            numberColor: '#fff',
             nameBg: 'linear-gradient(90deg,#D97706,#F59E0B,#FCD34D,#F59E0B)',
             nameTextColor: 'transparent',
             nameWebkit: true,
@@ -700,7 +899,10 @@ function renderMediaTeraktif(top3) {
             countColor: '#92400E',
             rowBg: 'linear-gradient(135deg,rgba(254,243,199,.5),rgba(253,230,138,.3))',
             rowBorder: '1px solid rgba(245,158,11,.25)',
-            crownEmoji: '👑',
+            rowWidth: '100%',
+            iconSize: 48,
+            padY: 12,
+            nameFont: 14,
         },
         {
             crownClass: 'crown-silver rank-float-2',
@@ -708,18 +910,21 @@ function renderMediaTeraktif(top3) {
             crownBg: 'linear-gradient(135deg,#94A3B8,#CBD5E1,#94A3B8)',
             crownBorder: '2px solid #64748B',
             crownShadow: '0 4px 12px rgba(148,163,184,.4)',
-            crownText: '#fff',
+            numberColor: '#fff',
             nameBg: '',
             nameTextColor: 'var(--text)',
             nameWebkit: false,
             badgeBg: 'linear-gradient(135deg,#94A3B8,#CBD5E1)',
             badgeText: '#fff',
-            badgeLabel: '🥈 #2',
+            badgeLabel: '#2',
             barClass: 'bar-shimmer-blue',
             countColor: 'var(--text-muted)',
             rowBg: 'linear-gradient(135deg,rgba(241,245,249,.6),rgba(226,232,240,.3))',
             rowBorder: '1px solid rgba(148,163,184,.25)',
-            crownEmoji: '🥈',
+            rowWidth: '90%',
+            iconSize: 42,
+            padY: 10,
+            nameFont: 13,
         },
         {
             crownClass: 'crown-bronze rank-float-3',
@@ -727,29 +932,76 @@ function renderMediaTeraktif(top3) {
             crownBg: 'linear-gradient(135deg,#B45309,#D97706,#B45309)',
             crownBorder: '2px solid #92400E',
             crownShadow: '0 4px 12px rgba(180,83,9,.35)',
-            crownText: '#fff',
+            numberColor: '#fff',
             nameBg: '',
             nameTextColor: 'var(--text)',
             nameWebkit: false,
             badgeBg: 'linear-gradient(135deg,#B45309,#D97706)',
             badgeText: '#fff',
-            badgeLabel: '🥉 #3',
+            badgeLabel: '#3',
             barClass: 'bar-shimmer-blue',
             countColor: 'var(--text-muted)',
             rowBg: 'linear-gradient(135deg,rgba(254,243,226,.5),rgba(253,230,196,.3))',
             rowBorder: '1px solid rgba(180,83,9,.2)',
-            crownEmoji: '🥉',
+            rowWidth: '80%',
+            iconSize: 36,
+            padY: 9,
+            nameFont: 12.5,
+        },
+        {
+            crownClass: 'rank-float',
+            rankLabel: '4',
+            crownBg: '#fff',
+            crownBorder: '2px solid var(--border)',
+            crownShadow: 'none',
+            numberColor: 'var(--text-muted)',
+            nameBg: '',
+            nameTextColor: 'var(--text)',
+            nameWebkit: false,
+            badgeBg: 'var(--bg)',
+            badgeText: 'var(--text-muted)',
+            badgeLabel: '#4',
+            barClass: 'bar-shimmer-blue',
+            countColor: 'var(--text-muted)',
+            rowBg: 'var(--bg-card)',
+            rowBorder: '1px solid var(--border)',
+            rowWidth: '70%',
+            iconSize: 30,
+            padY: 7,
+            nameFont: 12,
+        },
+        {
+            crownClass: 'rank-float-2',
+            rankLabel: '5',
+            crownBg: '#fff',
+            crownBorder: '2px solid var(--border)',
+            crownShadow: 'none',
+            numberColor: 'var(--text-muted)',
+            nameBg: '',
+            nameTextColor: 'var(--text)',
+            nameWebkit: false,
+            badgeBg: 'var(--bg)',
+            badgeText: 'var(--text-muted)',
+            badgeLabel: '#5',
+            barClass: 'bar-shimmer-blue',
+            countColor: 'var(--text-muted)',
+            rowBg: 'var(--bg-card)',
+            rowBorder: '1px solid var(--border)',
+            rowWidth: '60%',
+            iconSize: 26,
+            padY: 6,
+            nameFont: 11,
         },
     ];
 
     const container = document.getElementById('w-media-list');
-    if (!top3.length) {
+    if (!top5.length) {
         container.innerHTML = '<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px 0;">Belum ada data sumber.</p>';
         return;
     }
-    const maxCount = top3[0].count || 1;
+    const maxCount = top5[0].count || 1;
 
-    container.innerHTML = top3.map((src, i) => {
+    container.innerHTML = top5.map((src, i) => {
         const r    = RANKS[i];
         const pct  = ((src.count / maxCount) * 100).toFixed(0);
         const name = src.source || src.name || 'Sumber tidak diketahui';
@@ -757,26 +1009,32 @@ function renderMediaTeraktif(top3) {
             ? `background:${r.nameBg};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:800;`
             : `color:${r.nameTextColor};font-weight:700;`;
 
+        const svgSize = Math.round(r.iconSize * 0.54);
+
         return `
-        <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;margin-bottom:${i<top3.length-1?'10px':'0'};
+        <div style="display:flex;align-items:center;gap:${Math.max(8, 14 - i*1)}px;padding:${r.padY}px 16px;margin-bottom:${i<top5.length-1 ? Math.max(4, 9-i) + 'px' : '0'};
+                    width:${r.rowWidth};max-width:100%;
                     border-radius:12px;background:${r.rowBg};border:${r.rowBorder};
                     transition:transform .2s,box-shadow .2s;"
              onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,.08)'"
              onmouseout="this.style.transform='';this.style.boxShadow=''">
 
-            <!-- Mahkota dengan animasi berkilau -->
-            <div class="${r.crownClass}" style="width:52px;height:52px;border-radius:14px;
+            <!-- Badge peringkat bernomor, dengan animasi berkilau -->
+            <div class="${r.crownClass}" style="width:${r.iconSize}px;height:${r.iconSize}px;border-radius:${Math.round(r.iconSize*0.27)}px;
                         background:${r.crownBg};border:${r.crownBorder};
                         box-shadow:${r.crownShadow};
                         display:flex;align-items:center;justify-content:center;
-                        flex-shrink:0;font-size:26px;cursor:default;">
-                ${r.crownEmoji}
+                        flex-shrink:0;cursor:default;">
+                <svg width="${svgSize}" height="${svgSize}" viewBox="0 0 28 28" style="position:relative;z-index:1;">
+                    <circle cx="14" cy="14" r="12" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.6)" stroke-width="1.5"></circle>
+                    <text x="14" y="19" text-anchor="middle" font-size="14" font-weight="800" fill="${r.numberColor}" font-family="Inter, sans-serif">${r.rankLabel}</text>
+                </svg>
             </div>
 
             <!-- Info -->
             <div style="flex:1;min-width:0;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
-                    <span style="font-size:14px;${nameStyle}
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:${Math.max(3,6-i)}px;flex-wrap:wrap;">
+                    <span style="font-size:${r.nameFont}px;${nameStyle}
                                  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">
                         ${name}
                     </span>
@@ -798,6 +1056,237 @@ function renderMediaTeraktif(top3) {
             </div>
         </div>`;
     }).join('');
+}
+
+// ── Statistik 1: Kuantitas Berita per Hari (Minggu–Sabtu) ───
+function renderWeekdayChart(year, month, days) {
+    const totals = [0, 0, 0, 0, 0, 0, 0]; // index 0=Minggu ... 6=Sabtu, sama urutan getDay()
+    days.forEach(d => {
+        if (d.is_future) return;
+        const dow = new Date(year, month - 1, d.day).getDay();
+        totals[dow] += d.count;
+    });
+
+    const ctx = document.getElementById('weekday-chart').getContext('2d');
+    if (weekdayChart) weekdayChart.destroy();
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, 100);
+    gradient.addColorStop(0, 'rgba(40,116,166,.35)');
+    gradient.addColorStop(1, 'rgba(40,116,166,0)');
+
+    weekdayChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: WEEKDAYS.map(w => w.slice(0, 3)),
+            datasets: [{
+                data: totals,
+                borderColor: '#2874A6',
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#2874A6',
+                pointBorderWidth: 2,
+                borderWidth: 2.5,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1B4F72', padding: 8, cornerRadius: 6,
+                    callbacks: { label: (ctx) => `${ctx.raw} berita` }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+                y: { display: false, beginAtZero: true }
+            }
+        }
+    });
+
+    let maxIdx = 0, minIdx = 0;
+    totals.forEach((v, i) => {
+        if (v > totals[maxIdx]) maxIdx = i;
+        if (v < totals[minIdx]) minIdx = i;
+    });
+    document.getElementById('weekday-insight').innerHTML =
+        `Terbanyak: <strong style="color:var(--success)">${WEEKDAYS[maxIdx]}</strong> (${totals[maxIdx]}) &middot; ` +
+        `Tersedikit: <strong style="color:var(--danger)">${WEEKDAYS[minIdx]}</strong> (${totals[minIdx]})`;
+}
+
+// ── Statistik 2: Jam Publikasi Tersibuk ──────────────────────
+async function loadHourlyChart(year, month, daysInMonth) {
+    const dateFrom = `${year}-${String(month).padStart(2, '0')}-01`;
+    const dateTo   = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+
+    let hours = [];
+    try {
+        const res  = await fetch(`/news/api/hourly_distribution?date_from=${dateFrom}&date_to=${dateTo}`);
+        const data = await res.json();
+        hours = data.hours || [];
+    } catch (e) {
+        hours = [];
+    }
+
+    const totals = new Array(24).fill(0);
+    hours.forEach(h => { totals[h.hour] = h.count; });
+
+    const ctx = document.getElementById('hourly-chart').getContext('2d');
+    if (hourlyChart) hourlyChart.destroy();
+
+    const colors = totals.map(() => 'rgba(230,126,34,.7)');
+
+    hourlyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: totals.map((_, h) => String(h).padStart(2, '0')),
+            datasets: [{
+                data: totals,
+                backgroundColor: colors,
+                borderRadius: 3,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1B4F72', padding: 8, cornerRadius: 6,
+                    callbacks: { label: (ctx) => `Jam ${ctx.label}:00 — ${ctx.raw} berita` }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 9 }, autoSkip: true, maxTicksLimit: 6 } },
+                y: { display: false, beginAtZero: true }
+            }
+        }
+    });
+
+    const total = totals.reduce((a, b) => a + b, 0);
+    if (total === 0) {
+        document.getElementById('hourly-insight').textContent = 'Belum ada data pada bulan ini.';
+        return;
+    }
+    const peakHour = totals.indexOf(Math.max(...totals));
+    document.getElementById('hourly-insight').innerHTML =
+        `Jam Tersibuk: <strong style="color:var(--accent)">${String(peakHour).padStart(2, '0')}:00–${String((peakHour + 1) % 24).padStart(2, '0')}:00</strong> (${totals[peakHour]} berita)`;
+}
+
+// ── Statistik 3: Momentum Mingguan ───────────────────────────
+function renderMomentumChart(year, month, days) {
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const bucketCount = Math.ceil(daysInMonth / 7);
+    const totals = new Array(bucketCount).fill(0);
+    const labels = [];
+
+    for (let i = 0; i < bucketCount; i++) {
+        const start = i * 7 + 1;
+        const end   = Math.min(start + 6, daysInMonth);
+        labels.push(`${start}-${end}`);
+    }
+
+    days.forEach(d => {
+        if (d.is_future) return;
+        const idx = Math.floor((d.day - 1) / 7);
+        totals[idx] += d.count;
+    });
+
+    const ctx = document.getElementById('momentum-chart').getContext('2d');
+    if (momentumChart) momentumChart.destroy();
+
+    momentumChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                data: totals,
+                backgroundColor: 'rgba(39,174,96,.7)',
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1B4F72', padding: 8, cornerRadius: 6,
+                    callbacks: { label: (ctx) => `Tanggal ${ctx.label}: ${ctx.raw} berita` }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+                y: { display: false, beginAtZero: true }
+            }
+        }
+    });
+
+    let maxIdx = 0;
+    totals.forEach((v, i) => { if (v > totals[maxIdx]) maxIdx = i; });
+    document.getElementById('momentum-insight').innerHTML =
+        `Puncak: <strong style="color:var(--success)">Pekan tgl ${labels[maxIdx]}</strong> (${totals[maxIdx]} berita)`;
+}
+
+// ── Bulan Ini vs Bulan Lalu ───────────────────────────────────
+async function loadMonthComparison(year, month, total) {
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const avg = total / daysInMonth;
+
+    let prevYear = year, prevMonth = month - 1;
+    if (prevMonth < 1) { prevMonth = 12; prevYear = year - 1; }
+    const prevMonthValue = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+
+    let prevTotal = 0;
+    try {
+        const res  = await fetch(`/news/api/daily_counts?month=${prevMonthValue}`);
+        const data = await res.json();
+        prevTotal = (data.days || []).reduce((a, d) => a + (d.is_future ? 0 : d.count), 0);
+    } catch (e) {
+        prevTotal = 0;
+    }
+    const prevDaysInMonth = new Date(prevYear, prevMonth, 0).getDate();
+    const prevAvg = prevTotal / prevDaysInMonth;
+
+    document.getElementById('mom-total').textContent = `${total} berita`;
+    document.getElementById('mom-avg').textContent = `${avg.toFixed(1)}/hari`;
+
+    renderMomStat('mom-total-marker', 'mom-total-change', total, prevTotal);
+    renderMomStat('mom-avg-marker', 'mom-avg-change', avg, prevAvg);
+}
+
+// Pil: separuh atas hijau & separuh bawah merah selalu tampil (latar tetap).
+// Garis penanda bergerak dari tengah (0%) — naik → bergerak ke atas (masuk
+// zona hijau), turun → bergerak ke bawah (masuk zona merah).
+function renderMomStat(markerId, labelId, current, prev) {
+    const marker = document.getElementById(markerId);
+    const label  = document.getElementById(labelId);
+
+    if (prev === 0) {
+        marker.style.top = '50%';
+        label.innerHTML = current === 0
+            ? `<span style="color:var(--text-muted);">—</span>`
+            : `<span style="color:var(--success);">&#9650; Baru</span>`;
+        return;
+    }
+
+    const change   = ((current - prev) / prev) * 100;
+    const clamped  = Math.max(-100, Math.min(100, change));
+    const topPct   = 50 - (clamped / 100) * 50; // 0%→di atas (hijau), 100%→di bawah (merah)
+    marker.style.top = `${topPct}%`;
+
+    if (Math.abs(change) < 0.5) {
+        label.innerHTML = `<span style="color:var(--text-muted);">0%</span>`;
+    } else if (change > 0) {
+        label.innerHTML = `<span style="color:var(--success);">&#9650; +${change.toFixed(0)}%</span>`;
+    } else {
+        label.innerHTML = `<span style="color:var(--danger);">&#9660; ${change.toFixed(0)}%</span>`;
+    }
 }
 
 </script>

@@ -1701,6 +1701,19 @@ def news_api_source_breakdown():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/news/api/hourly_distribution')
+def news_api_hourly_distribution():
+    try:
+        date_from = request.args.get('date_from')
+        date_to = request.args.get('date_to')
+        rows = se_news_storage.get_hourly_distribution(date_from, date_to)
+        return jsonify({'success': True, 'hours': rows})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/news/api/filter_summary')
 def news_api_filter_summary():
     try:

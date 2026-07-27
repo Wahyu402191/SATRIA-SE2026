@@ -102,6 +102,12 @@
     }
     .avatar-preset-option:hover { border-color: var(--primary); transform: scale(1.06); }
     .avatar-preset-option img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    @media (max-width: 480px) {
+        .avatar-preset-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .avatar-choice-row { gap: 10px; }
+        .avatar-choice-card { padding: 18px 10px; }
+    }
 </style>
 {% endblock %}
 

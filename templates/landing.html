@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>SATRIA SE2026 - Badan Pusat Statistik</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -13,6 +13,7 @@
             overflow: hidden;
             color: white;
             height: 100vh;
+            height: 100dvh; /* dvh = akun tinggi asli setelah address bar browser HP, biar konten tidak kepotong */
             position: relative;
         }
 
@@ -70,9 +71,17 @@
             position: relative;
             z-index: 10;
             height: 100vh;
+            height: 100dvh;
             display: flex;
             align-items: center;
             padding: 0 8% 0 7%;
+        }
+
+        /* Layar pendek (HP landscape, atau tablet dengan tinggi terbatas):
+           izinkan scroll vertikal supaya konten tidak terpotong overflow:hidden */
+        @media (max-height: 480px) {
+            body { overflow-y: auto; }
+            .page-wrap { height: auto; min-height: 100vh; min-height: 100dvh; padding-top: 24px; padding-bottom: 24px; }
         }
 
         .content-panel {

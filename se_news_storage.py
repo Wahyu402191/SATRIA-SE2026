@@ -194,6 +194,20 @@ class SeNewsStorage:
         """
         return execute_query(query, (year,), fetch=True)
 
+    def get_hourly_distribution(self, date_from, date_to):
+        """Jumlah berita per jam publikasi (0-23) dalam rentang tanggal —
+        dipakai untuk lihat jam berapa media biasanya publish berita SE2026."""
+        if not self.use_mysql:
+            return []
+        query = """
+            SELECT HOUR(published_date) as hour, COUNT(*) as count
+            FROM se_news_articles
+            WHERE published_day BETWEEN %s AND %s
+            GROUP BY HOUR(published_date)
+            ORDER BY hour ASC
+        """
+        return execute_query(query, (date_from, date_to), fetch=True)
+
     def get_source_breakdown(self, date_from=None, date_to=None, limit=12):
         if not self.use_mysql:
             return []

@@ -78,6 +78,14 @@ def init_scheduler(storage, analyzer):
         id='se_news_fetch',
         max_instances=1,
         coalesce=True,
+        # APScheduler's default misfire_grace_time is only 1 second — on a
+        # busy dev server (livereload watcher + many requests contending for
+        # the GIL) the job routinely fires a few seconds late and gets
+        # silently dropped as "misfired" instead of just running late. That's
+        # why the automatic scheduler barely ever ran in se_news_fetch_log
+        # (almost all entries are trigger_type='manual'). A generous grace
+        # window lets a late-firing tick still execute.
+        misfire_grace_time=1800,
     )
     scheduler.start()
     atexit.register(lambda: scheduler.shutdown(wait=False))
