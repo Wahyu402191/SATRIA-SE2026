@@ -548,6 +548,26 @@
 <!-- ═══ 3 KARTU STATISTIK BARU (placeholder, isinya menyusul) ═══ -->
 <div class="stats-placeholder-grid" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; margin-bottom:24px;">
 
+    <div class="card reveal" id="stat-placeholder-2" style="margin-bottom:0; display:flex; flex-direction:column;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+            <div style="width:36px;height:36px;border-radius:10px;
+                        background:linear-gradient(135deg,var(--accent),var(--accent-light));
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                        box-shadow:0 3px 10px rgba(230,126,34,.3);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:700;color:var(--accent);">Jam Publikasi Tersibuk</div>
+                <div style="font-size:11px;color:var(--text-muted);">Sebaran jam terbit berita bulan ini</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:14px; flex:1;">
+            <div id="hourly-clock" style="position:relative; width:104px; height:104px; flex-shrink:0;"></div>
+            <div id="hourly-list" style="flex:1; min-width:0; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:repeat(5,auto); grid-auto-flow:column; gap:4px 10px;"></div>
+        </div>
+        <div id="hourly-insight" style="font-size:11.5px; color:var(--text-muted); margin-top:10px; text-align:center; line-height:1.5;">—</div>
+    </div>
+
     <div class="card reveal" id="stat-placeholder-1" style="margin-bottom:0; min-height:190px; display:flex; flex-direction:column;">
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
             <div style="width:36px;height:36px;border-radius:10px;
@@ -565,7 +585,7 @@
         <div id="weekday-insight" style="font-size:11.5px; color:var(--text-muted); margin-top:10px; text-align:center; line-height:1.5;">—</div>
     </div>
 
-    <div class="card reveal" id="stat-placeholder-2" style="margin-bottom:0; display:flex; flex-direction:column;">
+    <div class="card reveal" id="stat-placeholder-3" style="margin-bottom:0; display:flex; flex-direction:column;">
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
             <div style="width:36px;height:36px;border-radius:10px;
                         background:linear-gradient(135deg,var(--success),var(--success-light));
@@ -578,25 +598,10 @@
                 <div style="font-size:11px;color:var(--text-muted);">Total berita per pekan dalam bulan ini</div>
             </div>
         </div>
-        <div class="chart-wrap" style="height:100px;"><canvas id="momentum-chart"></canvas></div>
-        <div id="momentum-insight" style="font-size:11.5px; color:var(--text-muted); margin-top:10px; text-align:center; line-height:1.5;">—</div>
-    </div>
-
-    <div class="card reveal" id="stat-placeholder-3" style="margin-bottom:0; display:flex; flex-direction:column;">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-            <div style="width:36px;height:36px;border-radius:10px;
-                        background:linear-gradient(135deg,var(--accent),var(--accent-light));
-                        display:flex;align-items:center;justify-content:center;flex-shrink:0;
-                        box-shadow:0 3px 10px rgba(230,126,34,.3);">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
-            </div>
-            <div>
-                <div style="font-size:13px;font-weight:700;color:var(--accent);">Jam Publikasi Tersibuk</div>
-                <div style="font-size:11px;color:var(--text-muted);">Sebaran jam terbit berita bulan ini</div>
-            </div>
+        <div class="chart-wrap" style="height:150px;">
+            <svg id="momentum-chart" viewBox="0 0 320 150" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;overflow:visible;"></svg>
         </div>
-        <div class="chart-wrap" style="height:100px;"><canvas id="hourly-chart"></canvas></div>
-        <div id="hourly-insight" style="font-size:11.5px; color:var(--text-muted); margin-top:10px; text-align:center; line-height:1.5;">—</div>
+        <div id="momentum-insight" style="font-size:11.5px; color:var(--text-muted); margin-top:10px; text-align:center; line-height:1.5;">—</div>
     </div>
 
 </div>
@@ -1136,46 +1141,80 @@ async function loadHourlyChart(year, month, daysInMonth) {
     const totals = new Array(24).fill(0);
     hours.forEach(h => { totals[h.hour] = h.count; });
 
-    const ctx = document.getElementById('hourly-chart').getContext('2d');
-    if (hourlyChart) hourlyChart.destroy();
+    renderHourlyClock(totals);
+}
 
-    const colors = totals.map(() => 'rgba(230,126,34,.7)');
+const HOUR_COLORS = ['#E67E22', '#2980B9', '#27AE60', '#8E44AD', '#E74C3C', '#16A085', '#F1C40F', '#2C3E50', '#D35400', '#3498DB'];
 
-    hourlyChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: totals.map((_, h) => String(h).padStart(2, '0')),
-            datasets: [{
-                data: totals,
-                backgroundColor: colors,
-                borderRadius: 3,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1B4F72', padding: 8, cornerRadius: 6,
-                    callbacks: { label: (ctx) => `Jam ${ctx.label}:00 — ${ctx.raw} berita` }
-                }
-            },
-            scales: {
-                x: { grid: { display: false }, ticks: { font: { size: 9 }, autoSkip: true, maxTicksLimit: 6 } },
-                y: { display: false, beginAtZero: true }
-            }
-        }
+function buildConicGradient(stops) {
+    let acc = 0;
+    const parts = stops.map(s => {
+        const start = acc;
+        acc += s.pct;
+        return `${s.color} ${start}% ${acc}%`;
     });
+    return `conic-gradient(${parts.join(', ')})`;
+}
 
-    const total = totals.reduce((a, b) => a + b, 0);
-    if (total === 0) {
+// Jam berbentuk lingkaran: tiap warna = 1 dari 10 jam tersibuk, lebar
+// wedge-nya sebanding dengan persentase jumlah berita jam tsb (dari
+// total 10 jam tersibuk). Di kanan: ranking 1-10 dua kolom (1-5 & 6-10).
+function renderHourlyClock(totals) {
+    const top10 = totals
+        .map((count, hour) => ({ hour, count }))
+        .filter(h => h.count > 0)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+
+    const clockEl = document.getElementById('hourly-clock');
+    const listEl  = document.getElementById('hourly-list');
+
+    if (!top10.length) {
+        clockEl.style.background = 'var(--bg)';
+        clockEl.style.borderRadius = '50%';
+        clockEl.innerHTML = '';
+        listEl.innerHTML = '<div style="grid-column:1/-1;font-size:11.5px;color:var(--text-muted);text-align:center;padding:8px 0;">Belum ada data.</div>';
         document.getElementById('hourly-insight').textContent = 'Belum ada data pada bulan ini.';
         return;
     }
-    const peakHour = totals.indexOf(Math.max(...totals));
+
+    const sumTop = top10.reduce((a, h) => a + h.count, 0);
+    const stops = top10.map((h, i) => ({
+        color: HOUR_COLORS[i % HOUR_COLORS.length],
+        pct: (h.count / sumTop) * 100,
+    }));
+
+    clockEl.style.background = buildConicGradient(stops);
+    clockEl.style.borderRadius = '50%';
+    clockEl.style.boxShadow = '0 4px 16px rgba(230,126,34,.25), inset 0 0 0 1px rgba(0,0,0,.04)';
+    clockEl.innerHTML = `
+        <div style="position:absolute;inset:16px;background:var(--bg-card);border-radius:50%;
+                    display:flex;flex-direction:column;align-items:center;justify-content:center;
+                    box-shadow:0 1px 4px rgba(0,0,0,.1);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div style="font-size:8.5px;color:var(--text-muted);font-weight:700;margin-top:2px;">TOP ${top10.length}</div>
+        </div>`;
+
+    listEl.innerHTML = top10.map((h, i) => {
+        const color = HOUR_COLORS[i % HOUR_COLORS.length];
+        return `
+        <div style="display:flex;align-items:center;gap:5px;min-width:0;">
+            <div style="width:15px;height:15px;border-radius:50%;flex-shrink:0;
+                        background:${color};color:#fff;font-size:8.5px;font-weight:700;
+                        display:flex;align-items:center;justify-content:center;">${i + 1}</div>
+            <div style="flex:1;min-width:0;font-size:10.5px;font-weight:700;color:var(--text);
+                        border:1.5px solid ${color}66;border-radius:8px;padding:2px 6px;
+                        display:flex;align-items:center;justify-content:space-between;gap:4px;overflow:hidden;">
+                <span>${String(h.hour).padStart(2, '0')}.00</span>
+                <span style="font-size:9px;font-weight:600;color:var(--text-muted);white-space:nowrap;">${h.count}</span>
+            </div>
+        </div>`;
+    }).join('');
+
     document.getElementById('hourly-insight').innerHTML =
-        `Jam Tersibuk: <strong style="color:var(--accent)">${String(peakHour).padStart(2, '0')}:00–${String((peakHour + 1) % 24).padStart(2, '0')}:00</strong> (${totals[peakHour]} berita)`;
+        `Jam Tersibuk: <strong style="color:var(--accent)">${String(top10[0].hour).padStart(2, '0')}:00</strong> (${top10[0].count} berita)`;
 }
 
 // ── Statistik 3: Momentum Mingguan ───────────────────────────
@@ -1197,40 +1236,103 @@ function renderMomentumChart(year, month, days) {
         totals[idx] += d.count;
     });
 
-    const ctx = document.getElementById('momentum-chart').getContext('2d');
-    if (momentumChart) momentumChart.destroy();
-
-    momentumChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [{
-                data: totals,
-                backgroundColor: 'rgba(39,174,96,.7)',
-                borderRadius: 4,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1B4F72', padding: 8, cornerRadius: 6,
-                    callbacks: { label: (ctx) => `Tanggal ${ctx.label}: ${ctx.raw} berita` }
-                }
-            },
-            scales: {
-                x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-                y: { display: false, beginAtZero: true }
-            }
-        }
-    });
+    renderMountainRange('momentum-chart', labels, totals, 'berita');
 
     let maxIdx = 0;
     totals.forEach((v, i) => { if (v > totals[maxIdx]) maxIdx = i; });
     document.getElementById('momentum-insight').innerHTML =
         `Puncak: <strong style="color:var(--success)">Pekan tgl ${labels[maxIdx]}</strong> (${totals[maxIdx]} berita)`;
+}
+
+const MOUNTAIN_COLORS = ['#27AE60', '#16A085', '#20C4C4', '#95A5A6', '#8E5FEF'];
+
+function lightenColor(hex, amt) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.min(255, (num >> 16) + amt);
+    const g = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+    const b = Math.min(255, (num & 0x0000FF) + amt);
+    return `rgb(${r},${g},${b})`;
+}
+
+// Render "pegunungan"/gelombang berwarna-warni (bukan bar/line polos),
+// terinspirasi visual mountain-chart: tiap bucket = satu lengkungan
+// dengan warna berbeda, tinggi mengikuti nilai, saling tumpang tindih.
+function renderMountainRange(svgId, labels, values, unit) {
+    const svg = document.getElementById(svgId);
+    const NS = 'http://www.w3.org/2000/svg';
+    svg.innerHTML = '';
+
+    // Samakan viewBox dengan ukuran render sebenarnya supaya tidak ada
+    // letterbox kiri-kanan dari preserveAspectRatio, lalu paksa gunung
+    // paling kiri/kanan menyentuh tepi kontainer.
+    const rect = svg.getBoundingClientRect();
+    const vbW  = rect.width  || 320;
+    const vbH  = rect.height || 150;
+    svg.setAttribute('viewBox', `0 0 ${vbW} ${vbH}`);
+
+    const baseY   = vbH - 20;
+    const minH    = 34;
+    const maxH    = vbH - 60;
+    const maxVal  = Math.max(...values, 1);
+    const n       = values.length;
+    const spacing = vbW / n;
+    const baseW   = spacing * 1.9;
+
+    const defs = document.createElementNS(NS, 'defs');
+    svg.appendChild(defs);
+
+    values.forEach((val, i) => {
+        const color  = MOUNTAIN_COLORS[i % MOUNTAIN_COLORS.length];
+        const xPeak  = spacing * i + spacing / 2;
+        const h      = minH + (val / maxVal) * (maxH - minH);
+        const peakY  = baseY - h;
+        let x0       = xPeak - baseW / 2;
+        let x1       = xPeak + baseW / 2;
+        if (i === 0)     x0 = 0;
+        if (i === n - 1) x1 = vbW;
+
+        const gradId = `mtn-grad-${svgId}-${i}`;
+        const grad = document.createElementNS(NS, 'linearGradient');
+        grad.setAttribute('id', gradId);
+        grad.setAttribute('x1', '0'); grad.setAttribute('y1', '0');
+        grad.setAttribute('x2', '0'); grad.setAttribute('y2', '1');
+        const stop1 = document.createElementNS(NS, 'stop');
+        stop1.setAttribute('offset', '0%');
+        stop1.setAttribute('stop-color', lightenColor(color, 55));
+        const stop2 = document.createElementNS(NS, 'stop');
+        stop2.setAttribute('offset', '100%');
+        stop2.setAttribute('stop-color', color);
+        grad.appendChild(stop1); grad.appendChild(stop2);
+        defs.appendChild(grad);
+
+        const d = `M ${x0} ${baseY} L ${xPeak} ${peakY} L ${x1} ${baseY} Z`;
+
+        const path = document.createElementNS(NS, 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('fill', `url(#${gradId})`);
+        path.setAttribute('opacity', '0.94');
+        svg.appendChild(path);
+
+        const valText = document.createElementNS(NS, 'text');
+        valText.setAttribute('x', xPeak);
+        valText.setAttribute('y', peakY - 9);
+        valText.setAttribute('text-anchor', 'middle');
+        valText.setAttribute('font-size', '11');
+        valText.setAttribute('font-weight', '700');
+        valText.setAttribute('fill', color);
+        valText.textContent = `${val} ${unit}`;
+        svg.appendChild(valText);
+
+        const capText = document.createElementNS(NS, 'text');
+        capText.setAttribute('x', xPeak);
+        capText.setAttribute('y', peakY - 22);
+        capText.setAttribute('text-anchor', 'middle');
+        capText.setAttribute('font-size', '9.5');
+        capText.setAttribute('font-weight', '600');
+        capText.setAttribute('fill', 'var(--text-muted)');
+        capText.textContent = labels[i];
+        svg.appendChild(capText);
+    });
 }
 
 // ── Bulan Ini vs Bulan Lalu ───────────────────────────────────

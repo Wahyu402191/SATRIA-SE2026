@@ -947,8 +947,7 @@
         /* ─── RESPONSIVE ─── */
         .hamburger {
             display: none;
-            flex-direction: column;
-            justify-content: center;
+            align-items: center;
             gap: 5px;
             background: none;
             border: none;
@@ -956,111 +955,129 @@
             padding: 6px;
             z-index: 1000;
         }
-        .hamburger span {
-            display: block;
-            width: 24px;
-            height: 2px;
-            background: var(--primary);
-            border-radius: 2px;
-            transition: all 0.3s ease;
-        }
-        .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-        .hamburger.open span:nth-child(2) { opacity: 0; }
-        .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
         @media (max-width: 900px) {
-            .inst-inner { flex-direction: column; min-height: auto; padding: 16px; }
-            .inst-photo-wrap { width: 100%; height: 80px; }
-            .inst-badge { margin: 8px auto 12px; padding: 8px 16px; }
-            .inst-badge-year { font-size: 24px; }
-            .inst-body { padding: 12px 16px; }
-            .inst-title { font-size: 16px; }
+            /* ─── Header mobile: satu baris ramping, logo | teks | chip tahun ─── */
+            .inst-inner { flex-direction: row; align-items: center; min-height: auto; padding: 18px 18px; gap: 13px; }
+            .inst-photo-wrap {
+                width: 56px; height: 56px; flex-shrink: 0; padding: 9px;
+                border-radius: 50%; background: rgba(255,255,255,.08);
+                box-shadow: inset 0 0 0 1px rgba(255,255,255,.16);
+            }
+            .inst-body { flex: 1; min-width: 0; padding: 0; justify-content: center; gap: 3px; }
+            .inst-eyebrow {
+                font-size: 9.5px; letter-spacing: 1.5px; margin-bottom: 0;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            }
+            .inst-title {
+                font-size: 18px; line-height: 1.2;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            }
             .inst-subtitle { display: none; }
             .inst-meta { display: none; }
+            /* Tanpa kotak/background — cuma teks polos rata kanan */
+            .inst-badge {
+                margin: 0 0 0 auto; align-self: center; flex-shrink: 0;
+                padding: 0; border: none; border-radius: 0;
+                background: none; box-shadow: none; backdrop-filter: none;
+                text-align: right;
+            }
+            .inst-badge-label { font-size: 7.5px; letter-spacing: .8px; color: rgba(255,255,255,.65); }
+            .inst-badge-sub { display: none; }
+            .inst-badge-year {
+                font-size: 18px; margin-top: 1px; filter: none;
+                background: none; -webkit-background-clip: initial; background-clip: initial;
+                -webkit-text-fill-color: var(--accent-light); color: var(--accent-light);
+                text-shadow: 0 0 10px rgba(230,126,34,.5);
+            }
         }
 
         @media (max-width: 768px) {
-            /* Hamburger button tampil */
-            .hamburger { display: flex; }
-
-            /* Navbar jadi 2 baris: brand + hamburger */
+            /* ─── Navbar mobile: brand kiri, hamburger kanan, dropdown rapi ─── */
             .navbar { height: auto; }
-            .navbar-inner {
-                padding: 12px 16px;
-                flex-wrap: wrap;
-                height: auto;
-                gap: 0;
+            .navbar-inner { padding: 10px 14px; flex-wrap: wrap; height: auto; gap: 8px; }
+            .sidebar-toggle-btn { width: 36px; height: 36px; }
+            .navbar-brand { gap: 9px; }
+            .brand-mark { width: 27px; height: 27px; }
+            .brand-text-main { font-size: 14.5px; }
+            .brand-text-sub { display: none; }
+            /* Tombol "Menu ⌄" — biar user langsung sadar itu dropdown pilihan
+               fitur, bukan sekadar hamburger polos. */
+            .hamburger {
+                display: flex; align-items: center; gap: 5px;
+                margin-left: auto; width: auto; height: 36px; padding: 0 12px;
+                border-radius: 999px; background: rgba(40,116,166,.08);
+                color: var(--primary); transition: background .2s;
             }
-
-            /* Nav links jadi dropdown tersembunyi */
+            .hamburger:active { background: rgba(40,116,166,.16); }
+            .hamburger-text { font-size: 13px; font-weight: 600; line-height: 1; }
+            .hamburger-chevron { width: 16px; height: 16px; transition: transform .25s cubic-bezier(.22,1,.36,1); }
+            .hamburger.open .hamburger-chevron { transform: rotate(180deg); }
             .nav-links {
-                display: none;
-                width: 100%;
-                flex-direction: column;
-                gap: 2px;
-                padding: 8px 0 12px;
-                border-top: 1px solid var(--border);
-                margin-top: 8px;
+                display: none; width: 100%; flex-direction: column; gap: 3px;
+                padding: 10px; margin-top: 2px; border-top: none;
+                background: var(--bg); border-radius: 12px;
             }
-            .nav-links.open { display: flex; }
-            .nav-links a {
-                padding: 10px 12px;
-                font-size: 14px;
-                border-radius: var(--radius);
-            }
+            .nav-links.open { display: flex; animation: navDropIn .22s ease both; }
+            @keyframes navDropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+            .nav-links a { padding: 11px 13px; font-size: 14px; border-radius: 9px; }
             .nav-links a.active::after { display: none; }
             .nav-divider { display: none; }
-            .btn-nav-cta {
-                width: 100%;
-                justify-content: center;
-                padding: 10px 16px;
-                font-size: 13px;
-                margin-top: 4px;
-            }
-            .brand-text-sub { display: none; }
-
-            /* Container & card */
+            .btn-nav-cta { width: 100%; justify-content: center; padding: 11px 16px; font-size: 13px; margin-top: 4px; border-radius: 9px; }
             .container { padding: 12px; }
             .card { padding: 16px; margin-bottom: 12px; }
-
-            /* Modal full screen di mobile */
+            /* Di layar sentuh gak ada hover, jadi versi tap-nya: kartu "hidup"
+               pas ditekan (garis gradient muncul + sedikit terangkat). */
+            .card:active { box-shadow: var(--shadow-md); transform: translateY(-2px) scale(.99); }
+            .card:active::before { opacity: 1; }
+            .btn:active { transform: translateY(-1px) scale(.98); box-shadow: 0 4px 10px rgba(40,116,166,.25); }
+            .btn-nav-cta:active { background: #fff; color: var(--primary); }
+            .nav-links a:active { color: var(--primary); background: #eef3f9; }
+            .navbar-brand:active .brand-mark { transform: rotate(-6deg); }
+            .sidebar-toggle-btn:active { background: rgba(40,116,166,.16); }
+            .sidebar-close-btn:active { background: rgba(255,255,255,.25); transform: rotate(90deg); }
+            .sidebar-app-link:active { background: rgba(255,255,255,.08); transform: translateX(3px); }
+            .sidebar-app-link:active .sidebar-app-icon { transform: scale(1.06) rotate(-3deg); }
+            .sidebar-foot-link:active { color: #fff; }
+            .modal-close:active { background: rgba(255,255,255,.25); transform: rotate(90deg); }
+            .logout-btn-cancel:active { background: var(--border); }
+            .logout-btn-confirm:active { box-shadow: 0 3px 10px rgba(231,76,60,.35); }
             .modal-overlay { padding: 0; }
             .modal-box { width: 100%; border-radius: 0; min-height: 100vh; min-height: 100dvh; }
             .modal-body { max-height: calc(100vh - 80px); overflow-y: auto; }
-
-            /* Progress bar lebih kecil */
             .progress-wrap { width: 100%; }
+            [style*="grid-template-columns: repeat(2"] { grid-template-columns: 1fr !important; }
+            [style*="grid-template-columns: repeat(3"] { grid-template-columns: 1fr !important; }
+            [style*="grid-template-columns: repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; }
 
-            /* Grid 1 kolom */
-            [style*="grid-template-columns: repeat(2"] {
-                grid-template-columns: 1fr !important;
-            }
-            [style*="grid-template-columns: repeat(3"] {
-                grid-template-columns: 1fr !important;
-            }
-            [style*="grid-template-columns: repeat(4"] {
-                grid-template-columns: repeat(2, 1fr) !important;
-            }
-
-            /* Footer di mobile */
-            .footer-inner { flex-direction: column; align-items: flex-start; gap: 12px; }
-            footer { padding: 24px 16px; margin-top: 32px; }
-            .footer-meta { flex-direction: column; gap: 8px; }
+            /* ─── Footer mobile: ringkas & rata tengah, cukup SATRIA + BPS
+               (tagline & meta lain disembunyikan, bukan dihapus dari HTML —
+               PC tetap tampil lengkap seperti semula) ─── */
+            footer { padding: 18px 20px; margin-top: 24px; }
+            .footer-inner { flex-direction: column; align-items: center; gap: 3px; text-align: center; }
+            .footer-brand { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+            .footer-brand strong { font-size: 13.5px; margin-bottom: 0; }
+            .footer-brand span { display: none; }
+            .footer-meta { justify-content: center; }
+            .footer-meta-item:nth-child(n+2) { display: none; }
+            .footer-meta-item { font-size: 10.5px; }
         }
 
         @media (max-width: 480px) {
-            .inst-photo-wrap { height: 60px; }
-            .inst-eyebrow { font-size: 9px; }
-            .inst-title { font-size: 13px; }
-            .inst-badge { padding: 6px 12px; }
-            .inst-badge-year { font-size: 18px; }
-            .inst-badge-label { font-size: 8px; }
-            .inst-badge-sub { font-size: 8px; }
+            .inst-inner { padding: 14px 16px; gap: 11px; }
+            .inst-photo-wrap { width: 46px; height: 46px; padding: 8px; }
+            .inst-eyebrow { font-size: 8px; }
+            .inst-title { font-size: 15px; }
+            .inst-badge-year { font-size: 15px; }
+            .inst-badge-label { font-size: 6.5px; }
+            .brand-mark { width: 24px; height: 24px; }
+            .brand-text-main { font-size: 13px; }
             .card { padding: 12px; }
             .btn { padding: 10px 18px; font-size: 12px; }
-            [style*="grid-template-columns: repeat(4"] {
-                grid-template-columns: 1fr 1fr !important;
-            }
+            footer { padding: 14px 14px; }
+            .footer-brand strong { font-size: 12.5px; }
+            .footer-brand span { font-size: 9.5px; }
+            [style*="grid-template-columns: repeat(4"] { grid-template-columns: 1fr 1fr !important; }
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -1212,7 +1229,8 @@
             </a>
 
             <button class="hamburger" id="hamburger-btn" onclick="toggleMenu()" aria-label="Menu">
-                <span></span><span></span><span></span>
+                <span class="hamburger-text">Menu</span>
+                <svg class="hamburger-chevron" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
             </button>
 
             <ul class="nav-links" id="nav-menu">

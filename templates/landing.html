@@ -405,21 +405,64 @@
 
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
-            .page-wrap { padding: 0 6% 80px; align-items: flex-end; }
-            .bg-overlay { background: linear-gradient(to top, rgba(8,18,35,0.97) 0%, rgba(8,18,35,0.6) 100%); }
-            .content-panel { max-width: 100%; }
-            .main-title { font-size: 68px; letter-spacing: -2px; }
-            .tagline { font-size: 15px; }
-            .description { font-size: 13px; margin-bottom: 28px; }
-            .stats-bar { gap: 20px; margin-top: 28px; }
-            .stat-value { font-size: 22px; }
+            /* Foto BPS bukan lagi background full-screen di mobile — jadi
+               panel dekoratif setinggi ~36% layar di bagian atas, sisanya
+               warna solid navy tema BPS. Konten disederhanakan & di-center
+               di ruang sisa bawahnya (bukan mepet ke tepi bawah lagi). */
+            body { background: #0a1628; }
+
+            .bg-image {
+                position: absolute; inset: auto; top: 0; left: 0; right: 0;
+                height: 36vh;
+                background-position: center 40%;
+                border-radius: 0 0 32px 32px;
+            }
+            .bg-overlay {
+                position: absolute; inset: auto; top: 0; left: 0; right: 0;
+                height: 36vh;
+                background: linear-gradient(to bottom, rgba(8,18,35,.1) 0%, rgba(8,18,35,.92) 100%);
+                border-radius: 0 0 32px 32px;
+            }
+            .bg-vignette, .grid-bg { display: none; }
+
+            .page-wrap {
+                height: 100dvh; padding: 36vh 9% 40px;
+                display: flex; align-items: center; justify-content: center;
+            }
+            .content-panel { max-width: 100%; text-align: center; }
+
+            /* Logo ditumpuk di atas teks (bukan sejajar) biar gak wrap aneh
+               di layar sempit. */
+            .eyebrow { flex-direction: column; gap: 8px; margin-bottom: 18px; }
+            .logo-bps { width: 34px; height: 34px; }
+            .eyebrow-text { align-items: center; gap: 6px; }
+            .eyebrow-text .org { font-size: 9px; letter-spacing: 2px; }
+            .badge { margin: 0 auto; }
+
+            .main-title { font-size: 60px; letter-spacing: -2px; margin-bottom: 10px; }
+            .main-title::after { content: none; } /* glow blur berat, kurang kelihatan di mobile */
+            .tagline { font-size: 14.5px; margin-bottom: 30px; }
+
+            /* Paragraf deskripsi dipangkas di mobile — cukup logo, judul,
+               tagline, tombol biar ringkas & simetris. */
+            .description { display: none; }
+
+            .btn-enter { margin: 0 auto; padding: 15px 40px; font-size: 13px; }
+
+            /* Footer & scroll-hint didesain untuk hero full-screen lama —
+               di layout baru yang center, keduanya cuma bikin ramai. */
+            .footer { display: none; }
+            .scroll-hint { display: none; }
         }
 
         @media (max-width: 480px) {
-            .main-title { font-size: 52px; }
-            .btn-enter { padding: 14px 36px; font-size: 13px; }
-            .eyebrow { gap: 10px; }
-            .logo-bps { width: 42px; height: 42px; }
+            .bg-image, .bg-overlay { height: 30vh; }
+            .page-wrap { padding-top: 30vh; }
+            .main-title { font-size: 48px; }
+            .btn-enter { padding: 14px 34px; font-size: 12.5px; }
+            .eyebrow { gap: 7px; margin-bottom: 14px; }
+            .logo-bps { width: 30px; height: 30px; }
+            .tagline { margin-bottom: 24px; }
         }
 
         /* ── LOADING OVERLAY (saat berpindah ke halaman pilihan aplikasi) ── */
