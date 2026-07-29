@@ -326,9 +326,52 @@
     }
 
     /* Buttons with BPS colors */
-    .btn { 
+    .btn {
         background: linear-gradient(135deg, var(--primary), var(--primary-light));
         transition: all .2s;
+    }
+    /* Reset — id selector sengaja dipakai supaya spesifisitasnya menang
+       telak atas .btn di atas (yang kalau cuma pakai class .btn-ghost akan
+       kalah, sama-sama 1 class, dan .btn di file ini ditulis belakangan). */
+    #reset-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+        padding: 11px 24px; border-radius: var(--radius);
+        font-size: 13px; font-weight: 600; cursor: pointer;
+        background: var(--bg); color: var(--text-muted);
+        border: 1.5px solid var(--border);
+        transition: all .2s;
+    }
+    #reset-btn:hover {
+        background: var(--border); color: var(--text); transform: translateY(-2px);
+    }
+    .analysis-action-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .analysis-action-row #analyze-btn,
+    .analysis-action-row #reset-btn { width: 180px; justify-content: center; }
+
+    /* Export/PDF: id selector supaya spesifisitasnya menang telak atas
+       .btn-sm dan .btn (di file ini & di base.html), lebar disamakan biar
+       "Export Excel" dan "Cetak PDF" gak beda-beda meski teksnya beda
+       panjang. white-space:nowrap biar teksnya gak pernah wrap 2 baris
+       walau kepanjangan — mending kepotong ellipsis daripada patah baris.
+       Berlaku di semua ukuran layar. */
+    #export-btn, #pdf-btn {
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+        width: 128px;
+        justify-content: center;
+        gap: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #export-btn svg, #pdf-btn svg { width: 11px; height: 11px; flex-shrink: 0; }
+
+    /* Mobile only: Mulai Analisis & Reset jadi kiri-kanan sama lebar (bukan
+       lebar tetap 180px yang di layar sempit malah numpuk ke bawah).
+       Desktop tidak kena sama sekali karena di dalam media query. */
+    @media (max-width: 768px) {
+        .analysis-action-row #analyze-btn,
+        .analysis-action-row #reset-btn { width: auto; flex: 1 1 0; }
     }
     .btn:hover {
         background: linear-gradient(135deg, var(--primary-dark), var(--primary));
@@ -815,6 +858,61 @@
         .method-grid { grid-template-columns: 1fr; }
         .wc-grid { grid-template-columns: 1fr; }
     }
+
+    /* Mobile: hasil analisis (confusion matrix, word cloud, distribusi
+       sentimen) dirapatkan — sebelumnya semua ukurannya dipatok untuk
+       desktop (cm-grid malah dipaksa min-width 1120px + scroll ke samping)
+       jadi kelihatan raksasa di HP. Desktop tidak kena karena semua di
+       dalam media query ini. */
+    @media (max-width: 768px) {
+        /* Confusion Matrix: 1 chart per baris, bukan 4 kolom yang di-scroll
+           ke samping — chart-nya jadi pas selebar card, gak perlu geser. */
+        .cm-scroll { overflow-x: visible; }
+        .cm-grid { grid-template-columns: 1fr; min-width: 0; gap: 12px; }
+        .cm-card-title { font-size: 12px; padding: 10px 14px; }
+
+        /* Word cloud: padding lebih rapat */
+        .wc-grid { grid-template-columns: 1fr; gap: 12px; margin-top: 10px; }
+        .wc-body { padding: 8px; min-height: auto; }
+        .wc-header { padding: 8px 12px; font-size: 11px; }
+
+        /* Distribusi Sentimen per Metode: kartu & teks dikecilkan */
+        .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+        .stat-card { padding: 14px; }
+        .stat-card-title { font-size: 11px; margin-bottom: 10px; padding-bottom: 8px; }
+        .bar-row { margin-bottom: 8px; }
+        .bar-meta { font-size: 11px; }
+
+        /* Agreement Rate: 2 kolom biar gak terlalu tinggi ke bawah */
+        .accuracy-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+        .acc-card { padding: 12px; }
+        .acc-pct { font-size: 22px; }
+        .acc-name { font-size: 10px; }
+
+        /* Hero banner "Analisis Sentimen Terpadu" — ikon & teksnya kegedean
+           buat layar HP, dirapatkan jadi lebih proporsional. */
+        .analysis-hero { padding: 18px 20px; gap: 14px; }
+        .ai-brain-illustration { width: 56px; height: 56px; }
+        .analysis-hero-text h2 { font-size: 16px; margin-bottom: 5px; }
+        .analysis-hero-text p { font-size: 12px; line-height: 1.5; }
+
+        /* Header judul halaman */
+        .page-header-icon { width: 38px; height: 38px; }
+        .page-header-icon svg { width: 19px; height: 19px; }
+        .page-header h1 { font-size: 16px; }
+        .page-header p { font-size: 12px; }
+
+        /* Tab "Data Scraping Terakhir" / "Pilih dari File Tersimpan" */
+        .source-tab { padding: 9px 6px; font-size: 11.5px; }
+
+        /* Kartu pilih metode & file tersimpan */
+        .method-card { padding: 11px 12px; gap: 8px; }
+        .method-card-name { font-size: 12.5px; }
+        .method-card-desc { font-size: 10px; }
+        .file-item { padding: 11px 12px; gap: 10px; }
+        .file-item-title { font-size: 12px; }
+        .file-item-meta { font-size: 10px; }
+    }
 </style>
 {% endblock %}
 
@@ -888,8 +986,23 @@
 
 <!-- Method Selection -->
 <div class="card">
-    <div class="card-title">Pilih Metode Analisis</div>
-    <div class="card-sub">Pilih satu atau lebih metode Machine Learning untuk analisis sentimen</div>
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+        <div>
+            <div class="card-title">Pilih Metode Analisis</div>
+            <div class="card-sub" style="margin-bottom:0;">Pilih satu atau lebih metode Machine Learning untuk analisis sentimen</div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-success btn-sm" id="export-btn" onclick="exportData()" style="display:none;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export Excel
+            </button>
+            <button class="btn btn-danger btn-sm" id="pdf-btn" onclick="exportPDF()" style="display:none;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Cetak PDF
+            </button>
+        </div>
+    </div>
+    <div style="margin-top:22px;"></div>
 
     <div class="method-grid">
         <label class="method-card selected" id="card-nb">
@@ -922,18 +1035,13 @@
         </label>
     </div>
 
-    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <div class="analysis-action-row">
         <button class="btn" id="analyze-btn" onclick="startAnalysis()">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             <span id="analyze-btn-text">Mulai Analisis</span>
         </button>
-        <button class="btn btn-success" id="export-btn" onclick="exportData()" style="display:none;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export Excel
-        </button>
-        <button class="btn btn-danger" id="pdf-btn" onclick="exportPDF()" style="display:none;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            Cetak Laporan PDF
+        <button id="reset-btn" onclick="resetAnalysis()" title="Hapus hasil tersimpan tanpa menjalankan analisis baru">
+            Reset
         </button>
     </div>
 </div>
@@ -1033,6 +1141,18 @@
 <script>
 let selectedFile = null;
 let activeTab = 'current';
+
+// Simpan hasil analisis terakhir supaya tidak hilang begitu user pindah
+// halaman lewat navbar lalu kembali lagi — tanpa ini, tiap balik ke
+// halaman ini harus klik "Mulai Analisis" dari nol lagi.
+const YT_ANALYSIS_CACHE_KEY = 'youtubeAnalysisCache';
+function saveAnalysisCache(patch) {
+    let current;
+    try { current = JSON.parse(sessionStorage.getItem(YT_ANALYSIS_CACHE_KEY) || '{}'); }
+    catch (e) { current = {}; }
+    try { sessionStorage.setItem(YT_ANALYSIS_CACHE_KEY, JSON.stringify(Object.assign(current, patch))); }
+    catch (e) { /* storage penuh/diblokir — abaikan, cuma fitur convenience */ }
+}
 
 const methodInfo = {
     naive_bayes: {
@@ -1316,6 +1436,10 @@ async function startAnalysis() {
         document.getElementById('pdf-btn').style.display = 'inline-flex';
         showToast('Analisis selesai. ' + comments.length.toLocaleString('id-ID') + ' komentar diproses.', 'success');
 
+        // Overwrite (bukan merge) — hasil baru ini gantikan cache run sebelumnya,
+        // termasuk membuang wordcloud lama yang sudah tidak relevan.
+        try { sessionStorage.setItem(YT_ANALYSIS_CACHE_KEY, JSON.stringify({ activeTab, selectedFile, methods, result })); } catch (e) {}
+
         // Load wordcloud async
         loadWordclouds();
 
@@ -1332,28 +1456,33 @@ async function startAnalysis() {
 // ── Wordclouds ─────────────────────────────────────────────
 async function loadWordclouds() {
     try {
-        const wc = document.getElementById('wordcloud-container');
         const res = await fetch('/youtube/generate_wordcloud', { method:'POST', headers:{'Content-Type':'application/json'} });
         const data = await res.json();
-        if (!data.success) {
-            wc.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:12px;">Word cloud tidak tersedia.</p>';
-            return;
-        }
-        wc.innerHTML = `<div class="wc-grid">
-            <div class="wc-box">
-                <div class="wc-header pos">Komentar Positif (${data.positive_count})</div>
-                <div class="wc-body">${data.wordcloud_positive
-                    ? `<img src="${data.wordcloud_positive}" alt="Positive Word Cloud" style="animation:fadeUp .5s ease;">`
-                    : '<p style="color:var(--text-muted);font-size:12px;">Tidak ada komentar positif</p>'}</div>
-            </div>
-            <div class="wc-box">
-                <div class="wc-header neg">Komentar Negatif (${data.negative_count})</div>
-                <div class="wc-body">${data.wordcloud_negative
-                    ? `<img src="${data.wordcloud_negative}" alt="Negative Word Cloud" style="animation:fadeUp .5s ease;">`
-                    : '<p style="color:var(--text-muted);font-size:12px;">Tidak ada komentar negatif</p>'}</div>
-            </div>
-        </div>`;
+        renderWordclouds(data);
+        saveAnalysisCache({ wordcloud: data });
     } catch(e) { console.error(e); }
+}
+
+function renderWordclouds(data) {
+    const wc = document.getElementById('wordcloud-container');
+    if (!data.success) {
+        wc.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:12px;">Word cloud tidak tersedia.</p>';
+        return;
+    }
+    wc.innerHTML = `<div class="wc-grid">
+        <div class="wc-box">
+            <div class="wc-header pos">Komentar Positif (${data.positive_count})</div>
+            <div class="wc-body">${data.wordcloud_positive
+                ? `<img src="${data.wordcloud_positive}" alt="Positive Word Cloud" style="animation:fadeUp .5s ease;">`
+                : '<p style="color:var(--text-muted);font-size:12px;">Tidak ada komentar positif</p>'}</div>
+        </div>
+        <div class="wc-box">
+            <div class="wc-header neg">Komentar Negatif (${data.negative_count})</div>
+            <div class="wc-body">${data.wordcloud_negative
+                ? `<img src="${data.wordcloud_negative}" alt="Negative Word Cloud" style="animation:fadeUp .5s ease;">`
+                : '<p style="color:var(--text-muted);font-size:12px;">Tidak ada komentar negatif</p>'}</div>
+        </div>
+    </div>`;
 }
 
 // ── Display results ────────────────────────────────────────
@@ -1523,6 +1652,47 @@ async function exportData() {
         btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Excel`;
     }
 }
+
+// Hapus cache & hasil yang tampil — dipakai kalau user mau mulai bersih
+// tanpa langsung menjalankan analisis baru (refresh saja TIDAK menghapus
+// cache, makanya butuh tombol ini).
+function resetAnalysis() {
+    sessionStorage.removeItem(YT_ANALYSIS_CACHE_KEY);
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('stats-grid').innerHTML = '';
+    document.getElementById('acc-section')?.remove();
+    document.getElementById('cm-section')?.remove();
+    document.getElementById('wordcloud-container').innerHTML = `<div class="wc-grid">
+        <div class="wc-box"><div class="wc-header pos">Komentar Positif</div><div class="wc-body"><p style="color:var(--text-muted);font-size:12px;">Memuat...</p></div></div>
+        <div class="wc-box"><div class="wc-header neg">Komentar Negatif</div><div class="wc-body"><p style="color:var(--text-muted);font-size:12px;">Memuat...</p></div></div>
+    </div>`;
+    document.getElementById('export-btn').style.display = 'none';
+    document.getElementById('pdf-btn').style.display = 'none';
+}
+
+// Pulihkan hasil analisis terakhir (kalau ada) begitu halaman dibuka lagi.
+(function restoreAnalysisCache() {
+    let cached;
+    try { cached = JSON.parse(sessionStorage.getItem(YT_ANALYSIS_CACHE_KEY) || 'null'); }
+    catch (e) { cached = null; }
+    if (!cached || !cached.result) return;
+
+    activeTab = cached.activeTab || 'current';
+    document.getElementById('tab-current').classList.toggle('active', activeTab === 'current');
+    document.getElementById('tab-saved').classList.toggle('active', activeTab === 'saved');
+    if (activeTab === 'saved') document.getElementById('saved-files-section').style.display = 'block';
+    selectedFile = cached.selectedFile || null;
+
+    document.querySelectorAll('input[name="method"]').forEach(cb => {
+        cb.checked = (cached.methods || []).includes(cb.value);
+        toggleMethodCard(cb, cb.closest('.method-card').id);
+    });
+
+    displayResults(cached.result);
+    document.getElementById('export-btn').style.display = 'inline-flex';
+    document.getElementById('pdf-btn').style.display = 'inline-flex';
+    if (cached.wordcloud) renderWordclouds(cached.wordcloud);
+})();
 </script>
 
 {% endblock %}

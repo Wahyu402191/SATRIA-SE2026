@@ -107,6 +107,18 @@
         width: 11px !important; height: 11px !important;
         aspect-ratio: unset; flex-shrink: 0;
     }
+
+    /* Mobile: grid auto-fit gak punya override, collapse ke 1 kolom
+       memanjang. Dipaksa 2 kolom biar gak sepanjang itu di HP. */
+    @media (max-width: 640px) {
+        .summary-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .summary-card { padding: 12px; min-height: 120px; }
+        .summary-value { font-size: 19px; }
+        .page-header { padding: 16px 18px; gap: 12px; }
+        .page-header-icon { width: 42px; height: 42px; }
+        .page-header-icon svg { width: 21px; height: 21px; }
+        .page-header h1 { font-size: 17px; }
+    }
 </style>
 {% endblock %}
 

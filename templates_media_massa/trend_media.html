@@ -98,6 +98,13 @@
     .word-chip-count { font-size:11px; color:var(--text-muted); margin-top:4px; font-weight:600; }
     .empty-state { text-align:center; padding:60px 24px; color:var(--text-muted); }
     .empty-state a { color:var(--primary); font-weight:600; text-decoration:none; }
+
+    /* Mobile: rapatkan grid-grid kecil biar konsisten sama halaman lain */
+    @media (max-width: 640px) {
+        .legend-grid { grid-template-columns: repeat(2, 1fr); }
+        .top-words-grid { grid-template-columns: repeat(2, 1fr); }
+        .word-chip { padding: 12px 14px; }
+    }
 </style>
 {% endblock %}
 

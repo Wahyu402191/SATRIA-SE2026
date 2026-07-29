@@ -197,6 +197,19 @@
     .api-guide ol li { font-size:13px; color:var(--text); margin-bottom:8px; line-height:1.6; }
     .api-guide a { color:var(--primary-light); font-weight:600; text-decoration:none; }
     code { background:var(--bg); border:1px solid var(--border); padding:2px 7px; border-radius:4px; font-size:12px; font-family:monospace; color:var(--primary); }
+
+    /* Mobile: grid auto-fit di halaman ini gak punya override sama sekali,
+       jadi collapse ke 1 kolom sempit memanjang ke bawah. Dipaksa 2 kolom
+       biar lebih mirip pola desktop, gak panjang banget. */
+    @media (max-width: 640px) {
+        .methods-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .method-tile { padding: 16px; }
+        .feature-list { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .lex-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .lex-item { padding: 12px; }
+        .lex-num { font-size: 20px; }
+        .lex-label { font-size: 9.5px; }
+    }
 </style>
 {% endblock %}
 

@@ -501,6 +501,19 @@
         .options-row .form-group:first-child,
         .options-row .form-group:last-child { flex: 1 1 160px; }
     }
+
+    /* Mobile: 4 kartu statistik (Total Video/Komentar/Analisis/Metode ML)
+       pakai grid auto-fit yang otomatis numpuk 1 kolom penuh di layar
+       sempit — bikin halamannya panjang banget ke bawah. Dipaksa 2 kolom
+       (2x2) supaya tata letaknya lebih mirip desktop, gak lurus ke bawah. */
+    @media (max-width: 640px) {
+        .dashboard-stats { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .stat-card { padding: 14px 12px; gap: 10px; }
+        .stat-icon-wrap { width: 42px; height: 42px; }
+        .stat-icon-wrap svg { width: 20px; height: 20px; }
+        .stat-label { font-size: 10px; }
+        .stat-value { font-size: 20px; }
+    }
 </style>
 {% endblock %}
 

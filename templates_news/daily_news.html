@@ -211,6 +211,7 @@
     }
     @media (max-width: 900px) {
         .stats-placeholder-grid { grid-template-columns: 1fr !important; }
+        .stat-row-daily { grid-template-columns: 1fr !important; }
     }
 </style>
 {% endblock %}
@@ -606,6 +607,93 @@
 
 </div>
 
+<!-- ═══ 3 KARTU TAMBAHAN: konsistensi, proyeksi, hari kerja vs akhir pekan ═══ -->
+<div class="stat-row-daily" style="display:grid; grid-template-columns:4fr 3fr 4fr; gap:24px; margin-bottom:24px;">
+
+    <div class="card reveal" style="margin-bottom:0; display:flex; flex-direction:column;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <div style="width:36px;height:36px;border-radius:10px;
+                        background:linear-gradient(135deg,var(--success),var(--success-light));
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                        box-shadow:0 3px 10px rgba(39,174,96,.3);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:700;color:var(--success);">Konsistensi Publikasi</div>
+                <div style="font-size:11px;color:var(--text-muted);">Seberapa rutin berita muncul tiap hari</div>
+            </div>
+        </div>
+        <div style="flex:1; display:flex; align-items:center; gap:18px;">
+            <div style="position:relative; width:92px; height:92px; flex-shrink:0;">
+                <svg width="92" height="92" viewBox="0 0 92 92" style="transform:rotate(-90deg);">
+                    <circle cx="46" cy="46" r="38" fill="none" stroke="var(--bg)" stroke-width="10"/>
+                    <circle id="consistency-ring" cx="46" cy="46" r="38" fill="none" stroke="var(--success)" stroke-width="10"
+                            stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="238.76"
+                            style="transition:stroke-dashoffset 1s cubic-bezier(.22,1,.36,1);"></circle>
+                </svg>
+                <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <div id="consistency-pct" style="font-size:19px; font-weight:800; color:var(--text);">—</div>
+                    <div style="font-size:7.5px; color:var(--text-muted); font-weight:700; letter-spacing:.3px;">HARI ADA BERITA</div>
+                </div>
+            </div>
+            <div style="flex:1; min-width:0;">
+                <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Gap Terpanjang</div>
+                <div id="consistency-gap" style="font-size:20px;font-weight:800;color:var(--text);">—</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">tanpa berita berturut-turut</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card reveal" style="margin-bottom:0; display:flex; flex-direction:column;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <div style="width:36px;height:36px;border-radius:10px;
+                        background:linear-gradient(135deg,var(--primary),var(--primary-light));
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                        box-shadow:0 3px 10px rgba(40,116,166,.3);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/></svg>
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:700;color:var(--primary);">Proyeksi Akhir Bulan</div>
+                <div style="font-size:11px;color:var(--text-muted);">Estimasi dari rata-rata sejauh ini</div>
+            </div>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:10px;">
+            <div>
+                <div id="projection-total" style="font-size:32px;font-weight:800;color:var(--primary);line-height:1;">—</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:5px;">estimasi total berita bulan ini</div>
+            </div>
+            <div id="projection-detail" style="font-size:11.5px;color:var(--text-muted);padding-top:10px;border-top:1px solid var(--border);">—</div>
+        </div>
+    </div>
+
+    <div class="card reveal" style="margin-bottom:0; display:flex; flex-direction:column;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <div style="width:36px;height:36px;border-radius:10px;
+                        background:linear-gradient(135deg,var(--accent),var(--accent-light));
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                        box-shadow:0 3px 10px rgba(230,126,34,.3);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text);">Hari Kerja vs Akhir Pekan</div>
+                <div style="font-size:11px;color:var(--text-muted);">Perbandingan volume berita</div>
+            </div>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                <div><span id="weekday-pct" style="font-size:22px;font-weight:800;color:var(--primary);">—</span><span style="font-size:11px;color:var(--text-muted);"> Hari Kerja</span></div>
+                <div><span id="weekend-pct" style="font-size:22px;font-weight:800;color:var(--accent);">—</span><span style="font-size:11px;color:var(--text-muted);"> Akhir Pekan</span></div>
+            </div>
+            <div style="height:12px; border-radius:999px; overflow:hidden; display:flex; background:var(--bg);">
+                <div id="weekday-bar" style="background:linear-gradient(90deg,var(--primary),var(--primary-light)); height:100%; width:0%; transition:width .6s cubic-bezier(.22,1,.36,1);"></div>
+                <div id="weekend-bar" style="background:linear-gradient(90deg,var(--accent-light),var(--accent)); height:100%; width:0%; transition:width .6s cubic-bezier(.22,1,.36,1);"></div>
+            </div>
+            <div id="weekday-weekend-detail" style="font-size:11px;color:var(--text-muted);">—</div>
+        </div>
+    </div>
+
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 const WEEKDAYS = ['Minggu','Senin','Selasa','Rabu','Kamis',"Jum'at",'Sabtu'];
@@ -767,10 +855,58 @@ async function loadDaily() {
     renderMomentumChart(year, month, data.days);
     loadHourlyChart(year, month, daysInMonth);
     loadMonthComparison(year, month, total);
+    renderExtraDailyStats(year, month, data.days);
 
     // Ukur ulang setelah semua widget (termasuk "Bulan Ini vs Bulan Lalu"
     // yang fetch-nya terpisah) benar-benar selesai render.
     setTimeout(matchMediaCardHeight, 300);
+}
+
+// ── 3 statistik tambahan: konsistensi, proyeksi, hari kerja vs akhir pekan ──
+function renderExtraDailyStats(year, month, days) {
+    const past = days.filter(d => !d.is_future);
+
+    // Konsistensi publikasi: % hari (yang sudah lewat) yang ada beritanya,
+    // + gap terpanjang tanpa berita sama sekali secara berturut-turut.
+    const daysWithNews = past.filter(d => d.count > 0).length;
+    const coveragePct  = past.length ? (daysWithNews / past.length * 100) : 0;
+    let maxGap = 0, curGap = 0;
+    past.forEach(d => {
+        if (d.count === 0) { curGap++; maxGap = Math.max(maxGap, curGap); }
+        else { curGap = 0; }
+    });
+
+    const RING_CIRCUMFERENCE = 238.76; // 2 * PI * r(38), samakan dengan stroke-dasharray di HTML
+    const ring = document.getElementById('consistency-ring');
+    if (ring) ring.style.strokeDashoffset = String(RING_CIRCUMFERENCE - (coveragePct / 100 * RING_CIRCUMFERENCE));
+    document.getElementById('consistency-pct').textContent = coveragePct.toFixed(0) + '%';
+    document.getElementById('consistency-gap').textContent = maxGap > 0 ? `${maxGap} hari` : 'Tidak ada';
+
+    // Proyeksi akhir bulan: ekstrapolasi linear dari rata-rata harian sejauh ini.
+    const totalSoFar   = past.reduce((a, d) => a + d.count, 0);
+    const daysInMonth  = new Date(year, month, 0).getDate();
+    const avgPerDay    = past.length ? (totalSoFar / past.length) : 0;
+    const projected    = Math.round(avgPerDay * daysInMonth);
+    document.getElementById('projection-total').textContent = `${projected} berita`;
+    document.getElementById('projection-detail').innerHTML =
+        `Sejauh ini <strong style="color:var(--text);">${totalSoFar} berita</strong> dalam ${past.length} hari (rata-rata ${avgPerDay.toFixed(1)}/hari)`;
+
+    // Hari kerja (Sen-Jum) vs akhir pekan (Sab-Min).
+    let weekdayTotal = 0, weekendTotal = 0;
+    past.forEach(d => {
+        const dow = new Date(year, month - 1, d.day).getDay();
+        if (dow === 0 || dow === 6) weekendTotal += d.count;
+        else weekdayTotal += d.count;
+    });
+    const wwTotal    = weekdayTotal + weekendTotal;
+    const weekdayPct = wwTotal ? (weekdayTotal / wwTotal * 100) : 0;
+    const weekendPct = wwTotal ? (weekendTotal / wwTotal * 100) : 0;
+    document.getElementById('weekday-pct').textContent = weekdayPct.toFixed(0) + '%';
+    document.getElementById('weekend-pct').textContent = weekendPct.toFixed(0) + '%';
+    document.getElementById('weekday-bar').style.width = weekdayPct + '%';
+    document.getElementById('weekend-bar').style.width = weekendPct + '%';
+    document.getElementById('weekday-weekend-detail').textContent =
+        `${weekdayTotal} berita hari kerja · ${weekendTotal} berita akhir pekan`;
 }
 
 // ── Ekspor CSV ──

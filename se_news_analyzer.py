@@ -98,6 +98,12 @@ class SeNewsAnalyzer:
             results['accuracy'] = self._calculate_cross_method_accuracy(results['articles'], methods)
             results['confusion_matrices'] = self._generate_confusion_matrices(results['articles'], methods)
 
+        results['keywords'] = self._extract_top_keywords(results['articles'], preprocessed, methods)
+        results['source_breakdown'] = self._calculate_source_breakdown(results['articles'], methods)
+        results['confidence'] = self._calculate_avg_confidence(results['articles'], methods)
+        results['controversial_articles'], results['extreme_articles'] = \
+            self._analyze_disagreement(results['articles'], methods)
+
         return results
 
     def analyze_and_store(self, storage, articles, methods=None):
@@ -230,3 +236,123 @@ class SeNewsAnalyzer:
             confusion_matrices[method] = {'matrix': matrix.tolist(), 'labels': sentiment_labels}
 
         return confusion_matrices
+
+    def _majority_vote(self, article, methods):
+        predictions = [article[f'{m}_sentiment'] for m in methods if f'{m}_sentiment' in article]
+        return Counter(predictions).most_common(1)[0][0] if predictions else 'Netral'
+
+    def _extract_top_keywords(self, articles, preprocessed, methods, top_n=18):
+        """Kata paling sering muncul di berita yang mayoritas metode labeli
+        Positif/Negatif — dipakai buat tag cloud di halaman Analisis
+        Sentimen. Reuse `preprocessed` (teks sudah bersih dari stopword)
+        yang sudah dihitung sekali di awal analyze_batch, bukan proses ulang."""
+        counters = {'Positif': Counter(), 'Negatif': Counter()}
+        for article, text in zip(articles, preprocessed):
+            label = self._majority_vote(article, methods)
+            if label in counters:
+                counters[label].update(text.split())
+
+        def top_list(counter):
+            return [{'word': w, 'count': c} for w, c in counter.most_common(top_n) if c >= 2]
+
+        return {
+            'positive': top_list(counters['Positif']),
+            'negative': top_list(counters['Negatif']),
+        }
+
+    def _calculate_source_breakdown(self, articles, methods, top_n=12):
+        """Sebaran sentimen (majority vote) per sumber media, dibatasi ke
+        top_n sumber dengan berita terbanyak — dipakai buat bubble chart
+        perbandingan sumber di halaman Analisis Sentimen."""
+        by_source = {}
+        for article in articles:
+            source = article.get('source') or 'Tidak diketahui'
+            label = self._majority_vote(article, methods)
+            bucket = by_source.setdefault(source, {'positive': 0, 'negative': 0, 'neutral': 0})
+            bucket[_SENTIMENT_KEY.get(label.lower(), 'neutral')] += 1
+
+        rows = []
+        for source, counts in by_source.items():
+            total = counts['positive'] + counts['negative'] + counts['neutral']
+            if total == 0:
+                continue
+            dominant_key = max(counts, key=counts.get)
+            rows.append({
+                'source': source,
+                'total': total,
+                'positive_pct': round(counts['positive'] / total * 100, 1),
+                'negative_pct': round(counts['negative'] / total * 100, 1),
+                'neutral_pct': round(counts['neutral'] / total * 100, 1),
+                # Label Indonesia ('Positif'/'Negatif'/'Netral') supaya konsisten
+                # dengan label yang dipakai di seluruh UI, bukan key internal.
+                'dominant': {'positive': 'Positif', 'negative': 'Negatif', 'neutral': 'Netral'}[dominant_key],
+            })
+
+        rows.sort(key=lambda r: r['total'], reverse=True)
+        return rows[:top_n]
+
+    def _calculate_avg_confidence(self, articles, methods):
+        """Rata-rata confidence score per metode, jadi salah satu sumbu
+        radar chart perbandingan metode. NB/SVM score itu probabilitas asli
+        (0-1), tapi LSTM/IndoBERT scorenya rata-rata bobot leksikon yang tidak
+        dibatasi — bisa >1 untuk teks yang kata sentimennya kuat/padat. Clamp
+        ke 1.0 dulu sebelum dikalikan 100 supaya confidence-nya tidak pernah
+        "lebih dari 100%" yang membingungkan di chart."""
+        result = {}
+        for method in methods:
+            scores = [min(abs(a[f'{method}_score']), 1.0) for a in articles if f'{method}_score' in a]
+            result[_METHOD_NAMES.get(method, method)] = round(sum(scores) / len(scores) * 100, 1) if scores else 0.0
+        return result
+
+    def _analyze_disagreement(self, articles, methods, top_n=8):
+        """Dua sudut pandang yang gampang dipahami tanpa perlu ngerti detail
+        4 metode ML-nya:
+        - Kontroversial: artikel yang labelnya paling banyak beda-beda antar
+          metode (suara mayoritas paling "tipis") — kandidat bagus buat
+          ditinjau manual.
+        - Ekstrem: artikel Positif/Negatif dengan confidence rata-rata
+          tertinggi di antara metode yang sepakat dengan suara mayoritas —
+          "yang paling meyakinkan" dari masing-masing sisi."""
+        controversial = []
+        extreme_positive = None
+        extreme_negative = None
+
+        for article in articles:
+            preds = [(m, article[f'{m}_sentiment'], article[f'{m}_score'])
+                     for m in methods if f'{m}_sentiment' in article]
+            if not preds:
+                continue
+
+            label_counts = Counter(p[1] for p in preds)
+            majority_label, majority_count = label_counts.most_common(1)[0]
+            total = len(preds)
+
+            base = {
+                'id': article.get('id'),
+                'title': article.get('title', ''),
+                'source': article.get('source', ''),
+                'url': article.get('url', ''),
+                'published_date': article.get('published_date', ''),
+            }
+
+            controversy = round((1 - majority_count / total) * 100, 1)
+            if controversy > 0:
+                controversial.append({**base, 'controversy': controversy, 'breakdown': dict(label_counts)})
+
+            if majority_label in ('Positif', 'Negatif'):
+                agreeing = [min(abs(p[2]), 1.0) for p in preds if p[1] == majority_label]
+                candidate = {
+                    **base,
+                    'confidence': round((sum(agreeing) / len(agreeing)) * 100, 1) if agreeing else 0.0,
+                    'agree_count': majority_count,
+                    'total_methods': total,
+                }
+                if majority_label == 'Positif':
+                    if extreme_positive is None or candidate['confidence'] > extreme_positive['confidence']:
+                        extreme_positive = candidate
+                else:
+                    if extreme_negative is None or candidate['confidence'] > extreme_negative['confidence']:
+                        extreme_negative = candidate
+
+        controversial.sort(key=lambda r: r['controversy'], reverse=True)
+        return controversial[:top_n], {'positive': extreme_positive, 'negative': extreme_negative}

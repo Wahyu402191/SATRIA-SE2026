@@ -198,6 +198,19 @@
     .db-icon svg { width:20px; height:20px; fill:var(--primary); }
     .db-name { font-size:13px; font-weight:700; color:var(--primary); margin-bottom:4px; }
     .db-desc { font-size:11px; color:var(--text-muted); line-height:1.5; }
+
+    /* Mobile: grid auto-fit gak punya override, collapse ke 1 kolom
+       memanjang. Dipaksa 2 kolom biar gak sepanjang itu di HP. */
+    @media (max-width: 640px) {
+        .methods-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .method-tile { padding: 16px; }
+        .feature-list { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .db-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .db-item { padding: 12px; }
+        .db-icon { width: 32px; height: 32px; margin-bottom: 8px; }
+        .db-name { font-size: 11.5px; }
+        .db-desc { font-size: 10px; }
+    }
 </style>
 {% endblock %}
 
