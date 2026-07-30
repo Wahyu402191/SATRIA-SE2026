@@ -153,6 +153,45 @@
         .sidebar-toggle-btn:hover { background: rgba(40, 116, 166, 0.08); }
         .sidebar-toggle-btn svg { width: 22px; height: 22px; fill: var(--primary); }
 
+        /* Avatar profil di navbar & grid ikon navigasi — cuma dipakai di
+           mobile (lihat media query di bawah), disembunyikan total di
+           desktop supaya tampilan PC tidak berubah sama sekali. */
+        .navbar-avatar-link { display: none; }
+        .navbar-avatar {
+            position: relative;
+            width: 34px; height: 34px; border-radius: 50%; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid var(--border); background: var(--primary); flex-shrink: 0;
+        }
+        .navbar-avatar img {
+            position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        }
+        .navbar-avatar-initial { color: #fff; font-weight: 800; font-size: 13px; }
+
+        .mobile-nav-grid { display: none; }
+        .mnav-grid-inner { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .mnav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            text-decoration: none; padding: 2px 0;
+        }
+        .mnav-icon {
+            width: 44px; height: 44px; border-radius: 13px;
+            background: #E4EEF8; display: flex; align-items: center; justify-content: center;
+            border: 2px solid transparent; transition: all .2s;
+        }
+        .mnav-icon svg { width: 20px; height: 20px; fill: var(--primary); }
+        .mnav-label { font-size: 9.5px; font-weight: 600; color: var(--text-muted); text-align: center; line-height: 1.2; }
+        .mnav-item.active .mnav-icon { border-color: var(--accent); background: var(--accent-pale); }
+        .mnav-item.active .mnav-label { color: var(--accent); font-weight: 700; }
+        .mnav-item:active .mnav-icon { transform: scale(.93); }
+        .mnav-item-cta .mnav-icon { background: linear-gradient(135deg, var(--primary), var(--primary-light)); }
+        .mnav-item-cta .mnav-icon svg { fill: #fff; }
+
+        /* Tab chevron manual buka/tutup grid navigasi (di bawah navbar) */
+        .mnav-toggle { display: none; }
+        .mnav-toggle svg { width: 16px; height: 16px; fill: var(--primary); transition: transform .25s cubic-bezier(.22,1,.36,1); }
+        .mnav-toggle.mnav-toggle-open svg { transform: rotate(180deg); }
+
         /* App Sidebar */
         .app-sidebar-backdrop {
             position: fixed; inset: 0; background: rgba(8, 18, 35, 0.55);
@@ -441,37 +480,48 @@
         }
 
         @media (max-width: 768px) {
-            /* ─── Navbar mobile: brand kiri, hamburger kanan, dropdown rapi ─── */
+            /* ─── Navbar mobile: brand kiri, avatar profil kanan; dropdown
+               "Menu ⌄" lama diganti grid ikon di bawahnya (lihat
+               .mobile-nav-grid) — nav-links lama dikunci tersembunyi total
+               karena sudah tidak ada tombol yang membukanya lagi. ─── */
             .navbar { height: auto; }
-            .navbar-inner { padding: 10px 14px; flex-wrap: wrap; height: auto; gap: 8px; }
+            /* Solid juga — .navbar.scrolled biasanya semi-transparan +
+               blur, sekarang navbar-nya jadi 2 baris (tambah grid ikon)
+               jadi areanya lebih luas & efek transparannya makin kentara. */
+            .navbar.scrolled { background: var(--bg-card); backdrop-filter: none; }
+            .navbar-inner { padding: 10px 14px; flex-wrap: wrap; height: auto; gap: 8px; background: var(--bg-card); position: relative; z-index: 1; }
             .sidebar-toggle-btn { width: 36px; height: 36px; }
             .navbar-brand { gap: 9px; }
             .brand-mark { width: 27px; height: 27px; }
             .brand-text-main { font-size: 14.5px; }
             .brand-text-sub { display: none; }
-            /* Tombol "Menu ⌄" — biar user langsung sadar itu dropdown pilihan
-               fitur, bukan sekadar hamburger polos. */
-            .hamburger {
-                display: flex; align-items: center; gap: 5px;
-                margin-left: auto; width: auto; height: 36px; padding: 0 12px;
-                border-radius: 999px; background: rgba(40,116,166,.08);
-                color: var(--primary); transition: background .2s;
-            }
-            .hamburger:active { background: rgba(40,116,166,.16); }
-            .hamburger-text { font-size: 13px; font-weight: 600; line-height: 1; }
-            .hamburger-chevron { width: 16px; height: 16px; transition: transform .25s cubic-bezier(.22,1,.36,1); }
-            .hamburger.open .hamburger-chevron { transform: rotate(180deg); }
-            .nav-links {
-                display: none; width: 100%; flex-direction: column; gap: 3px;
-                padding: 10px; margin-top: 2px; border-top: none;
-                background: var(--bg); border-radius: 12px;
-            }
-            .nav-links.open { display: flex; animation: navDropIn .22s ease both; }
-            @keyframes navDropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-            .nav-links a { padding: 11px 13px; font-size: 14px; border-radius: 9px; }
-            .nav-links a.active::after { display: none; }
+            .navbar-avatar-link { display: flex; align-items: center; margin-left: auto; }
+            .nav-links { display: none !important; }
             .nav-divider { display: none; }
-            .btn-nav-cta { width: 100%; justify-content: center; padding: 11px 16px; font-size: 13px; margin-top: 4px; border-radius: 9px; }
+
+            /* Grid ikon navigasi — panel yang collapse otomatis pas scroll
+               ke bawah (class .mnav-hidden ditambah/dihapus lewat JS),
+               muncul lagi pas scroll ke atas. */
+            .mobile-nav-grid {
+                display: block; width: 100%; position: relative; z-index: 1;
+                max-height: 260px; opacity: 1;
+                padding: 4px 14px 14px;
+                overflow: hidden;
+                /* Solid, bukan transparan — navbar pakai background blur pas
+                   di-scroll (.navbar.scrolled), tanpa ini konten di
+                   belakangnya keliatan nembus/blur pas transisi buka-tutup
+                   (efek "glitch" yang dilaporkan). */
+                background: var(--bg-card);
+                transition: max-height .3s cubic-bezier(.22,1,.36,1), opacity .25s ease, padding .3s ease;
+            }
+            .mobile-nav-grid.mnav-hidden { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; }
+            .mnav-toggle {
+                display: flex; align-items: center; justify-content: center;
+                width: 100%; height: 16px; margin: -4px 0 0; padding: 0;
+                border: none; background: var(--bg-card); cursor: pointer;
+                position: relative; z-index: 1;
+            }
+            .mnav-toggle:active svg { fill: var(--accent); }
             .container { padding: 12px; }
             .card { padding: 16px; margin-bottom: 12px; }
             /* Di layar sentuh gak ada hover, jadi versi tap-nya: kartu "hidup"
@@ -665,10 +715,18 @@
                 </div>
             </a>
 
-            <button class="hamburger" id="hamburger-btn" onclick="toggleMenu()" aria-label="Menu">
-                <span class="hamburger-text">Menu</span>
-                <svg class="hamburger-chevron" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
-            </button>
+            <!-- Avatar profil — khusus mobile, gantikan dropdown "Menu" lama.
+                 Inisial dirender di belakang selalu; kalau foto ada tapi
+                 gagal dimuat (mis. foto Google yang butuh referrer khusus),
+                 onerror sembunyikan img-nya, inisial tetap kelihatan. -->
+            <a href="{{ url_for('profile', next=request.path) }}" class="navbar-avatar-link" aria-label="Profil Saya">
+                <div class="navbar-avatar" data-avatar-bg="{{ session.user_email|avatar_color }}">
+                    <span class="navbar-avatar-initial">{{ (session.user_name or 'U')[0]|upper }}</span>
+                    {% if session.user_photo %}
+                        <img src="{{ session.user_photo }}" alt="Foto Profil" referrerpolicy="no-referrer" onerror="this.style.display='none';">
+                    {% endif %}
+                </div>
+            </a>
 
             <ul class="nav-links" id="nav-menu">
                 <li class="nav-divider"></li>
@@ -716,6 +774,48 @@
                     </a>
                 </li>
             </ul>
+        </div>
+
+        <!-- Tab chevron manual — di bawah baris "SATRIA SE2026". Grid ikon
+             tetap auto-hide/show pas scroll, tapi ini biar bisa dibuka-tutup
+             manual kapan saja tanpa perlu scroll balik ke atas dulu. -->
+        <button class="mnav-toggle mnav-toggle-open" id="mnavToggle" onclick="toggleMobileNavGrid()" aria-label="Buka/tutup menu navigasi">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+        </button>
+
+        <!-- Grid ikon navigasi — khusus mobile, gantikan dropdown "Menu".
+             Otomatis ketutup pas scroll ke bawah, muncul lagi pas scroll ke atas. -->
+        <div class="mobile-nav-grid" id="mobileNavGrid">
+            <div class="mnav-grid-inner">
+                <a href="/news/" class="mnav-item {% if request.path == '/news/' %}active{% endif %}">
+                    <span class="mnav-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg></span>
+                    <span class="mnav-label">Beranda</span>
+                </a>
+                <a href="/news/articles" class="mnav-item {% if request.path == '/news/articles' %}active{% endif %}">
+                    <span class="mnav-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span>
+                    <span class="mnav-label">Data Berita</span>
+                </a>
+                <a href="/news/daily" class="mnav-item {% if request.path == '/news/daily' %}active{% endif %}">
+                    <span class="mnav-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg></span>
+                    <span class="mnav-label">Statistik Harian</span>
+                </a>
+                <a href="/news/analysis" class="mnav-item {% if request.path == '/news/analysis' %}active{% endif %}">
+                    <span class="mnav-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg></span>
+                    <span class="mnav-label">Analisis Sentimen</span>
+                </a>
+                <a href="/news/trend" class="mnav-item {% if request.path == '/news/trend' %}active{% endif %}">
+                    <span class="mnav-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg></span>
+                    <span class="mnav-label">Trend & Insight</span>
+                </a>
+                <a href="/news/about" class="mnav-item {% if request.path == '/news/about' %}active{% endif %}">
+                    <span class="mnav-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></span>
+                    <span class="mnav-label">Tentang</span>
+                </a>
+                <a href="/selection" class="mnav-item mnav-item-cta">
+                    <span class="mnav-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>
+                    <span class="mnav-label">Kembali</span>
+                </a>
+            </div>
         </div>
     </nav>
 
@@ -810,42 +910,46 @@
         }, { passive: true });
     }
 
-    function toggleMenu() {
-        const btn = document.getElementById('hamburger-btn');
-        const menu = document.getElementById('nav-menu');
-        if (btn && menu) {
-            btn.classList.toggle('open');
-            menu.classList.toggle('open');
-        }
+    // ── Grid ikon navigasi mobile: auto-hide scroll ke bawah, muncul lagi
+    // scroll ke atas (mirip pola app modern spt Instagram/Twitter) — plus
+    // tab chevron manual buat buka/tutup kapan saja tanpa perlu scroll. ────
+    function toggleMobileNavGrid() {
+        const grid = document.getElementById('mobileNavGrid');
+        const toggle = document.getElementById('mnavToggle');
+        if (!grid) return;
+        const nowHidden = grid.classList.toggle('mnav-hidden');
+        toggle?.classList.toggle('mnav-toggle-open', !nowHidden);
     }
-    document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('#nav-menu a').forEach(link => {
-            link.addEventListener('click', () => {
-                document.getElementById('hamburger-btn')?.classList.remove('open');
-                document.getElementById('nav-menu')?.classList.remove('open');
-            });
-        });
-    });
-
-    document.addEventListener('click', () => {
-        // Removed user menu dropdown logic
-    });
-
-    // ── Hamburger Menu Toggle ────────────────────────────
-    function toggleMenu() {
-        const btn = document.getElementById('hamburger-btn');
-        const menu = document.getElementById('nav-menu');
-        if (btn && menu) {
-            btn.classList.toggle('open');
-            menu.classList.toggle('open');
+    (function () {
+        const grid = document.getElementById('mobileNavGrid');
+        const toggle = document.getElementById('mnavToggle');
+        if (!grid) return;
+        let lastY = window.scrollY;
+        let ticking = false;
+        // Satu arah aja: scroll ke bawah otomatis nutup panel.
+        // Scroll ke atas TIDAK otomatis buka lagi — biar gak ada
+        // efek geter-geter dari toggle bolak-balik. Buka lagi cuma
+        // lewat tombol chevron manual (toggleMobileNavGrid).
+        const DELTA_THRESHOLD = 10;
+        function onScroll() {
+            const y = Math.max(0, window.scrollY);
+            const delta = y - lastY;
+            if (delta > DELTA_THRESHOLD && y > 80) {
+                grid.classList.add('mnav-hidden');
+                toggle?.classList.remove('mnav-toggle-open');
+                lastY = y;
+            } else if (delta < -DELTA_THRESHOLD) {
+                lastY = y;
+            }
+            ticking = false;
         }
-    }
-    document.querySelectorAll('#nav-menu a').forEach(link => {
-        link.addEventListener('click', () => {
-            document.getElementById('hamburger-btn')?.classList.remove('open');
-            document.getElementById('nav-menu')?.classList.remove('open');
-        });
-    });
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(onScroll);
+                ticking = true;
+            }
+        }, { passive: true });
+    })();
 
     document.addEventListener('click', function(e) {
         const btn = e.target.closest('.btn');

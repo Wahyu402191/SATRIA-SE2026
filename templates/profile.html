@@ -89,10 +89,17 @@
     .avatar-choice-sub { font-size: 11px; color: var(--text-muted); text-align: center; }
 
     .avatar-back-link {
-        background: none; border: none; color: var(--primary); font-size: 13px; font-weight: 600;
-        cursor: pointer; padding: 0; margin-bottom: 16px; font-family: inherit;
+        background: none; border: none; color: var(--primary); font-size: 28px; font-weight: 900;
+        cursor: pointer; padding: 0 4px; margin-bottom: 16px; font-family: monospace;
+        transition: all .2s ease;
+        display: inline-flex; align-items: center; justify-content: center;
+        line-height: 1; letter-spacing: -2px;
     }
-    .avatar-back-link:hover { text-decoration: underline; }
+    .avatar-back-link:hover { 
+        transform: translateX(-3px);
+        opacity: 0.7;
+    }
+    }
 
     .avatar-preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
     .avatar-preset-option {
@@ -104,9 +111,13 @@
     .avatar-preset-option img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
     @media (max-width: 480px) {
-        .avatar-preset-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .avatar-choice-row { gap: 10px; }
-        .avatar-choice-card { padding: 18px 10px; }
+        .avatar-modal-box { width: 100%; max-width: 320px; padding: 20px; }
+        .avatar-preset-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .avatar-choice-row { flex-direction: column; align-items: center; gap: 12px; }
+        .avatar-choice-card { width: 90%; max-width: 320px; padding: 32px 20px; font-size: 15px; }
+        .avatar-choice-icon svg { width: 40px; height: 40px; }
+        .avatar-choice-label { font-size: 15px; font-weight: 700; }
+        .avatar-choice-sub { font-size: 12px; }
     }
 </style>
 {% endblock %}
@@ -223,7 +234,7 @@
             </div>
 
             <div id="avatar-grid-step" style="display:none;">
-                <button type="button" class="avatar-back-link" onclick="showAvatarChoice()">&larr; Kembali</button>
+                <button type="button" class="avatar-back-link" onclick="showAvatarChoice()"><<<</button>
                 {% if avatar_files %}
                 <div class="avatar-preset-grid">
                     {% for fname in avatar_files %}

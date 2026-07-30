@@ -56,6 +56,7 @@
     .radar-ring-2 { animation-delay: .8s; }
     .radar-ring-3 { animation-delay: 1.6s; }
     .fetch-break { display: none; }
+    .mobile-break { display: none; }
     @keyframes radarPing {
         0%   { transform: scale(.3); opacity: .9; }
         100% { transform: scale(2.2); opacity: 0; }
@@ -101,6 +102,17 @@
         /* Berita Terbaru */
         .news-latest-card h2 { font-size: 15px; }
         .news-latest-card .card-sub { font-size: 11.5px; }
+        .news-latest-card .card-sub .mobile-break { display: block; height: 6px; }
+        .news-latest-card .latest-articles-link {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: #fff !important;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 9px !important;
+            box-shadow: 0 2px 6px rgba(40,116,166,.3);
+            text-decoration: none !important;
+        }
         .latest-article-title { font-size: 12px !important; }
         .latest-article-meta { font-size: 10px !important; }
     }
@@ -203,7 +215,7 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--primary)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
         Berita Terbaru
     </h2>
-    <p class="card-sub">Artikel yang paling baru ditemukan. Lihat semua di <a href="/news/articles" style="color:var(--primary); font-weight:600;">Data Berita</a>.</p>
+    <p class="card-sub">Artikel yang paling baru ditemukan. Lihat semua di<span class="mobile-break"></span> <a href="/news/articles" class="latest-articles-link" style="color:var(--primary); font-weight:600;">Data Berita</a></p>
 
     <div style="display:flex; flex-direction:column; gap:2px;">
         {% for a in latest_articles %}
