@@ -1,6 +1,6 @@
 # SATRIA SE2026
 
-**Scraping and Sentiment Analysis Tracker for Economic Census 2026**  
+**Sistem Analisis Tren & Riset Informasi Augmentasi — Sensus Ekonomi 2026**  
 Badan Pusat Statistik Kabupaten Bangkalan
 
 Aplikasi web untuk scraping komentar YouTube dan analisis sentimen menggunakan 4 metode Machine Learning (Naive Bayes, SVM, LSTM, IndoBERT) dengan database MySQL.

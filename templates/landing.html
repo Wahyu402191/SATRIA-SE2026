@@ -403,66 +403,170 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
-        /* ── RESPONSIVE ── */
+        /* ── RESPONSIVE: MOBILE (max-width: 768px) ──
+           Layout:
+             ① Semua elemen center secara horizontal
+             ② Konten teks (logo → deskripsi) di area atas
+             ③ Tombol di bawah tapi tidak terlalu mepet bawah
+             ④ Semua ukuran pakai clamp() — fit di HP apapun
+        */
         @media (max-width: 768px) {
-            /* Foto BPS bukan lagi background full-screen di mobile — jadi
-               panel dekoratif setinggi ~36% layar di bagian atas, sisanya
-               warna solid navy tema BPS. Konten disederhanakan & di-center
-               di ruang sisa bawahnya (bukan mepet ke tepi bawah lagi). */
-            body { background: #0a1628; }
 
+            /* Foto kantor BPS — full-screen, tidak terpotong */
             .bg-image {
-                position: absolute; inset: auto; top: 0; left: 0; right: 0;
-                height: 36vh;
-                background-position: center 40%;
-                border-radius: 0 0 32px 32px;
+                position: fixed;
+                inset: 0;
+                background-image: url('/static/img/kantor-bps-mobile.jpg');
+                background-size: cover;
+                background-position: center center;
+                background-repeat: no-repeat;
+                z-index: 0;
             }
+
+            /* Overlay: semi-gelap merata supaya foto tetap kelihatan
+               tapi semua teks (atas & bawah) tetap terbaca */
             .bg-overlay {
-                position: absolute; inset: auto; top: 0; left: 0; right: 0;
-                height: 36vh;
-                background: linear-gradient(to bottom, rgba(8,18,35,.1) 0%, rgba(8,18,35,.92) 100%);
-                border-radius: 0 0 32px 32px;
+                position: fixed;
+                inset: 0;
+                background: linear-gradient(
+                    to bottom,
+                    rgba(4, 10, 22, 0.82) 0%,
+                    rgba(4, 10, 22, 0.68) 30%,
+                    rgba(4, 10, 22, 0.68) 70%,
+                    rgba(4, 10, 22, 0.88) 100%
+                );
+                z-index: 1;
             }
+
             .bg-vignette, .grid-bg { display: none; }
 
-            .page-wrap {
-                height: 100dvh; padding: 36vh 9% 40px;
-                display: flex; align-items: center; justify-content: center;
+            body {
+                background: #040a16;
+                overflow-y: auto;
             }
-            .content-panel { max-width: 100%; text-align: center; }
 
-            /* Logo ditumpuk di atas teks (bukan sejajar) biar gak wrap aneh
-               di layar sempit. */
-            .eyebrow { flex-direction: column; gap: 8px; margin-bottom: 18px; }
-            .logo-bps { width: 34px; height: 34px; }
-            .eyebrow-text { align-items: center; gap: 6px; }
-            .eyebrow-text .org { font-size: 9px; letter-spacing: 2px; }
-            .badge { margin: 0 auto; }
+            /* Page-wrap: flex column, konten + tombol terbagi
+               di dalam satu kolom yang mengisi full viewport */
+            .page-wrap {
+                position: relative;
+                z-index: 10;
+                min-height: 100dvh;
+                height: auto;
+                padding: clamp(36px, 8vh, 64px) clamp(20px, 7%, 44px)
+                         clamp(32px, 7vh, 56px);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
 
-            .main-title { font-size: 60px; letter-spacing: -2px; margin-bottom: 10px; }
-            .main-title::after { content: none; } /* glow blur berat, kurang kelihatan di mobile */
-            .tagline { font-size: 14.5px; margin-bottom: 30px; }
+            /* Content-panel: mengisi seluruh tinggi page-wrap (flex:1)
+               supaya margin-top:auto pada tombol benar-benar mendorongnya ke bawah */
+            .content-panel {
+                flex: 1;
+                width: 100%;
+                max-width: 420px;
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                animation: fadeInUp 0.85s ease-out both;
+                /* reset style lama */
+                background: none;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+                border: none;
+                border-radius: 0;
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
+            }
 
-            /* Paragraf deskripsi dipangkas di mobile — cukup logo, judul,
-               tagline, tombol biar ringkas & simetris. */
+            /* ── Logo BPS ── */
+            .eyebrow {
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: clamp(8px, 1.8vh, 14px);
+                margin-bottom: clamp(8px, 2vh, 16px);
+                width: 100%;
+            }
+
+            .logo-bps {
+                width: clamp(44px, 12vw, 60px);
+                height: clamp(44px, 12vw, 60px);
+                filter: drop-shadow(0 0 16px rgba(200, 151, 58, 0.65));
+            }
+
+            .eyebrow-text {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: clamp(5px, 1vh, 8px);
+            }
+
+            .eyebrow-text .org {
+                font-size: clamp(8px, 2.2vw, 11px);
+                letter-spacing: clamp(2px, 0.5vw, 3px);
+                color: rgba(255, 255, 255, 0.58);
+                text-transform: uppercase;
+                white-space: nowrap;
+            }
+
+            .badge {
+                margin: 0 auto;
+                font-size: clamp(9px, 2.4vw, 11px);
+                padding: clamp(3px, 0.6vh, 5px) clamp(12px, 3.2vw, 18px);
+                letter-spacing: clamp(1.5px, 0.4vw, 2.2px);
+            }
+
+            /* ── Judul SATRIA ── */
+            .main-title {
+                font-size: clamp(56px, 17vw, 84px);
+                letter-spacing: clamp(-3px, -0.8vw, -1.5px);
+                line-height: 0.92;
+                margin-top: 0;
+                margin-bottom: clamp(8px, 1.8vh, 14px);
+                padding-right: 6px; /* Mencegah huruf terakhir terpotong akibat negative letter-spacing */
+            }
+            .main-title::after { content: none; }
+
+            /* ── Tagline ── */
+            .tagline {
+                font-size: clamp(9px, 2.6vw, 13px);
+                font-weight: 700;
+                color: #f4d799;
+                line-height: 1.45;
+                letter-spacing: 0.2px;
+                margin-bottom: clamp(10px, 2vh, 16px);
+                white-space: nowrap;
+            }
+
+            /* ── Deskripsi ── */
             .description { display: none; }
 
-            .btn-enter { margin: 0 auto; padding: 15px 40px; font-size: 13px; }
+            .stats-bar { display: none; }
 
-            /* Footer & scroll-hint didesain untuk hero full-screen lama —
-               di layout baru yang center, keduanya cuma bikin ramai. */
-            .footer { display: none; }
+            /* Tombol — margin-top:auto mendorongnya ke bawah content-panel
+               (yang flex:1 = mengisi full viewport). Jarak dari tepi bawah
+               diatur oleh padding-bottom pada .page-wrap. */
+            .btn-enter {
+                margin-top: auto;
+                margin-left: auto;
+                margin-right: auto;
+                margin-bottom: clamp(16px, 3vh, 32px);
+                padding: clamp(14px, 2.4vh, 18px) clamp(36px, 10vw, 54px);
+                font-size: clamp(12px, 3.2vw, 15px);
+                letter-spacing: clamp(1.6px, 0.4vw, 2.2px);
+                box-shadow: 0 8px 28px rgba(200, 151, 58, 0.45);
+            }
+
+            .footer      { display: none; }
             .scroll-hint { display: none; }
         }
 
-        @media (max-width: 480px) {
-            .bg-image, .bg-overlay { height: 30vh; }
-            .page-wrap { padding-top: 30vh; }
-            .main-title { font-size: 48px; }
-            .btn-enter { padding: 14px 34px; font-size: 12.5px; }
-            .eyebrow { gap: 7px; margin-bottom: 14px; }
-            .logo-bps { width: 30px; height: 30px; }
-            .tagline { margin-bottom: 24px; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(26px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
         /* ── LOADING OVERLAY (saat berpindah ke halaman pilihan aplikasi) ── */
@@ -680,7 +784,7 @@
 
             <!-- Tagline -->
             <p class="tagline">
-                <strong>Sistem Analisis Tren</strong> dan Riset Interaktif
+                <strong>Sistem Analisis Tren &amp; Riset Informasi Augmentasi</strong>
             </p>
 
             <!-- Deskripsi -->

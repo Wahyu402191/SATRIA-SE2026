@@ -5,114 +5,291 @@
 <style>
     /* Enhanced Page Header */
     .page-header {
-        display:flex; align-items:center; gap:18px; margin-bottom:28px;
-        padding:24px 28px; border-radius:var(--radius-lg);
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 28px;
+        padding: 24px 28px;
+        border-radius: var(--radius-lg);
         background: var(--gradient-wave-cool);
-        border:1px solid var(--border);
-        position:relative; overflow:hidden;
+        border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
     }
+
     .page-header::before {
-        content:''; position:absolute; inset:0;
-        background: radial-gradient(circle at 70% 30%, rgba(230,126,34,.08), transparent 60%);
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 70% 30%, rgba(230, 126, 34, .08), transparent 60%);
         animation: headerPulse 4.5s ease-in-out infinite alternate;
     }
+
     @keyframes headerPulse {
-        0%, 100% { opacity: .3; }
-        50% { opacity: .7; }
+
+        0%,
+        100% {
+            opacity: .3;
+        }
+
+        50% {
+            opacity: .7;
+        }
     }
+
     .page-header-icon {
-        width:56px; height:56px;
-        background:linear-gradient(135deg, var(--accent), var(--accent-light));
-        background-size:200% 200%;
-        animation:waveMove 7s ease infinite;
-        border-radius:var(--radius-lg);
-        display:flex; align-items:center; justify-content:center;
-        box-shadow:0 4px 16px rgba(230,126,34,.3);
-        position:relative; z-index:1;
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-light));
+        background-size: 200% 200%;
+        animation: waveMove 7s ease infinite;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 16px rgba(230, 126, 34, .3);
+        position: relative;
+        z-index: 1;
     }
-    .page-header-icon svg { width:28px; height:28px; stroke:#fff; stroke-width:2; fill:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,.2)); }
-    .page-header-content { flex:1; position:relative; z-index:1; }
+
+    .page-header-icon svg {
+        width: 28px;
+        height: 28px;
+        stroke: #fff;
+        stroke-width: 2;
+        fill: none;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .2));
+    }
+
+    .page-header-content {
+        flex: 1;
+        position: relative;
+        z-index: 1;
+    }
+
     .page-header h1 {
-        font-size:22px; font-weight:800; margin-bottom:6px;
-        background:linear-gradient(135deg, var(--accent), var(--primary));
-        -webkit-background-clip:text;
-        -webkit-text-fill-color:transparent;
-        background-clip:text;
-        letter-spacing:-.5px;
+        font-size: 22px;
+        font-weight: 800;
+        margin-bottom: 6px;
+        background: linear-gradient(135deg, var(--accent), var(--primary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -.5px;
     }
-    .page-header p { font-size:13px; color:var(--text-muted); line-height:1.6; }
+
+    .page-header p {
+        font-size: 13px;
+        color: var(--text-muted);
+        line-height: 1.6;
+    }
 
     /* Enhanced Section Heading */
     .section-heading {
-        font-size:16px; font-weight:800; margin-bottom:18px;
-        display:flex; align-items:center; gap:10px;
-        background:var(--gradient-blue-orange);
-        -webkit-background-clip:text;
-        -webkit-text-fill-color:transparent;
-        background-clip:text;
+        font-size: 16px;
+        font-weight: 800;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--gradient-blue-orange);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
+
     .section-heading::before {
-        content:''; display:block; width:4px; height:22px;
-        background:var(--gradient-blue-green);
-        border-radius:3px;
-        box-shadow:0 2px 8px rgba(230,126,34,.3);
+        content: '';
+        display: block;
+        width: 4px;
+        height: 22px;
+        background: var(--gradient-blue-green);
+        border-radius: 3px;
+        box-shadow: 0 2px 8px rgba(230, 126, 34, .3);
     }
-    .chart-wrap { position:relative; width:100%; }
-    canvas { width:100% !important; height:100% !important; }
-    .legend-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; margin-top:16px; }
-    .legend-item { display:flex; align-items:center; gap:8px; font-size:12px; }
-    .legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
-    .top-words-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin-top:4px; }
+
+    .chart-wrap {
+        position: relative;
+        width: 100%;
+    }
+
+    canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .legend-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 8px;
+        margin-top: 16px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+    }
+
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        flex-shrink: 0;
+    }
+
+    .top-words-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+        margin-top: 4px;
+    }
 
     /* Video info card */
-    .video-info-card { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; }
-    .video-info-main { flex:1; min-width:220px; }
-    .video-info-title { font-size:16px; font-weight:700; color:var(--text); line-height:1.4; margin-bottom:8px; }
-    .video-info-meta { display:flex; gap:16px; flex-wrap:wrap; font-size:12.5px; color:var(--text-muted); }
-    .video-info-meta span strong { color:var(--text); font-weight:600; }
+    .video-info-card {
+        display: flex;
+        gap: 18px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .video-info-main {
+        flex: 1;
+        min-width: 220px;
+    }
+
+    .video-info-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1.4;
+        margin-bottom: 8px;
+    }
+
+    .video-info-meta {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 12.5px;
+        color: var(--text-muted);
+    }
+
+    .video-info-meta span strong {
+        color: var(--text);
+        font-weight: 600;
+    }
 
     /* Month picker */
-    .month-picker-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:4px; }
+    .month-picker-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 4px;
+    }
+
     .month-picker-row select {
-        padding:9px 14px; border:1.5px solid var(--border); border-radius:var(--radius);
-        font-size:13px; font-weight:600; color:var(--primary); background:var(--bg-card);
-        cursor:pointer; min-width:180px;
+        padding: 9px 14px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--primary);
+        background: var(--bg-card);
+        cursor: pointer;
+        min-width: 180px;
     }
-    .month-picker-row select:focus { outline:none; border-color:var(--primary-light); }
+
+    .month-picker-row select:focus {
+        outline: none;
+        border-color: var(--primary-light);
+    }
+
     .month-total-badge {
-        font-size:12px; font-weight:700; padding:5px 14px; border-radius:99px;
-        background:linear-gradient(135deg,rgba(230,126,34,.12),rgba(243,156,18,.12));
-        border:1.5px solid var(--accent-light); color:var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 5px 14px;
+        border-radius: 99px;
+        background: linear-gradient(135deg, rgba(230, 126, 34, .12), rgba(243, 156, 18, .12));
+        border: 1.5px solid var(--accent-light);
+        color: var(--accent);
     }
+
     /* Word Chips - Enhanced */
     .word-chip {
-        background:var(--bg); border:2px solid var(--border); border-radius:var(--radius-lg);
-        padding:16px 18px; text-align:center;
-        transition:all .3s cubic-bezier(.22,1,.36,1);
-        position:relative; overflow:hidden;
+        background: var(--bg);
+        border: 2px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 16px 18px;
+        text-align: center;
+        transition: all .3s cubic-bezier(.22, 1, .36, 1);
+        position: relative;
+        overflow: hidden;
     }
+
     .word-chip::before {
-        content:''; position:absolute; top:0; left:0; right:0; height:2px;
-        background:var(--gradient-blue-green);
-        opacity:0; transition:opacity .3s;
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--gradient-blue-green);
+        opacity: 0;
+        transition: opacity .3s;
     }
+
     .word-chip:hover {
-        border-color:var(--primary);
-        background:linear-gradient(135deg, #E3F2FD, #E8F8F5);
-        transform:translateY(-4px);
-        box-shadow:0 6px 20px rgba(40,116,166,.15);
+        border-color: var(--primary);
+        background: linear-gradient(135deg, #E3F2FD, #E8F8F5);
+        transform: translateY(-4px);
+        box-shadow: 0 6px 20px rgba(40, 116, 166, .15);
     }
-    .word-chip:hover::before { opacity:1; }
-    .word-chip-word { font-size:15px; font-weight:800; color:var(--primary); letter-spacing:-.3px; }
-    .word-chip-count { font-size:11px; color:var(--text-muted); margin-top:4px; font-weight:600; }
-    .empty-state { text-align:center; padding:60px 24px; color:var(--text-muted); }
-    .empty-state a { color:var(--primary); font-weight:600; text-decoration:none; }
+
+    .word-chip:hover::before {
+        opacity: 1;
+    }
+
+    .word-chip-word {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--primary);
+        letter-spacing: -.3px;
+    }
+
+    .word-chip-count {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 4px;
+        font-weight: 600;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 24px;
+        color: var(--text-muted);
+    }
+
+    .empty-state a {
+        color: var(--primary);
+        font-weight: 600;
+        text-decoration: none;
+    }
 
     /* Mobile: rapatkan grid-grid kecil biar konsisten sama halaman lain */
     @media (max-width: 640px) {
-        .legend-grid { grid-template-columns: repeat(2, 1fr); }
-        .top-words-grid { grid-template-columns: repeat(2, 1fr); }
-        .word-chip { padding: 12px 14px; }
+        .legend-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .top-words-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .word-chip {
+            padding: 12px 14px;
+        }
     }
 </style>
 {% endblock %}
@@ -120,17 +297,21 @@
 {% block content %}
 <div class="page-header reveal">
     <div class="page-header-icon">
-        <svg viewBox="0 0 24 24"><path d="M3.5 18.5l6-6 4 4L22 6.92"/></svg>
+        <svg viewBox="0 0 24 24">
+            <path d="M3.5 18.5l6-6 4 4L22 6.92" />
+        </svg>
     </div>
     <div class="page-header-content">
         <h1>Trend Kata per Waktu</h1>
-        <p>Visualisasi kata paling sering muncul dalam komentar · Pilih bulan, lihat frekuensi kata per tanggal dalam bulan itu</p>
+        <p>Visualisasi kata paling sering muncul dalam komentar · Pilih bulan, lihat frekuensi kata per tanggal dalam
+            bulan itu</p>
     </div>
 </div>
 
 <div class="card" id="no-data" style="display:none;">
     <div class="empty-state">
-        <p>Belum ada data scraping. <a href="/youtube/">Lakukan scraping komentar terlebih dahulu</a>, lalu kembali ke halaman ini.</p>
+        <p>Belum ada data scraping. <a href="/youtube/">Lakukan scraping komentar terlebih dahulu</a>, lalu kembali ke
+            halaman ini.</p>
     </div>
 </div>
 
@@ -140,7 +321,8 @@
     <div class="card">
         <div class="section-heading">Pilih Video</div>
         <p class="card-sub" style="margin-bottom:14px;">
-            Ganti video yang ditampilkan — memuat data yang sudah tersimpan di database, <strong>tidak scraping ulang</strong>.
+            Ganti video yang ditampilkan — memuat data yang sudah tersimpan di database, <strong>tidak scraping
+                ulang</strong>.
             Setelah dipilih, tombol "Refresh Komentar" di bawah akan mengambil komentar baru khusus untuk video ini.
         </p>
         <div class="month-picker-row">
@@ -161,7 +343,10 @@
             </div>
             <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
                 <button class="btn btn-accent btn-sm" id="refresh-btn" onclick="refreshComments()">
-                    <svg viewBox="0 0 24 24" fill="white"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08a5.99 5.99 0 01-5.65 4c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="white">
+                        <path
+                            d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08a5.99 5.99 0 01-5.65 4c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+                    </svg>
                     Refresh Komentar
                 </button>
                 <span style="font-size:11px; color:var(--text-muted);" id="refresh-status"></span>
@@ -211,216 +396,216 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script>
-const PALETTE = [
-    '#1a3a5c','#c8973a','#2d7a4f','#9b2335','#2e5f8a',
-    '#e8b96a','#4caf87','#d45c6a','#5a6a7a','#8e6b2a'
-];
+    const PALETTE = [
+        '#1a3a5c', '#c8973a', '#2d7a4f', '#9b2335', '#2e5f8a',
+        '#e8b96a', '#4caf87', '#d45c6a', '#5a6a7a', '#8e6b2a'
+    ];
 
-let trendChart = null, barChart = null;
-let currentVideoId = null;
+    let trendChart = null, barChart = null;
+    let currentVideoId = null;
 
-async function loadSavedVideos() {
-    try {
-        const res = await fetch('/youtube/saved_files');
-        const data = await res.json();
-        const select = document.getElementById('video-select');
-        if (!data.files || !data.files.length) {
-            select.innerHTML = '<option value="">Belum ada video tersimpan</option>';
-            return;
-        }
-        select.innerHTML = data.files.map(f => `
+    async function loadSavedVideos() {
+        try {
+            const res = await fetch('/youtube/saved_files');
+            const data = await res.json();
+            const select = document.getElementById('video-select');
+            if (!data.files || !data.files.length) {
+                select.innerHTML = '<option value="">Belum ada video tersimpan</option>';
+                return;
+            }
+            select.innerHTML = data.files.map(f => `
             <option value="${f.video_id}" ${f.video_id === currentVideoId ? 'selected' : ''}>
                 ${f.video_title} (${f.total_comments.toLocaleString('id-ID')} komentar)
             </option>`).join('');
-    } catch (e) {
-        console.error('Gagal memuat daftar video:', e);
-    }
-}
-
-async function switchVideo(videoId) {
-    if (!videoId || videoId === currentVideoId) return;
-    try {
-        const res = await fetch('/youtube/load_file/' + videoId);
-        const data = await res.json();
-        if (!data.success) { alert('Gagal memuat video ini'); return; }
-        await loadTrend();  // no month arg -> backend picks the latest month for the new video
-    } catch (e) {
-        alert('Terjadi kesalahan: ' + e);
-    }
-}
-
-async function loadTrend(month) {
-    try {
-        const url = month ? `/youtube/word_trend?month=${encodeURIComponent(month)}` : '/youtube/word_trend';
-        const res = await fetch(url);
-        const data = await res.json();
-
-        if (data.error || !data.days || !data.days.length) {
-            document.getElementById('no-data').style.display = 'block';
-            return;
+        } catch (e) {
+            console.error('Gagal memuat daftar video:', e);
         }
-        currentVideoId = data.video_id;
-        loadSavedVideos();
-        document.getElementById('main-content').style.display = 'block';
+    }
 
-        const { days, words, data: series, video_info, available_months, selected_month, month_total_comments } = data;
+    async function switchVideo(videoId) {
+        if (!videoId || videoId === currentVideoId) return;
+        try {
+            const res = await fetch('/youtube/load_file/' + videoId);
+            const data = await res.json();
+            if (!data.success) { alert('Gagal memuat video ini'); return; }
+            await loadTrend();  // no month arg -> backend picks the latest month for the new video
+        } catch (e) {
+            alert('Terjadi kesalahan: ' + e);
+        }
+    }
 
-        // Video info
-        document.getElementById('video-title').textContent = video_info.title || 'Tidak diketahui';
-        document.getElementById('video-channel').textContent = video_info.channel || 'Tidak diketahui';
-        document.getElementById('video-published').textContent = video_info.published_at
-            ? new Date(video_info.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
-            : 'Tidak diketahui';
+    async function loadTrend(month) {
+        try {
+            const url = month ? `/youtube/word_trend?month=${encodeURIComponent(month)}` : '/youtube/word_trend';
+            const res = await fetch(url);
+            const data = await res.json();
 
-        // Month dropdown — rebuilt each load so it always reflects the
-        // currently loaded video, but keeps whichever month is selected
-        const monthSelect = document.getElementById('month-select');
-        monthSelect.innerHTML = available_months.map(m =>
-            `<option value="${m.value}" ${m.value === selected_month ? 'selected' : ''}>${m.label}</option>`
-        ).join('');
-        document.getElementById('month-total-badge').textContent = `${month_total_comments} komentar bulan ini`;
+            if (data.error || !data.days || !data.days.length) {
+                document.getElementById('no-data').style.display = 'block';
+                return;
+            }
+            currentVideoId = data.video_id;
+            loadSavedVideos();
+            document.getElementById('main-content').style.display = 'block';
 
-        // Top words chips — calculate totals
-        const totals = {};
-        words.forEach(w => { totals[w] = (series[w]||[]).reduce((a,b)=>a+b,0); });
-        const sorted = [...words].sort((a,b)=>totals[b]-totals[a]);
+            const { days, words, data: series, video_info, available_months, selected_month, month_total_comments } = data;
 
-        const topGrid = document.getElementById('top-words-grid');
-        if (!sorted.length) {
-            topGrid.innerHTML = `<p style="color:var(--text-muted); font-size:13px; grid-column:1/-1;">Tidak ada komentar pada bulan ini.</p>`;
-        } else {
-            topGrid.innerHTML = sorted.map((w,i) => `
-                <div class="word-chip" style="border-top:3px solid ${PALETTE[i%PALETTE.length]};">
+            // Video info
+            document.getElementById('video-title').textContent = video_info.title || 'Tidak diketahui';
+            document.getElementById('video-channel').textContent = video_info.channel || 'Tidak diketahui';
+            document.getElementById('video-published').textContent = video_info.published_at
+                ? new Date(video_info.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+                : 'Tidak diketahui';
+
+            // Month dropdown — rebuilt each load so it always reflects the
+            // currently loaded video, but keeps whichever month is selected
+            const monthSelect = document.getElementById('month-select');
+            monthSelect.innerHTML = available_months.map(m =>
+                `<option value="${m.value}" ${m.value === selected_month ? 'selected' : ''}>${m.label}</option>`
+            ).join('');
+            document.getElementById('month-total-badge').textContent = `${month_total_comments} komentar bulan ini`;
+
+            // Top words chips — calculate totals
+            const totals = {};
+            words.forEach(w => { totals[w] = (series[w] || []).reduce((a, b) => a + b, 0); });
+            const sorted = [...words].sort((a, b) => totals[b] - totals[a]);
+
+            const topGrid = document.getElementById('top-words-grid');
+            if (!sorted.length) {
+                topGrid.innerHTML = `<p style="color:var(--text-muted); font-size:13px; grid-column:1/-1;">Tidak ada komentar pada bulan ini.</p>`;
+            } else {
+                topGrid.innerHTML = sorted.map((w, i) => `
+                <div class="word-chip" style="border-top:3px solid ${PALETTE[i % PALETTE.length]};">
                     <div class="word-chip-word">${w}</div>
                     <div class="word-chip-count">${totals[w]} kemunculan</div>
                 </div>`).join('');
-        }
+            }
 
-        // X-axis = day-of-month (1, 2, 3, ...)
-        const labels = days.map(d => `Tgl ${d}`);
+            // X-axis = day-of-month (1, 2, 3, ...)
+            const labels = days.map(d => `Tgl ${d}`);
 
-        // Line Chart
-        const lineCtx = document.getElementById('trend-chart').getContext('2d');
-        if (trendChart) trendChart.destroy();
-        trendChart = new Chart(lineCtx, {
-            type: 'line',
-            data: {
-                labels,
-                datasets: words.map((w,i) => ({
-                    label: w,
-                    data: series[w]||[],
-                    borderColor: PALETTE[i%PALETTE.length],
-                    backgroundColor: PALETTE[i%PALETTE.length] + '18',
-                    borderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    tension: 0.35,
-                    fill: false
-                }))
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { mode:'index', intersect:false },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#0f2238',
-                        titleColor: '#e8b96a',
-                        bodyColor: 'rgba(255,255,255,.8)',
-                        padding: 12,
-                        cornerRadius: 8
-                    }
+            // Line Chart
+            const lineCtx = document.getElementById('trend-chart').getContext('2d');
+            if (trendChart) trendChart.destroy();
+            trendChart = new Chart(lineCtx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: words.map((w, i) => ({
+                        label: w,
+                        data: series[w] || [],
+                        borderColor: PALETTE[i % PALETTE.length],
+                        backgroundColor: PALETTE[i % PALETTE.length] + '18',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.35,
+                        fill: false
+                    }))
                 },
-                scales: {
-                    x: {
-                        grid: { color: 'rgba(0,0,0,.04)' },
-                        ticks: { font:{ size:11 }, color:'#6b7c8d' }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f2238',
+                            titleColor: '#e8b96a',
+                            bodyColor: 'rgba(255,255,255,.8)',
+                            padding: 12,
+                            cornerRadius: 8
+                        }
                     },
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(0,0,0,.04)' },
-                        ticks: { font:{ size:11 }, color:'#6b7c8d', precision:0 }
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(0,0,0,.04)' },
+                            ticks: { font: { size: 11 }, color: '#6b7c8d' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,.04)' },
+                            ticks: { font: { size: 11 }, color: '#6b7c8d', precision: 0 }
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        // Custom legend
-        document.getElementById('chart-legend').innerHTML = words.map((w,i)=>`
+            // Custom legend
+            document.getElementById('chart-legend').innerHTML = words.map((w, i) => `
             <div class="legend-item">
-                <div class="legend-dot" style="background:${PALETTE[i%PALETTE.length]};"></div>
+                <div class="legend-dot" style="background:${PALETTE[i % PALETTE.length]};"></div>
                 <span>${w}</span>
             </div>`).join('');
 
-        // Bar chart (total per word)
-        const barCtx = document.getElementById('bar-chart').getContext('2d');
-        if (barChart) barChart.destroy();
-        barChart = new Chart(barCtx, {
-            type: 'bar',
-            data: {
-                labels: sorted,
-                datasets: [{
-                    label: 'Total Kemunculan',
-                    data: sorted.map(w=>totals[w]),
-                    backgroundColor: sorted.map((_,i)=>PALETTE[i%PALETTE.length]+'cc'),
-                    borderColor:    sorted.map((_,i)=>PALETTE[i%PALETTE.length]),
-                    borderWidth: 1.5,
-                    borderRadius: 5
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display:false },
-                    tooltip: {
-                        backgroundColor: '#0f2238',
-                        titleColor: '#e8b96a',
-                        bodyColor: 'rgba(255,255,255,.8)',
-                        padding: 10, cornerRadius: 8
-                    }
+            // Bar chart (total per word)
+            const barCtx = document.getElementById('bar-chart').getContext('2d');
+            if (barChart) barChart.destroy();
+            barChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: sorted,
+                    datasets: [{
+                        label: 'Total Kemunculan',
+                        data: sorted.map(w => totals[w]),
+                        backgroundColor: sorted.map((_, i) => PALETTE[i % PALETTE.length] + 'cc'),
+                        borderColor: sorted.map((_, i) => PALETTE[i % PALETTE.length]),
+                        borderWidth: 1.5,
+                        borderRadius: 5
+                    }]
                 },
-                scales: {
-                    x: { grid:{ display:false }, ticks:{ font:{size:12}, color:'#1e2d3d', fontWeight:'700' } },
-                    y: { beginAtZero:true, grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{size:11}, color:'#6b7c8d', precision:0 } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f2238',
+                            titleColor: '#e8b96a',
+                            bodyColor: 'rgba(255,255,255,.8)',
+                            padding: 10, cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 12 }, color: '#1e2d3d', fontWeight: '700' } },
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { size: 11 }, color: '#6b7c8d', precision: 0 } }
+                    }
                 }
-            }
-        });
+            });
 
-    } catch(e) {
-        console.error(e);
-        document.getElementById('no-data').style.display = 'block';
-    }
-}
-
-async function refreshComments() {
-    const btn = document.getElementById('refresh-btn');
-    const status = document.getElementById('refresh-status');
-    btn.disabled = true;
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="white"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Mengambil komentar baru...';
-    status.textContent = '';
-
-    try {
-        const res = await fetch('/youtube/refresh_comments', { method: 'POST' });
-        const data = await res.json();
-
-        if (!res.ok || data.error) {
-            alert(data.error || 'Gagal refresh komentar');
-        } else if (data.new_comments_count > 0) {
-            status.textContent = `+${data.new_comments_count} komentar baru, diambil ${new Date(data.refreshed_at).toLocaleTimeString('id-ID')}`;
-            await loadTrend();  // reload with the latest month so new data shows up
-        } else {
-            status.textContent = `Sudah paling baru — dicek ${new Date(data.refreshed_at).toLocaleTimeString('id-ID')}`;
+        } catch (e) {
+            console.error(e);
+            document.getElementById('no-data').style.display = 'block';
         }
-    } catch (e) {
-        alert('Terjadi kesalahan: ' + e);
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="white"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08a5.99 5.99 0 01-5.65 4c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> Refresh Komentar';
     }
-}
 
-loadTrend();
+    async function refreshComments() {
+        const btn = document.getElementById('refresh-btn');
+        const status = document.getElementById('refresh-status');
+        btn.disabled = true;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="white"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Mengambil komentar baru...';
+        status.textContent = '';
+
+        try {
+            const res = await fetch('/youtube/refresh_comments', { method: 'POST' });
+            const data = await res.json();
+
+            if (!res.ok || data.error) {
+                alert(data.error || 'Gagal refresh komentar');
+            } else if (data.new_comments_count > 0) {
+                status.textContent = `+${data.new_comments_count} komentar baru, diambil ${new Date(data.refreshed_at).toLocaleTimeString('id-ID')}`;
+                await loadTrend();  // reload with the latest month so new data shows up
+            } else {
+                status.textContent = `Sudah paling baru — dicek ${new Date(data.refreshed_at).toLocaleTimeString('id-ID')}`;
+            }
+        } catch (e) {
+            alert('Terjadi kesalahan: ' + e);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="white"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08a5.99 5.99 0 01-5.65 4c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> Refresh Komentar';
+        }
+    }
+
+    loadTrend();
 </script>
 {% endblock %}

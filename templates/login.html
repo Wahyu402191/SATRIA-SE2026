@@ -134,6 +134,48 @@
             transition: transform .25s ease, background .25s ease;
         }
         .back-link:hover .back-link-arrow { transform: translateX(-2px); background: rgba(200,151,58,0.3); }
+
+        @media (max-width: 768px) {
+            .back-link { top: 16px; left: 16px; font-size: 11.5px; padding: 6px 14px 6px 10px; }
+            .back-link-arrow { width: 20px; height: 20px; font-size: 11.5px; }
+            
+            /* Ubah layout agar tidak maksa ke tengah dan bertabrakan dengan tombol back */
+            .page-wrap { display: block; padding: 80px 16px 40px; }
+            .auth-card { margin: 0 auto; padding: 36px 24px; max-width: 100%; }
+            .auth-brand-text .name { font-size: 18px; }
+        }
+
+        /* Responsif untuk Mobile */
+        @media (max-width: 600px) {
+            .page-wrap {
+                padding-top: 90px;
+                align-items: flex-start;
+            }
+            .back-link {
+                top: 20px; left: 20px;
+            }
+            .auth-card {
+                padding: 32px 24px;
+            }
+            .auth-brand-text .name {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .back-link {
+                top: 16px; left: 16px;
+                font-size: 11px; padding: 7px 14px 7px 10px;
+            }
+            .page-wrap {
+                padding-top: 76px;
+                padding-bottom: 24px;
+                align-items: flex-start; /* Form tidak di tengah persis, melainkan agak ke atas supaya tidak tertimpa */
+            }
+            .auth-card {
+                padding: 32px 24px;
+            }
+        }
     </style>
 </head>
 <body>
