@@ -1793,6 +1793,11 @@ def news_api_analyze():
             'confidence': results.get('confidence', {}),
             'controversial_articles': results.get('controversial_articles', []),
             'extreme_articles': results.get('extreme_articles', {}),
+            'overall_summary': results.get('overall_summary', {}),
+            'source_ranking': results.get('source_ranking', {}),
+            'pairwise_agreement': results.get('pairwise_agreement', []),
+            'uncertain_articles': results.get('uncertain_articles', []),
+            'length_vs_sentiment': results.get('length_vs_sentiment', []),
         })
     except Exception as e:
         import traceback

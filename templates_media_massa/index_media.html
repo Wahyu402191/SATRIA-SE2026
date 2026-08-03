@@ -121,7 +121,7 @@
 </div>
 
 <!-- Month Selection -->
-<div class="card reveal">
+<div class="card reveal month-selection-card">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom: 24px;">
         <h2 style="display: flex; align-items: center; gap: 10px; margin-bottom: 0;">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--primary)">
@@ -260,18 +260,34 @@
        style, jadi kegedean & numpuk 1 kolom panjang di HP. !important
        dipakai karena inline style menang atas class biasa. */
     @media (max-width: 640px) {
-        .media-hero-card { padding: 18px !important; }
-        .media-hero-row { gap: 14px !important; flex-wrap: wrap; }
-        .media-hero-title { font-size: 20px !important; margin-bottom: 8px !important; }
-        .media-hero-desc { font-size: 12.5px !important; }
-        .hero-icon-badge { width: 64px !important; height: 64px !important; border-radius: 14px !important; }
-        .hero-icon-badge svg { width: 32px !important; height: 32px !important; }
+        .media-hero-card { padding: 16px !important; margin-bottom: 12px !important; }
+        .media-hero-row { gap: 12px !important; flex-wrap: nowrap !important; align-items: center !important; }
+        .media-hero-eyebrow { font-size: 9px !important; margin-bottom: 4px !important; }
+        .media-hero-title { font-size: 15px !important; margin-bottom: 4px !important; }
+        .media-hero-desc { display: none !important; }
+        .hero-icon-badge { width: 44px !important; height: 44px !important; border-radius: 12px !important; }
+        .hero-icon-badge svg { width: 22px !important; height: 22px !important; }
 
-        .dashboard-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
-        .dstat-icon { width: 38px !important; height: 38px !important; margin-bottom: 8px !important; }
-        .dstat-icon svg { width: 18px !important; height: 18px !important; }
-        .dstat-value { font-size: 22px !important; }
-        .dstat-label { font-size: 10.5px !important; }
+        .dashboard-stats-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; margin-bottom: 12px !important; }
+        .dashboard-stats-grid .card { padding: 8px 4px !important; }
+        .dstat-icon { width: 26px !important; height: 26px !important; margin-bottom: 5px !important; border-radius: 8px !important; }
+        .dstat-icon svg { width: 13px !important; height: 13px !important; }
+        .dstat-value { font-size: 15px !important; }
+        .dstat-label { font-size: 7.5px !important; line-height: 1.2; }
+
+        /* Card Pilih Bulan Data Berita Mobile */
+        .month-selection-card { padding: 14px !important; margin-bottom: 12px !important; }
+        .month-selection-card h2 { font-size: 15px !important; }
+        .month-selection-card h2 svg { width: 18px !important; height: 18px !important; }
+        .month-selection-card .card-sub { font-size: 11px !important; line-height: 1.4 !important; margin-bottom: 12px !important; }
+        #refresh-month-btn { font-size: 10.5px !important; padding: 6px 10px !important; }
+        #refresh-month-btn svg { width: 13px !important; height: 13px !important; }
+
+        .month-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 8px !important; margin-top: 14px !important; }
+        .month-btn { padding: 10px 4px !important; }
+        .month-btn div:nth-child(1) { font-size: 11px !important; margin-bottom: 2px !important; }
+        .month-btn div:nth-child(2) { font-size: 16px !important; }
+        .month-btn div:nth-child(3) { font-size: 9.5px !important; }
     }
 </style>
 

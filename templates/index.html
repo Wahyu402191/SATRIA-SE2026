@@ -507,12 +507,38 @@
        sempit — bikin halamannya panjang banget ke bawah. Dipaksa 2 kolom
        (2x2) supaya tata letaknya lebih mirip desktop, gak lurus ke bawah. */
     @media (max-width: 640px) {
-        .dashboard-stats { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .stat-card { padding: 14px 12px; gap: 10px; }
-        .stat-icon-wrap { width: 42px; height: 42px; }
-        .stat-icon-wrap svg { width: 20px; height: 20px; }
-        .stat-label { font-size: 10px; }
-        .stat-value { font-size: 20px; }
+        /* Hero Card Ramping Mobile */
+        .hero { padding: 16px !important; margin-bottom: 12px !important; border-radius: var(--radius) !important; min-height: auto !important; }
+        .hero-illustration { display: none !important; }
+        .hero-icon { width: 44px !important; height: 44px !important; border-radius: 12px !important; }
+        .hero-icon svg { width: 22px !important; height: 22px !important; }
+        .hero-text h1 { font-size: 15px !important; margin-bottom: 4px !important; }
+        .hero-text p { display: none !important; }
+        .hero-badge { display: none !important; }
+
+        /* 4 Kartu Statistik 1 Baris (4 Kolom Ramping) Mobile */
+        .dashboard-stats { grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; margin-bottom: 12px !important; }
+        .stat-card { padding: 8px 4px !important; flex-direction: column !important; text-align: center !important; gap: 4px !important; border-radius: 10px !important; }
+        .stat-icon-wrap { width: 26px !important; height: 26px !important; border-radius: 8px !important; margin: 0 auto 4px !important; }
+        .stat-icon-wrap svg { width: 13px !important; height: 13px !important; }
+        .stat-value { font-size: 15px !important; }
+        .stat-label { font-size: 7.5px !important; line-height: 1.2 !important; }
+
+        /* Step Wizard & Form Input YouTube Mobile */
+        .step-list { margin-bottom: 14px !important; }
+        .step-item { flex: 1 !important; min-width: 0 !important; padding: 0 3px !important; }
+        .step-item::before { top: 14px !important; height: 2px !important; }
+        .step-num { width: 28px !important; height: 28px !important; font-size: 12px !important; margin-bottom: 4px !important; border-width: 2px !important; }
+        .step-label { font-size: 9.5px !important; }
+
+        .scrape-form-card { padding: 14px !important; margin-bottom: 12px !important; }
+        .scrape-form-card h2, .scrape-form-card .card-title { font-size: 15px !important; margin-bottom: 4px !important; }
+        .scrape-form-card .card-sub { font-size: 11px !important; line-height: 1.4 !important; margin-bottom: 14px !important; }
+        .scrape-form-card label { font-size: 11px !important; margin-bottom: 4px !important; }
+        .scrape-form-card input, .scrape-form-card select { font-size: 12px !important; padding: 8px 12px 8px 36px !important; height: 38px !important; }
+        .scrape-form-card .url-input-wrap .url-icon { width: 14px !important; height: 14px !important; left: 12px !important; }
+        .scrape-form-card small, .scrape-form-card .form-text { font-size: 9.5px !important; margin-top: 3px !important; }
+        .scrape-form-card .btn { font-size: 12px !important; padding: 9px 16px !important; }
     }
 </style>
 {% endblock %}

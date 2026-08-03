@@ -13,6 +13,7 @@ on demand from the Analisis Sentimen page.
 import re
 import time
 from collections import Counter
+from itertools import combinations
 import numpy as np
 
 from sentiment_analyzer import SentimentAnalyzer
@@ -35,6 +36,10 @@ _SENTIMENT_KEY = {
 # without a full NLP sentence tokenizer.
 _SENTENCE_SPLIT_RE = re.compile(r'(?<=[.!?])\s+(?=[A-Z0-9"“])')
 _MIN_SENTENCE_CHARS = 15
+
+# Ambang confidence rata-rata (setelah di-clamp ke 0-1) di bawah mana artikel
+# yang labelnya kompak disepakati semua metode masih dianggap "ragu-ragu".
+_UNCERTAIN_CONFIDENCE_THRESHOLD = 0.5
 
 
 class SeNewsAnalyzer:
@@ -77,6 +82,7 @@ class SeNewsAnalyzer:
                 'source': article.get('source', 'Tidak diketahui'),
                 'url': article.get('url', ''),
                 'published_date': str(article.get('published_date', '')),
+                '_word_count': len((article.get('content') or '').split()),
             }
             method_results = {}
             for method in methods:
@@ -101,8 +107,14 @@ class SeNewsAnalyzer:
         results['keywords'] = self._extract_top_keywords(results['articles'], preprocessed, methods)
         results['source_breakdown'] = self._calculate_source_breakdown(results['articles'], methods)
         results['confidence'] = self._calculate_avg_confidence(results['articles'], methods)
-        results['controversial_articles'], results['extreme_articles'] = \
+        results['controversial_articles'], results['extreme_articles'], results['uncertain_articles'] = \
             self._analyze_disagreement(results['articles'], methods)
+
+        results['overall_summary'] = self._calculate_overall_summary(results['articles'], methods)
+        results['source_ranking'] = self._calculate_source_ranking(results['articles'], methods)
+        results['length_vs_sentiment'] = self._calculate_length_vs_sentiment(results['articles'], methods)
+        if len(methods) > 1:
+            results['pairwise_agreement'] = self._calculate_pairwise_agreement(results['articles'], methods)
 
         return results
 
@@ -305,15 +317,20 @@ class SeNewsAnalyzer:
         return result
 
     def _analyze_disagreement(self, articles, methods, top_n=8):
-        """Dua sudut pandang yang gampang dipahami tanpa perlu ngerti detail
+        """Tiga sudut pandang yang gampang dipahami tanpa perlu ngerti detail
         4 metode ML-nya:
         - Kontroversial: artikel yang labelnya paling banyak beda-beda antar
           metode (suara mayoritas paling "tipis") — kandidat bagus buat
           ditinjau manual.
         - Ekstrem: artikel Positif/Negatif dengan confidence rata-rata
           tertinggi di antara metode yang sepakat dengan suara mayoritas —
-          "yang paling meyakinkan" dari masing-masing sisi."""
+          "yang paling meyakinkan" dari masing-masing sisi.
+        - Ragu-ragu: kebalikan dari Kontroversial — SEMUA metode sepakat
+          pada label yang sama, tapi confidence rata-ratanya rendah di
+          semua metode ("kompak tapi tidak yakin"), butuh minimal 2 metode
+          biar "kompak" ada artinya."""
         controversial = []
+        uncertain = []
         extreme_positive = None
         extreme_negative = None
 
@@ -354,5 +371,138 @@ class SeNewsAnalyzer:
                     if extreme_negative is None or candidate['confidence'] > extreme_negative['confidence']:
                         extreme_negative = candidate
 
+            if majority_count == total and total >= 2:
+                all_scores = [min(abs(p[2]), 1.0) for p in preds]
+                avg_confidence = sum(all_scores) / len(all_scores) if all_scores else 0.0
+                if avg_confidence < _UNCERTAIN_CONFIDENCE_THRESHOLD:
+                    uncertain.append({
+                        **base,
+                        'label': majority_label,
+                        'confidence': round(avg_confidence * 100, 1),
+                    })
+
         controversial.sort(key=lambda r: r['controversy'], reverse=True)
-        return controversial[:top_n], {'positive': extreme_positive, 'negative': extreme_negative}
+        uncertain.sort(key=lambda r: r['confidence'])
+        return controversial[:top_n], {'positive': extreme_positive, 'negative': extreme_negative}, uncertain[:top_n]
+
+    def _calculate_overall_summary(self, articles, methods):
+        """Suara mayoritas gabungan semua metode untuk seluruh periode —
+        satu angka ringkas 'secara umum berita ini positif/negatif/netral',
+        pelengkap ringkasan per-metode yang sudah ada di summary chart."""
+        counts = {'positive': 0, 'negative': 0, 'neutral': 0}
+        for article in articles:
+            label = self._majority_vote(article, methods)
+            counts[_SENTIMENT_KEY.get(label.lower(), 'neutral')] += 1
+
+        total = counts['positive'] + counts['negative'] + counts['neutral']
+        dominant_key = max(counts, key=counts.get) if total else 'neutral'
+
+        return {
+            'positive': counts['positive'],
+            'negative': counts['negative'],
+            'neutral': counts['neutral'],
+            'total': total,
+            'dominant': {'positive': 'Positif', 'negative': 'Negatif', 'neutral': 'Netral'}[dominant_key],
+        }
+
+    def _calculate_source_ranking(self, articles, methods, top_n=5, min_total=3):
+        """Top-N sumber media paling positif & paling negatif (persentase
+        majority-vote), pelengkap bubble chart yang bagus untuk overview
+        tapi kurang enak dibaca untuk 'siapa juara'. Sumber dengan berita
+        terlalu sedikit (<min_total) diabaikan supaya tidak didominasi 1
+        artikel yang kebetulan positif/negatif; kalau semua sumber di
+        bawah ambang itu (dataset kecil), turunkan ambangnya supaya tetap
+        ada hasil."""
+        by_source = {}
+        for article in articles:
+            source = article.get('source') or 'Tidak diketahui'
+            label = self._majority_vote(article, methods)
+            bucket = by_source.setdefault(source, {'positive': 0, 'negative': 0, 'neutral': 0})
+            bucket[_SENTIMENT_KEY.get(label.lower(), 'neutral')] += 1
+
+        rows = []
+        for source, counts in by_source.items():
+            total = counts['positive'] + counts['negative'] + counts['neutral']
+            if total == 0:
+                continue
+            rows.append({
+                'source': source,
+                'total': total,
+                'positive_pct': round(counts['positive'] / total * 100, 1),
+                'negative_pct': round(counts['negative'] / total * 100, 1),
+                'neutral_pct': round(counts['neutral'] / total * 100, 1),
+            })
+
+        qualified = [r for r in rows if r['total'] >= min_total] or rows
+        most_positive = sorted(qualified, key=lambda r: (r['positive_pct'], r['total']), reverse=True)[:top_n]
+        most_negative = sorted(qualified, key=lambda r: (r['negative_pct'], r['total']), reverse=True)[:top_n]
+        return {'most_positive': most_positive, 'most_negative': most_negative}
+
+    def _calculate_pairwise_agreement(self, articles, methods):
+        """Persentase kesepakatan antar SETIAP PASANGAN metode (beda dari
+        Agreement Rate yang membandingkan tiap metode dengan suara
+        mayoritas gabungan) — menunjukkan pasangan metode mana yang
+        caranya menilai paling mirip/berbeda satu sama lain."""
+        pairs = []
+        for m1, m2 in combinations(methods, 2):
+            key1, key2 = f'{m1}_sentiment', f'{m2}_sentiment'
+            both = [a for a in articles if key1 in a and key2 in a]
+            if not both:
+                continue
+            agree = sum(1 for a in both if a[key1] == a[key2])
+            pairs.append({
+                'method_a': _METHOD_NAMES.get(m1, m1),
+                'method_b': _METHOD_NAMES.get(m2, m2),
+                'agreement': round(agree / len(both) * 100, 1),
+            })
+        pairs.sort(key=lambda p: p['agreement'], reverse=True)
+        return pairs
+
+    def _calculate_length_vs_sentiment(self, articles, methods):
+        """Bagi artikel jadi 3 kelompok panjang teks berdasarkan tercile
+        (bukan ambang kata tetap, supaya proporsional untuk periode data
+        berapa pun) lalu lihat apakah artikel yang lebih panjang cenderung
+        lebih netral/kurang ekstrem dibanding yang pendek."""
+        lengths = sorted(a.get('_word_count', 0) for a in articles)
+        n = len(lengths)
+        if n == 0:
+            return []
+
+        cut1 = lengths[n // 3]
+        cut2 = lengths[(2 * n) // 3]
+
+        def bucket_for(word_count):
+            if word_count <= cut1:
+                return 'Pendek'
+            elif word_count <= cut2:
+                return 'Sedang'
+            return 'Panjang'
+
+        buckets = {name: {'positive': 0, 'negative': 0, 'neutral': 0, 'words': [], 'scores': []}
+                   for name in ('Pendek', 'Sedang', 'Panjang')}
+
+        for article in articles:
+            b = buckets[bucket_for(article.get('_word_count', 0))]
+            label = self._majority_vote(article, methods)
+            b[_SENTIMENT_KEY.get(label.lower(), 'neutral')] += 1
+            b['words'].append(article.get('_word_count', 0))
+            scores = [min(abs(article[f'{m}_score']), 1.0) for m in methods if f'{m}_score' in article]
+            if scores:
+                b['scores'].append(sum(scores) / len(scores))
+
+        result = []
+        for name in ('Pendek', 'Sedang', 'Panjang'):
+            b = buckets[name]
+            total = b['positive'] + b['negative'] + b['neutral']
+            if total == 0:
+                continue
+            result.append({
+                'label': name,
+                'total': total,
+                'avg_words': round(sum(b['words']) / len(b['words'])) if b['words'] else 0,
+                'positive_pct': round(b['positive'] / total * 100, 1),
+                'negative_pct': round(b['negative'] / total * 100, 1),
+                'neutral_pct': round(b['neutral'] / total * 100, 1),
+                'avg_confidence': round(sum(b['scores']) / len(b['scores']) * 100, 1) if b['scores'] else 0.0,
+            })
+        return result

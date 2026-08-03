@@ -188,6 +188,7 @@
         .mnav-item-cta .mnav-icon svg { fill: #fff; }
 
         /* Tab chevron manual buka/tutup grid navigasi (di bawah navbar) */
+        .mnav-hint { display: none; }
         .mnav-toggle { display: none; }
         .mnav-toggle svg { width: 16px; height: 16px; fill: var(--primary); transition: transform .25s cubic-bezier(.22,1,.36,1); }
         .mnav-toggle.mnav-toggle-open svg { transform: rotate(180deg); }
@@ -243,9 +244,13 @@
             display: flex; align-items: center; justify-content: center;
             background: linear-gradient(135deg, var(--primary), var(--primary-light));
             box-shadow: 0 6px 20px rgba(0,0,0,.3);
+            position: relative;
         }
-        .sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .sidebar-avatar-initial { font-size: 32px; font-weight: 800; color: #fff; }
+        .sidebar-avatar img {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+        }
+        .sidebar-avatar-initial { font-size: 32px; font-weight: 800; color: #fff; position: relative; z-index: 0; }
         .sidebar-name { color: #fff; font-size: 17px; font-weight: 700; }
         .sidebar-email { font-size: 11.5px; color: rgba(255,255,255,.55); margin-top: 3px; word-break: break-all; }
         .sidebar-divider { height: 1px; background: rgba(255,255,255,.12); margin: 18px 0; }
@@ -522,6 +527,22 @@
                 position: relative; z-index: 1;
             }
             .mnav-toggle:active svg { fill: var(--accent); }
+            /* Label "PILIHAN LAINNYA" di atas chevron — mobile only */
+            .mnav-hint {
+                display: flex; align-items: center; gap: 8px;
+                padding: 4px 14px 0;
+                background: var(--bg-card);
+            }
+            .mnav-hint-line {
+                flex: 1; height: 1px;
+                background: var(--border);
+            }
+            .mnav-hint-text {
+                font-size: 9px; font-weight: 700;
+                color: var(--text-muted);
+                letter-spacing: 1.2px;
+                white-space: nowrap;
+            }
             .container { padding: 12px; }
             .card { padding: 16px; margin-bottom: 12px; }
             /* Di layar sentuh gak ada hover, jadi versi tap-nya: kartu "hidup"
@@ -711,7 +732,7 @@
                 </div>
                 <div>
                     <div class="brand-text-main">SATRIA SE2026</div>
-                    <div class="brand-text-sub">Sistem Analisis Tren &amp; Riset Informasi Augmentasi</div>
+                    <div class="brand-text-sub">Sistem Automatis Terpadu Riset Informasi dan Analisis</div>
                 </div>
             </a>
 
@@ -779,6 +800,12 @@
         <!-- Tab chevron manual — di bawah baris "SATRIA SE2026". Grid ikon
              tetap auto-hide/show pas scroll, tapi ini biar bisa dibuka-tutup
              manual kapan saja tanpa perlu scroll balik ke atas dulu. -->
+        <!-- Label "PILIHAN LAINNYA" + Chevron tab manual -->
+        <div class="mnav-hint">
+            <span class="mnav-hint-line"></span>
+            <span class="mnav-hint-text">PILIHAN LAINNYA</span>
+            <span class="mnav-hint-line"></span>
+        </div>
         <button class="mnav-toggle mnav-toggle-open" id="mnavToggle" onclick="toggleMobileNavGrid()" aria-label="Buka/tutup menu navigasi">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
         </button>
@@ -827,7 +854,7 @@
         <div class="footer-inner">
             <div class="footer-brand">
                 <strong>SATRIA SE2026</strong>
-                <span>Sistem Analisis Tren &amp; Riset Informasi Augmentasi</span>
+                <span>Sistem Automatis Terpadu Riset Informasi dan Analisis</span>
             </div>
             <div class="footer-meta">
                 <div class="footer-meta-item">BPS <span>Kabupaten Bangkalan</span></div>

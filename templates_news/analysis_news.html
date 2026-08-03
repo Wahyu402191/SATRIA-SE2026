@@ -107,6 +107,8 @@
 let summaryChart = null;
 let sourceBubbleChart = null;
 let methodRadarChart = null;
+let overallSummaryChart = null;
+let lengthSentimentChart = null;
 
 const METHOD_ID_TO_NAME = { naive_bayes: 'Naive Bayes', svm: 'SVM', lstm: 'LSTM', indobert: 'IndoBERT' };
 const METHOD_NAME_TO_ID = Object.fromEntries(Object.entries(METHOD_ID_TO_NAME).map(([k, v]) => [v, k]));
@@ -199,6 +201,11 @@ function displayResults(data) {
     const hasAccuracy = Object.keys(data.accuracy || {}).length > 0;
     const sources = data.source_breakdown || [];
     const kw = data.keywords || { positive: [], negative: [] };
+    const overall = data.overall_summary || {};
+    const sourceRanking = data.source_ranking || {};
+    const pairwise = data.pairwise_agreement || [];
+    const uncertain = data.uncertain_articles || [];
+    const lengthStats = data.length_vs_sentiment || [];
 
     const summaryHtml = `
         <div class="card">
@@ -271,6 +278,55 @@ function displayResults(data) {
             </div>
         </div>` : '';
 
+    const overallHtml = overall.total ? `
+        <div class="card">
+            <h2>Ringkasan Sentimen Keseluruhan</h2>
+            <p class="card-sub">Suara mayoritas gabungan seluruh metode untuk ${overall.total} berita pada periode ini.</p>
+            <div class="chart-wrap" style="height:220px; flex:1;"><canvas id="overall-summary-chart"></canvas></div>
+        </div>` : '';
+
+    const lengthHtml = lengthStats.length ? `
+        <div class="card">
+            <h2>Panjang Artikel vs Sentimen</h2>
+            <p class="card-sub">Apakah artikel yang lebih panjang cenderung lebih netral/kurang ekstrem dibanding yang pendek.</p>
+            <div class="chart-wrap" style="height:220px; flex:1;"><canvas id="length-sentiment-chart"></canvas></div>
+        </div>` : '';
+
+    const sourceRankingHtml = ((sourceRanking.most_positive || []).length || (sourceRanking.most_negative || []).length) ? `
+        <div class="card">
+            <h2>Ranking Sumber Media</h2>
+            <p class="card-sub">Sumber dengan berita &ge; 3 pada periode ini, diurutkan dari persentase sentimen tertinggi.</p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                    <div style="font-size:11px; font-weight:700; color:#1e8449; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px;">Paling Positif</div>
+                    ${renderSourceRankList(sourceRanking.most_positive, 'positive_pct', '#27AE60')}
+                </div>
+                <div>
+                    <div style="font-size:11px; font-weight:700; color:#c0392b; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px;">Paling Negatif</div>
+                    ${renderSourceRankList(sourceRanking.most_negative, 'negative_pct', '#E74C3C')}
+                </div>
+            </div>
+        </div>` : '';
+
+    const pairwiseHtml = pairwise.length ? `
+        <div class="card">
+            <h2>Kesepakatan Antar Pasangan Metode</h2>
+            <p class="card-sub">Persentase kedua metode memberi label sama pada artikel yang sama — beda dari Agreement Rate yang membandingkan tiap metode dengan suara mayoritas gabungan.</p>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                ${pairwise.map(renderPairwiseRow).join('')}
+            </div>
+        </div>` : '';
+
+    const uncertainHtml = hasAccuracy ? `
+        <div class="card">
+            <h2>Artikel Paling Ragu-ragu</h2>
+            <p class="card-sub">Semua metode sepakat pada label yang sama, tapi confidence-nya rendah di semua metode — beda dari Artikel Kontroversial (labelnya beda-beda antar metode).</p>
+            <div class="controversial-list">
+                ${uncertain.length ? uncertain.map(renderUncertainItem).join('') :
+                    '<span class="keyword-empty">Tidak ada artikel yang confidence-nya rendah secara kompak untuk periode ini.</span>'}
+            </div>
+        </div>` : '';
+
     // Baris divariasikan lebarnya (bukan satu kolom lurus ke bawah): baris 1
     // rasio 5/3/4, baris 2 rasio 5/3.5/3.5, baris 3 rasio 7/5 — tiap baris beda.
     section.innerHTML =
@@ -287,6 +343,17 @@ function displayResults(data) {
         buildRow([
             { html: controversialHtml, fr: 7 },
             { html: extremeHtml, fr: 5 },
+        ]) +
+        buildRow([
+            { html: overallHtml, fr: 4 },
+            { html: lengthHtml, fr: 8 },
+        ]) +
+        buildRow([
+            { html: sourceRankingHtml, fr: 6 },
+            { html: pairwiseHtml, fr: 6 },
+        ]) +
+        buildRow([
+            { html: uncertainHtml, fr: 12 },
         ]);
 
     const methods = Object.keys(data.summary);
@@ -312,6 +379,93 @@ function displayResults(data) {
 
     if (hasAccuracy) renderMethodRadar(data, methods);
     if (sources.length) renderSourceBubble(sources);
+    if (overall.total) renderOverallSummaryChart(overall);
+    if (lengthStats.length) renderLengthSentimentChart(lengthStats);
+}
+
+function renderSourceRankList(list, pctKey, color) {
+    if (!list || !list.length) return '<span class="keyword-empty">Belum ada sumber dengan data yang cukup.</span>';
+    return list.map(s => `
+        <div style="margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; gap:8px; font-size:12px; margin-bottom:3px;">
+                <span style="font-weight:600; color:var(--text);">${escapeHtml(s.source)}</span>
+                <span style="font-weight:700; color:${color}; white-space:nowrap;">${s[pctKey]}%</span>
+            </div>
+            <div style="height:6px; border-radius:99px; background:var(--bg); overflow:hidden;">
+                <div style="height:100%; width:${s[pctKey]}%; background:${color};"></div>
+            </div>
+            <div style="font-size:10.5px; color:var(--text-muted); margin-top:2px;">${s.total} berita</div>
+        </div>`).join('');
+}
+
+function renderPairwiseRow(p) {
+    return `
+        <div>
+            <div style="display:flex; justify-content:space-between; gap:8px; font-size:12.5px; margin-bottom:4px;">
+                <span style="font-weight:600; color:var(--text);">${p.method_a} &harr; ${p.method_b}</span>
+                <span style="font-weight:700; color:var(--primary); white-space:nowrap;">${p.agreement}%</span>
+            </div>
+            <div style="height:7px; border-radius:99px; background:var(--bg); overflow:hidden;">
+                <div style="height:100%; width:${p.agreement}%; background:var(--primary);"></div>
+            </div>
+        </div>`;
+}
+
+function renderUncertainItem(a) {
+    return `
+        <a href="${a.url || '#'}" target="_blank" rel="noopener" class="controversial-item">
+            <div class="controversial-title">${escapeHtml(a.title) || '(Tanpa judul)'}</div>
+            <div class="controversial-meta">${escapeHtml(a.source)} &middot; ${escapeHtml(a.published_date)}</div>
+            <div class="controversial-badge" style="color:var(--text-muted);">${a.label} &middot; confidence rata-rata ${a.confidence}%</div>
+        </a>`;
+}
+
+function renderOverallSummaryChart(overall) {
+    const ctx = document.getElementById('overall-summary-chart').getContext('2d');
+    if (overallSummaryChart) overallSummaryChart.destroy();
+    overallSummaryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Positif', 'Negatif', 'Netral'],
+            datasets: [{
+                data: [overall.positive, overall.negative, overall.neutral],
+                backgroundColor: [SENTIMENT_COLORS.Positif, SENTIMENT_COLORS.Negatif, SENTIMENT_COLORS.Netral],
+                borderWidth: 2,
+                borderColor: '#fff',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+        }
+    });
+}
+
+function renderLengthSentimentChart(lengthStats) {
+    const ctx = document.getElementById('length-sentiment-chart').getContext('2d');
+    if (lengthSentimentChart) lengthSentimentChart.destroy();
+    const labels = lengthStats.map(b => `${b.label} (~${b.avg_words} kata)`);
+    lengthSentimentChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                { label: 'Positif', data: lengthStats.map(b => b.positive_pct), backgroundColor: '#27AE60', stack: 's' },
+                { label: 'Negatif', data: lengthStats.map(b => b.negative_pct), backgroundColor: '#E74C3C', stack: 's' },
+                { label: 'Netral', data: lengthStats.map(b => b.neutral_pct), backgroundColor: '#95A5A6', stack: 's' },
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                x: { stacked: true },
+                y: { stacked: true, beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } },
+            }
+        }
+    });
 }
 
 function renderKeywordCloud(words, color) {

@@ -52,12 +52,38 @@
     @media (max-width: 640px) {
         .method-explain-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .method-explain-card { padding: 10px 11px; }
+
+        /* Filter & Cari Berita Card Mobile Ramping */
+        .filter-card { padding: 14px !important; margin-bottom: 12px !important; }
+        .filter-card h2 { font-size: 15px !important; margin-bottom: 4px !important; }
+        .filter-card .card-sub { font-size: 11px !important; line-height: 1.4 !important; margin-bottom: 12px !important; }
+        .filter-bar { gap: 8px !important; margin-bottom: 4px !important; }
+        .filter-group { min-width: 0 !important; width: 100% !important; gap: 3px !important; }
+        .filter-group label { font-size: 11px !important; }
+        .filter-group input, .filter-group select { font-size: 12px !important; padding: 6px 10px !important; height: 36px !important; }
+        .filter-group .btn { font-size: 11px !important; padding: 7px 12px !important; }
+        .chip-row { gap: 5px !important; margin-top: 10px !important; }
+        .chip { padding: 5px 10px !important; font-size: 11px !important; }
+
+        /* Daftar Berita Card & Item List Mobile Ramping */
+        .articles-list-card { padding: 14px !important; margin-bottom: 12px !important; }
+        .articles-list-card h2 { font-size: 15px !important; }
+        #export-link { font-size: 10.5px !important; padding: 5px 10px !important; }
+
+        .article-row { padding: 10px 4px !important; gap: 8px !important; }
+        .article-title { font-size: 12.5px !important; line-height: 1.35 !important; }
+        .article-meta { font-size: 10px !important; margin-top: 2px !important; }
+        .content-source-tag { font-size: 8.5px !important; padding: 1px 6px !important; }
+        .article-row .badge { font-size: 9.5px !important; padding: 2px 8px !important; }
+        .pagination { gap: 6px !important; margin-top: 14px !important; }
+        .pagination .btn { font-size: 10.5px !important; padding: 5px 10px !important; }
+        #page-info { font-size: 10.5px !important; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="card reveal">
+<div class="card reveal filter-card">
     <h2>Filter & Cari Berita</h2>
     <p class="card-sub">Cari berita Sensus Ekonomi 2026 berdasarkan tanggal, sumber, kata kunci, atau sentimen.</p>
 
@@ -101,7 +127,7 @@
     </div>
 </div>
 
-<div class="card reveal">
+<div class="card reveal articles-list-card">
     <div style="display:flex; align-items:center; justify-content:space-between;">
         <h2 style="margin-bottom:0;">Daftar Berita</h2>
         <a class="btn btn-ghost btn-sm" id="export-link" href="/news/export">Export Excel</a>

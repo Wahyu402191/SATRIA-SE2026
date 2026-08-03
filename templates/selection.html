@@ -352,6 +352,11 @@
             .header-title h1 { font-size: 15px; letter-spacing: 0.5px; }
             .header-title p { font-size: 8px; letter-spacing: 1px; }
 
+            /* Footer 2 baris di mobile */
+            .footer { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+            .footer-sep { display: none; }
+            .footer-copy { display: block; }
+
             /* 3. Judul "Pilih Aplikasi" dikecilkan & tidak memanjang ke kanan */
             .main-body { gap: 12px; }
             .page-title { margin-top: 0; }
@@ -612,7 +617,7 @@
 
         <!-- Footer -->
         <div class="footer">
-            <strong>SATRIA SE2026</strong> &copy; 2026 Badan Pusat Statistik Kabupaten Bangkalan
+            <strong>SATRIA SE2026</strong><span class="footer-sep"> </span><span class="footer-copy">&copy; 2026 Badan Pusat Statistik Kabupaten Bangkalan</span>
         </div>
 
     </div>
