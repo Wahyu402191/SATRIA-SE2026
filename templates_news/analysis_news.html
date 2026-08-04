@@ -8,10 +8,22 @@
     .filter-group label { margin-bottom:0; font-size:12px; }
     .chart-wrap { position:relative; width:100%; }
     canvas { width:100% !important; height:100% !important; }
-    .accuracy-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px; }
-    .accuracy-tile { text-align:center; padding:16px; border:2px solid var(--border); border-radius:var(--radius-lg); }
-    .accuracy-value { font-size:24px; font-weight:800; color:var(--primary); }
-    .accuracy-label { font-size:11px; color:var(--text-muted); margin-top:4px; }
+
+    /* Tombol "Jalankan Analisis" & "Reset" disamakan lebarnya (desktop saja
+       — dibungkus min-width:641px, kebalikan dari @media max-width:640px di
+       bawah tempat tombol ini juga diatur untuk mobile, supaya tidak ada
+       celah lebar layar yang tidak kena aturan mana pun). */
+    @media (min-width:641px) {
+        #btn-run-analysis, #btn-reset-analysis { min-width:200px; justify-content:center; }
+    }
+
+    /* Kotak "Dari Tanggal" & "Sampai Tanggal" disamakan lebarnya dengan baris
+       "Pilih Metode Analisis" (max-width:480px, gap:12px) di bawahnya —
+       desktop saja, sama seperti pola @media min-width di atas. */
+    @media (min-width:641px) {
+        .date-filter-group { width:233px; }
+        .date-filter-group input[type="date"] { width:100%; }
+    }
 
     /* Baris statistik dengan kartu berbagai lebar (bukan satu kolom penuh
        lurus ke bawah) — tiap baris punya rasio kolom sendiri lewat inline
@@ -20,9 +32,6 @@
     .stat-row > .card { margin-bottom:0; display:flex; flex-direction:column; min-width:0; }
     @media (max-width:900px) {
         .stat-row { grid-template-columns:1fr !important; }
-        .accuracy-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .accuracy-tile { padding: 12px; }
-        .accuracy-value { font-size: 20px; }
     }
 
     /* Tag cloud kata kunci — ukuran font sebanding frekuensi kemunculan */
@@ -46,6 +55,56 @@
     .extreme-card:hover { transform:translateY(-2px); }
     .extreme-title { font-size:13px; font-weight:600; color:var(--text); line-height:1.4; }
     .extreme-meta { font-size:11px; color:var(--text-muted); margin-top:4px; }
+
+    /* ── Mobile scale-down (≤ 640 px) ── */
+    @media (max-width:640px) {
+        /* Form card: judul & deskripsi */
+        .card h2 { font-size:15px !important; margin-bottom:6px !important; }
+        .card .card-sub { font-size:10.5px !important; line-height:1.45 !important; margin-bottom:10px !important; }
+
+        /* Filter bar: date inputs — 2 kolom rata kiri-kanan */
+        .filter-bar {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 8px !important;
+            margin-bottom: 0 !important;
+        }
+
+        .filter-group { width: 100% !important; }
+        .filter-group label { font-size:10px !important; }
+        .filter-group input[type="date"] {
+            font-size:10px !important;
+            padding:5px 7px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Pilih Metode Analisis */
+        .form-group label { font-size:10.5px !important; }
+        .form-group > div { gap:7px !important; margin-top:7px !important; }
+        .checkbox-row { padding:7px 8px !important; font-size:10.5px !important; }
+        .checkbox-row span { font-size:10px !important; }
+
+        /* Tombol Jalankan & Reset — lebar sama rata di mobile */
+        #btn-wrapper {
+            display: flex !important;
+            gap: 8px !important;
+            margin-top: 10px !important;
+        }
+
+        #btn-run-analysis, #btn-reset-analysis {
+            font-size: 11px !important;
+            padding: 7px 10px !important;
+            margin-top: 0 !important;
+            flex: 1 1 0 !important;
+            min-width: 0 !important;
+            text-align: center !important;
+            justify-content: center !important;
+        }
+
+        /* Card padding umum */
+        .card { padding:12px 14px !important; }
+    }
 </style>
 {% endblock %}
 
@@ -59,11 +118,11 @@
     </p>
 
     <div class="filter-bar">
-        <div class="filter-group">
+        <div class="filter-group date-filter-group">
             <label>Dari Tanggal</label>
             <input type="date" id="date-from" value="2026-01-01">
         </div>
-        <div class="filter-group">
+        <div class="filter-group date-filter-group">
             <label>Sampai Tanggal</label>
             <input type="date" id="date-to">
         </div>
@@ -87,12 +146,14 @@
         </div>
     </div>
 
-    <button class="btn" style="margin-top:8px;" onclick="runAnalysis()">
-        Jalankan Analisis
-    </button>
-    <button class="btn btn-ghost" style="margin-top:8px;" onclick="resetAnalysis()" title="Hapus hasil tersimpan tanpa menjalankan analisis baru">
-        Reset
-    </button>
+    <div id="btn-wrapper" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
+        <button id="btn-run-analysis" class="btn" onclick="runAnalysis()">
+            Jalankan Analisis
+        </button>
+        <button id="btn-reset-analysis" class="btn btn-ghost" onclick="resetAnalysis()" title="Hapus hasil tersimpan tanpa menjalankan analisis baru">
+            Reset
+        </button>
+    </div>
 </div>
 
 <div id="loading-section" class="loading">
@@ -105,14 +166,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 let summaryChart = null;
-let sourceBubbleChart = null;
-let methodRadarChart = null;
-let overallSummaryChart = null;
 let lengthSentimentChart = null;
 
-const METHOD_ID_TO_NAME = { naive_bayes: 'Naive Bayes', svm: 'SVM', lstm: 'LSTM', indobert: 'IndoBERT' };
-const METHOD_NAME_TO_ID = Object.fromEntries(Object.entries(METHOD_ID_TO_NAME).map(([k, v]) => [v, k]));
-const METHOD_COLORS = { 'Naive Bayes': '#2874A6', 'SVM': '#16A085', 'LSTM': '#E67E22', 'IndoBERT': '#8E44AD' };
 const SENTIMENT_COLORS = { Positif: '#27AE60', Negatif: '#E74C3C', Netral: '#95A5A6' };
 
 function currentMonthStart() {
@@ -199,9 +254,7 @@ function buildRow(items) {
 function displayResults(data) {
     const section = document.getElementById('results-section');
     const hasAccuracy = Object.keys(data.accuracy || {}).length > 0;
-    const sources = data.source_breakdown || [];
     const kw = data.keywords || { positive: [], negative: [] };
-    const overall = data.overall_summary || {};
     const sourceRanking = data.source_ranking || {};
     const pairwise = data.pairwise_agreement || [];
     const uncertain = data.uncertain_articles || [];
@@ -212,33 +265,6 @@ function displayResults(data) {
             <h2>Ringkasan (${data.total_articles} berita dianalisis)</h2>
             <div class="chart-wrap" style="height:260px; flex:1;"><canvas id="summary-chart"></canvas></div>
         </div>`;
-
-    const accuracyHtml = hasAccuracy ? `
-        <div class="card">
-            <h2>Agreement Rate</h2>
-            <p class="card-sub">Tingkat kesepakatan tiap metode dengan suara mayoritas.</p>
-            <div class="accuracy-grid">
-                ${Object.entries(data.accuracy).map(([m, v]) => `
-                    <div class="accuracy-tile">
-                        <div class="accuracy-value">${v}%</div>
-                        <div class="accuracy-label">${m.replace('_',' ').toUpperCase()}</div>
-                    </div>`).join('')}
-            </div>
-        </div>` : '';
-
-    const radarHtml = hasAccuracy ? `
-        <div class="card">
-            <h2>Perbandingan Metode</h2>
-            <p class="card-sub">Agreement rate, rata-rata confidence, dan rasio berita positif tiap metode.</p>
-            <div class="chart-wrap" style="height:280px; flex:1;"><canvas id="method-radar-chart"></canvas></div>
-        </div>` : '';
-
-    const sourceHtml = sources.length ? `
-        <div class="card">
-            <h2>Sentimen per Sumber Media</h2>
-            <p class="card-sub">Tiap gelembung = 1 sumber. Kanan = makin negatif, atas = makin positif, ukuran = jumlah berita.</p>
-            <div class="chart-wrap" style="height:280px; flex:1;"><canvas id="source-bubble-chart"></canvas></div>
-        </div>` : '';
 
     const keywordPosHtml = kw.positive.length ? `
         <div class="card" style="background:rgba(39,174,96,.05); border-color:rgba(39,174,96,.25);">
@@ -276,13 +302,6 @@ function displayResults(data) {
                 ${extreme.negative ? renderExtremeCard(extreme.negative, 'Negatif', '#E74C3C') :
                     '<span class="keyword-empty">Belum ada berita negatif yang cukup meyakinkan.</span>'}
             </div>
-        </div>` : '';
-
-    const overallHtml = overall.total ? `
-        <div class="card">
-            <h2>Ringkasan Sentimen Keseluruhan</h2>
-            <p class="card-sub">Suara mayoritas gabungan seluruh metode untuk ${overall.total} berita pada periode ini.</p>
-            <div class="chart-wrap" style="height:220px; flex:1;"><canvas id="overall-summary-chart"></canvas></div>
         </div>` : '';
 
     const lengthHtml = lengthStats.length ? `
@@ -327,26 +346,19 @@ function displayResults(data) {
             </div>
         </div>` : '';
 
-    // Baris divariasikan lebarnya (bukan satu kolom lurus ke bawah): baris 1
-    // rasio 5/3/4, baris 2 rasio 5/3.5/3.5, baris 3 rasio 7/5 — tiap baris beda.
+    // Baris divariasikan lebarnya (bukan satu kolom lurus ke bawah) — tiap baris beda.
     section.innerHTML =
         buildRow([
-            { html: summaryHtml, fr: 5 },
-            { html: accuracyHtml, fr: 3 },
-            { html: radarHtml, fr: 4 },
+            { html: summaryHtml, fr: 6 },
+            { html: lengthHtml, fr: 6 },
         ]) +
         buildRow([
-            { html: sourceHtml, fr: 5 },
-            { html: keywordPosHtml, fr: 3.5 },
-            { html: keywordNegHtml, fr: 3.5 },
+            { html: keywordPosHtml, fr: 6 },
+            { html: keywordNegHtml, fr: 6 },
         ]) +
         buildRow([
             { html: controversialHtml, fr: 7 },
             { html: extremeHtml, fr: 5 },
-        ]) +
-        buildRow([
-            { html: overallHtml, fr: 4 },
-            { html: lengthHtml, fr: 8 },
         ]) +
         buildRow([
             { html: sourceRankingHtml, fr: 6 },
@@ -377,9 +389,6 @@ function displayResults(data) {
         }
     });
 
-    if (hasAccuracy) renderMethodRadar(data, methods);
-    if (sources.length) renderSourceBubble(sources);
-    if (overall.total) renderOverallSummaryChart(overall);
     if (lengthStats.length) renderLengthSentimentChart(lengthStats);
 }
 
@@ -418,28 +427,6 @@ function renderUncertainItem(a) {
             <div class="controversial-meta">${escapeHtml(a.source)} &middot; ${escapeHtml(a.published_date)}</div>
             <div class="controversial-badge" style="color:var(--text-muted);">${a.label} &middot; confidence rata-rata ${a.confidence}%</div>
         </a>`;
-}
-
-function renderOverallSummaryChart(overall) {
-    const ctx = document.getElementById('overall-summary-chart').getContext('2d');
-    if (overallSummaryChart) overallSummaryChart.destroy();
-    overallSummaryChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Positif', 'Negatif', 'Netral'],
-            datasets: [{
-                data: [overall.positive, overall.negative, overall.neutral],
-                backgroundColor: [SENTIMENT_COLORS.Positif, SENTIMENT_COLORS.Negatif, SENTIMENT_COLORS.Netral],
-                borderWidth: 2,
-                borderColor: '#fff',
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom' } },
-        }
-    });
 }
 
 function renderLengthSentimentChart(lengthStats) {
@@ -517,79 +504,5 @@ function renderExtremeCard(a, label, color) {
         </a>`;
 }
 
-function renderMethodRadar(data, methods) {
-    const ctx = document.getElementById('method-radar-chart').getContext('2d');
-    if (methodRadarChart) methodRadarChart.destroy();
-
-    const datasets = methods.map(name => {
-        const id = METHOD_NAME_TO_ID[name] || name;
-        const agreement = data.accuracy[id] ?? 0;
-        const confidence = (data.confidence || {})[name] ?? 0;
-        const s = data.summary[name];
-        const total = s.positive + s.negative + s.neutral;
-        const posRatio = total ? (s.positive / total * 100) : 0;
-        const color = METHOD_COLORS[name] || '#2874A6';
-        return {
-            label: name,
-            data: [agreement, confidence, posRatio],
-            borderColor: color,
-            backgroundColor: color + '26',
-            pointBackgroundColor: color,
-            borderWidth: 2,
-        };
-    });
-
-    methodRadarChart = new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: ['Agreement Rate (%)', 'Confidence Rata-rata (%)', 'Rasio Berita Positif (%)'],
-            datasets,
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { r: { beginAtZero: true, max: 100, ticks: { stepSize: 25 } } },
-            plugins: { legend: { position: 'bottom' } },
-        }
-    });
-}
-
-function renderSourceBubble(sources) {
-    const ctx = document.getElementById('source-bubble-chart').getContext('2d');
-    if (sourceBubbleChart) sourceBubbleChart.destroy();
-
-    const maxTotal = Math.max(...sources.map(s => s.total));
-    sourceBubbleChart = new Chart(ctx, {
-        type: 'bubble',
-        data: {
-            datasets: sources.map(s => ({
-                label: s.source,
-                data: [{ x: s.negative_pct, y: s.positive_pct, r: 6 + (s.total / maxTotal) * 26 }],
-                backgroundColor: (SENTIMENT_COLORS[s.dominant] || '#95A5A6') + 'B3',
-                borderColor: SENTIMENT_COLORS[s.dominant] || '#95A5A6',
-                borderWidth: 1.5,
-            }))
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: { min: 0, max: 100, title: { display: true, text: 'Persentase Negatif (%)' } },
-                y: { min: 0, max: 100, title: { display: true, text: 'Persentase Positif (%)' } },
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: (item) => {
-                            const s = sources[item.datasetIndex];
-                            return `${s.source}: ${s.total} berita — Positif ${s.positive_pct}% · Negatif ${s.negative_pct}% · Netral ${s.neutral_pct}%`;
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
 </script>
 {% endblock %}

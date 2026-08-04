@@ -63,41 +63,116 @@
     }
 
     /* Calendar heatmap */
+    .heatmap-outer-container {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .heatmap-day-labels {
+        display: grid;
+        grid-template-rows: repeat(7, 22px);
+        gap: 3px;
+        padding-top: 32px;
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text-muted);
+        line-height: 22px;
+        text-align: right;
+        flex-shrink: 0;
+        user-select: none;
+    }
     .heatmap-wrap {
         width: 100%;
         overflow-x: auto;
+        padding-top: 32px;
         padding-bottom: 6px;
+        padding-left: 2px;
+        padding-right: 2px;
+        position: relative;
+        -webkit-overflow-scrolling: touch;
     }
     .heatmap-grid {
         display: grid;
         grid-auto-flow: column;
-        grid-template-rows: repeat(7, 1fr);
+        grid-template-rows: repeat(7, auto);
+        align-content: start;
+        align-items: start;
         gap: 3px;
-        /* Isi penuh lebar container, cell ikut menyesuaikan */
         width: 100%;
         min-width: 0;
+        height: auto !important;
     }
     .heatmap-cell {
-        aspect-ratio: 1 / 1;    /* selalu kotak */
-        border-radius: 3px;
+        width: 22px;
+        height: 22px;
+        aspect-ratio: 1 / 1;
+        border-radius: 3.5px;
         background: var(--border);
         position: relative;
-        cursor: default;
-        min-width: 0;
-        min-height: 0;
+        cursor: pointer;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9.5px;
+        font-weight: 700;
+        color: rgba(44, 62, 80, 0.7);
+        line-height: 1;
+        user-select: none;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    .heatmap-cell[data-level="1"] { background:#cfe3f2; }
-    .heatmap-cell[data-level="2"] { background:#8fc0e0; }
-    .heatmap-cell[data-level="3"] { background:#4f9cca; }
-    .heatmap-cell[data-level="4"] { background:var(--primary-dark); }
+    @media (max-width: 640px) {
+        .heatmap-day-labels {
+            grid-template-rows: repeat(7, 18px) !important;
+            line-height: 18px !important;
+            font-size: 9px !important;
+        }
+        .heatmap-cell {
+            width: 18px !important;
+            height: 18px !important;
+            font-size: 8px !important;
+        }
+    }
+    .heatmap-cell[data-level="1"] { background:#cfe3f2; color:#1b4f72; }
+    .heatmap-cell[data-level="2"] { background:#8fc0e0; color:#0b293a; }
+    .heatmap-cell[data-level="3"] { background:#4f9cca; color:#ffffff; }
+    .heatmap-cell[data-level="4"] { background:var(--primary-dark); color:#ffffff; }
+    .heatmap-cell.month-start {
+        outline: 1.5px solid var(--accent);
+        outline-offset: 1px;
+    }
+    .heatmap-cell.selected-cell {
+        outline: 2px solid #E67E22 !important;
+        outline-offset: 1px !important;
+        box-shadow: 0 0 12px rgba(230, 126, 34, 0.9) !important;
+        transform: scale(1.2) !important;
+        z-index: 15 !important;
+    }
     .heatmap-cell:hover::after {
         content: attr(data-tooltip);
-        position: absolute; bottom: 120%; left: 50%;
+        position: absolute;
+        bottom: 115%;
+        left: 50%;
         transform: translateX(-50%);
-        background: #1B4F72; color: #fff;
-        padding: 4px 8px; border-radius: 6px;
-        font-size: 11px; white-space: nowrap; z-index: 10;
+        background: #1B4F72;
+        color: #fff;
+        padding: 3px 6px;
+        border-radius: 4px;
+        font-size: 9.5px;
+        font-weight: 500;
+        white-space: nowrap;
+        z-index: 99 !important;
         pointer-events: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    .heatmap-cell[data-tooltip-pos="left"]:hover::after {
+        left: 0 !important;
+        transform: translateX(0) !important;
+    }
+    .heatmap-cell[data-tooltip-pos="right"]:hover::after {
+        left: auto !important;
+        right: 0 !important;
+        transform: translateX(0) !important;
     }
     .heatmap-legend {
         display: flex; align-items: center; gap: 6px;
@@ -118,6 +193,83 @@
         .page-header-icon { width: 42px; height: 42px; }
         .page-header-icon svg { width: 21px; height: 21px; }
         .page-header h1 { font-size: 17px; }
+        .page-header p { font-size: 11px !important; line-height: 1.4 !important; }
+
+        /* Filter card — compact di mobile */
+        .filter-bar {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 7px !important;
+            margin-bottom: 0 !important;
+        }
+
+        .filter-group {
+            width: 100% !important;
+            gap: 3px !important;
+        }
+
+        .filter-group label {
+            font-size: 9.5px !important;
+            margin-bottom: 0 !important;
+        }
+
+        .filter-group input[type="date"],
+        .filter-group select {
+            font-size: 10px !important;
+            padding: 5px 6px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Tombol Terapkan — full width bawah, spanning 2 kolom */
+        .filter-bar > .filter-group:last-child {
+            grid-column: 1 / -1 !important;
+        }
+
+        .filter-bar > .filter-group:last-child .btn {
+            width: 100% !important;
+            font-size: 11px !important;
+            padding: 7px 10px !important;
+            justify-content: center !important;
+        }
+
+        /* Metode dropdown — full width, spanning 2 kolom */
+        .filter-bar > .filter-group:nth-child(3) {
+            grid-column: 1 / -1 !important;
+        }
+
+        /* Rekap Informasi — 4 kartu 1 baris */
+        .summary-grid { 
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 6px !important; 
+        }
+        .summary-card {
+            padding: 6px 7px !important;
+            min-height: 70px !important;
+            text-align: center !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .summary-label { font-size: 7.5px !important; letter-spacing: 0 !important; }
+        .summary-value { font-size: 18px !important; margin-top: 3px !important; }
+        .summary-sub { font-size: 8.5px !important; margin-top: 2px !important; }
+        .card h2 { font-size: 14px !important; margin-bottom: 4px !important; }
+        .card .card-sub { font-size: 10px !important; }
+
+        /* Kartu chart donat: kecilkan tinggi di mobile */
+        .summary-chart-wrap {
+            height: 140px !important;
+            margin-top: 6px !important;
+        }
+
+        .summary-note {
+            font-size: 9.5px !important;
+            margin-top: 6px !important;
+        }
+
+        /* Trend Sentimen & Sumber Media: tinggi diset dinamis via JS agar source chart muat semua sumber */
     }
 </style>
 {% endblock %}
@@ -181,8 +333,10 @@
             <div class="summary-sub" id="summary-neutral-pct">0%</div>
         </div>
     </div>
-    <div class="summary-chart-wrap"><canvas id="summary-chart"></canvas></div>
-    <div class="summary-note" id="summary-method-note">Distribusi persentase sentimen berdasarkan metode yang dipilih.</div>
+    <div id="summary-chart-area">
+        <div class="summary-chart-wrap"><canvas id="summary-chart"></canvas></div>
+        <div class="summary-note" id="summary-method-note">Distribusi persentase sentimen berdasarkan metode yang dipilih.</div>
+    </div>
 </div>
 
 <div class="card reveal">
@@ -198,7 +352,20 @@
 <div class="card reveal">
     <h2>Peta Intensitas Berita (2026)</h2>
     <p class="card-sub">Setiap kotak mewakili satu hari. Semakin gelap warnanya, semakin banyak berita yang ditemukan pada hari itu.</p>
-    <div class="heatmap-wrap"><div class="heatmap-grid" id="heatmap-grid"></div></div>
+    <div class="heatmap-outer-container">
+        <div class="heatmap-day-labels">
+            <div>Sen</div>
+            <div>Sel</div>
+            <div>Rab</div>
+            <div>Kam</div>
+            <div>Jum</div>
+            <div>Sab</div>
+            <div>Min</div>
+        </div>
+        <div class="heatmap-wrap">
+            <div class="heatmap-grid" id="heatmap-grid"></div>
+        </div>
+    </div>
     <div class="heatmap-legend">
         Sedikit
         <div class="heatmap-cell" data-level="0" style="width:11px;height:11px;"></div>
@@ -257,7 +424,7 @@ async function loadSummaryStats() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'bottom' },
+                legend: { position: window.innerWidth <= 640 ? 'right' : 'bottom', display: true },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
@@ -282,6 +449,12 @@ async function loadSentimentTrend() {
     if (!data.success) return;
 
     const ctx = document.getElementById('sentiment-chart').getContext('2d');
+
+    // Di mobile, kurangi tinggi chart sentiment
+    if (window.innerWidth <= 640) {
+        ctx.canvas.closest('.chart-wrap').style.height = '180px';
+    }
+
     if (sentimentChart) sentimentChart.destroy();
     sentimentChart = new Chart(ctx, {
         type: 'line',
@@ -313,19 +486,41 @@ async function loadSourceBreakdown() {
     const counts = data.sources.map(s => s.count);
 
     const ctx = document.getElementById('source-chart').getContext('2d');
+
+    // Di mobile, sesuaikan tinggi chart agar semua sumber tampil
+    if (window.innerWidth <= 640) {
+        const minHeight = Math.max(140, labels.length * 22);
+        ctx.canvas.closest('.chart-wrap').style.height = minHeight + 'px';
+    }
+
     if (sourceChart) sourceChart.destroy();
     sourceChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels,
-            datasets: [{ label: 'Jumlah Berita', data: counts, backgroundColor: labels.map((_,i)=>PALETTE[i%PALETTE.length]) }]
+            datasets: [{ label: 'Jumlah Berita', data: counts, backgroundColor: labels.map((_,i)=>PALETTE[i%PALETTE.length]),
+                barThickness: window.innerWidth <= 640 ? 10 : undefined }]
         },
         options: {
             indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display:false } },
-            scales: { x: { beginAtZero:true, ticks:{ precision:0 } } }
+            scales: {
+                x: { beginAtZero:true, ticks:{ precision:0, font:{ size: window.innerWidth <= 640 ? 9 : 11 } } },
+                y: {
+                    ticks: {
+                        font: { size: window.innerWidth <= 640 ? 9 : 11 },
+                        callback: function(value) {
+                            const label = this.getLabelForValue(value);
+                            if (window.innerWidth <= 640 && label && label.length > 18) {
+                                return label.substring(0, 18) + '…';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
         }
     });
 }
@@ -341,22 +536,45 @@ async function loadHeatmap() {
     const grid = document.getElementById('heatmap-grid');
     grid.innerHTML = '';
 
-    const start = new Date(year, 0, 1);
-    const end   = new Date(year, 11, 31);
+    const isMobile = window.innerWidth <= 640;
+    const dateFromVal = document.getElementById('date-from').value;
+    const dateToVal = document.getElementById('date-to').value;
+
+    let start, end;
+    if (dateFromVal && dateToVal) {
+        start = new Date(dateFromVal + 'T00:00:00');
+        end = new Date(dateToVal + 'T00:00:00');
+    } else {
+        start = new Date(year, 0, 1);
+        end   = new Date(year, 11, 31);
+    }
+
     const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 
     // Hitung total minggu (kolom) yang dibutuhkan
-    // Mulai dari Senin pertama sebelum/pada 1 Jan
-    const firstDay  = start.getDay(); // 0=Sun
-    const startOffset = (firstDay === 0 ? 6 : firstDay - 1); // geser ke Senin
-    const totalDays  = Math.ceil((((end - start) / 86400000) + 1 + startOffset) / 7) * 7;
-    const totalWeeks = totalDays / 7;
+    const firstDay  = start.getDay(); 
+    const startOffset = (firstDay === 0 ? 6 : firstDay - 1);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    const totalDays  = diffDays + startOffset;
+    const totalWeeks = Math.max(1, Math.ceil(totalDays / 7));
 
-    // Set kolom grid secara eksplisit
-    grid.style.gridTemplateColumns = `repeat(${totalWeeks}, 1fr)`;
-    grid.style.gridTemplateRows    = 'repeat(7, 1fr)';
+    grid.style.gridTemplateRows = 'repeat(7, auto)';
+    grid.style.alignContent = 'start';
+    grid.style.alignItems = 'start';
 
-    // Isi cell kosong di awal (padding hari sebelum 1 Jan)
+    const cellPx = isMobile ? '18px' : '22px';
+    if (dateFromVal && dateToVal) {
+        // Jika difilter tanggal, gunakan kolom rapat di kiri (22px desktop, 18px mobile)
+        grid.style.gridTemplateColumns = `repeat(${totalWeeks}, ${cellPx})`;
+        grid.style.justifyContent = 'start';
+    } else {
+        // Jika tampilan 1 tahun penuh tanpa filter
+        grid.style.gridTemplateColumns = `repeat(${totalWeeks}, ${cellPx})`;
+        grid.style.justifyContent = 'start';
+    }
+
+    // Isi cell kosong di awal
     for (let i = 0; i < startOffset; i++) {
         const blank = document.createElement('div');
         blank.className = 'heatmap-cell';
@@ -365,17 +583,52 @@ async function loadHeatmap() {
         grid.appendChild(blank);
     }
 
+    let dayIndex = 0;
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         const key   = d.toISOString().slice(0, 10);
         const count = counts[key] || 0;
         let level = 0;
         if (count > 0) level = Math.min(4, Math.ceil((count / max) * 4));
 
+        const colIndex = Math.floor((startOffset + dayIndex) / 7);
+        let tooltipPos = 'center';
+        if (isMobile) {
+            if (colIndex < Math.ceil(totalWeeks / 2)) {
+                tooltipPos = 'left';
+            } else {
+                tooltipPos = 'right';
+            }
+        } else {
+            if (colIndex <= 2) {
+                tooltipPos = 'left';
+            } else if (colIndex >= totalWeeks - 3) {
+                tooltipPos = 'right';
+            }
+        }
+
         const cell = document.createElement('div');
         cell.className     = 'heatmap-cell';
-        cell.dataset.level = level;
-        cell.dataset.tooltip = `${d.getDate()} ${monthNames[d.getMonth()]} ${year} — ${count} berita`;
+        if (d.getDate() === 1) {
+            cell.classList.add('month-start');
+        }
+        cell.dataset.level      = level;
+        cell.dataset.tooltipPos = tooltipPos;
+        const tooltipText = `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()} — ${count} berita`;
+        cell.dataset.tooltip = tooltipText;
+        cell.title           = tooltipText;
+        cell.textContent     = d.getDate();
+
+        // Event listener saat tanggal diklik: beri penanda visual selected-cell
+        cell.addEventListener('click', function() {
+            document.querySelectorAll('.heatmap-cell.selected-cell').forEach(el => {
+                el.classList.remove('selected-cell');
+            });
+            this.classList.add('selected-cell');
+        });
+
         grid.appendChild(cell);
+
+        dayIndex++;
     }
 }
 
@@ -390,9 +643,9 @@ function loadAll() {
     loadSummaryStats();
     loadSentimentTrend();
     loadSourceBreakdown();
+    loadHeatmap();
 }
 
 loadAll();
-loadHeatmap();
 </script>
 {% endblock %}

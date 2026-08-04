@@ -74,8 +74,14 @@ def fetch_rss_entries(query, max_results=100):
     """Phase 1 — fetch Google News RSS for one query term.
     Returns raw dicts: title, link, published_date (WIB, naive), source, snippet.
     Never raises — a failed request just yields an empty list.
+
+    The query is wrapped in double quotes so Google treats it as an exact
+    phrase instead of a loose relevance match — without quotes, a term like
+    "Sensus Ekonomi 2026 Bangkalan" pulled in any article that merely
+    mentioned "Bangkalan" (crime news, football, wildlife...), completely
+    unrelated to the census.
     """
-    params = {'q': query, 'hl': 'id', 'gl': 'ID', 'ceid': 'ID:id'}
+    params = {'q': f'"{query}"', 'hl': 'id', 'gl': 'ID', 'ceid': 'ID:id'}
     url = f"{GOOGLE_NEWS_RSS_URL}?{urlencode(params)}"
 
     try:

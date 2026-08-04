@@ -2,6 +2,7 @@
 Flask
 Flask-Session
 gunicorn
+waitress
 Werkzeug
 Jinja2
 itsdangerous
