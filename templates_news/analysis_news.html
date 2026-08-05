@@ -25,13 +25,19 @@
         .date-filter-group input[type="date"] { width:100%; }
     }
 
-    /* Baris statistik dengan kartu berbagai lebar (bukan satu kolom penuh
-       lurus ke bawah) — tiap baris punya rasio kolom sendiri lewat inline
-       style, di mobile semua diringkas jadi 1 kolom. */
+    /* Baris statistik dengan kartu berbagai lebar */
     .stat-row { display:grid; gap:20px; margin-bottom:20px; align-items:stretch; }
     .stat-row > .card { margin-bottom:0; display:flex; flex-direction:column; min-width:0; }
     @media (max-width:900px) {
         .stat-row { grid-template-columns:1fr !important; }
+        .summary-keyword-row {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 10px !important;
+        }
+        .summary-keyword-row > .card:first-child {
+            grid-column: 1 / -1 !important;
+        }
     }
 
     /* Tag cloud kata kunci — ukuran font sebanding frekuensi kemunculan */
@@ -50,14 +56,45 @@
     .controversial-badge { font-size:10px; font-weight:700; color:var(--accent); }
 
     /* Artikel Paling Ekstrem */
-    .extreme-showcase { display:flex; flex-direction:column; gap:14px; flex:1; }
-    .extreme-card { display:block; padding:14px 16px; border:1.5px solid var(--border); border-radius:var(--radius-lg); text-decoration:none; transition:transform .15s; }
+    .extreme-showcase { display:flex; flex-direction:column; gap:6px; flex:1; }
+    .extreme-card { display:block; padding:7px 10px; border:1.5px solid var(--border); border-radius:var(--radius); text-decoration:none; transition:transform .15s; }
     .extreme-card:hover { transform:translateY(-2px); }
-    .extreme-title { font-size:13px; font-weight:600; color:var(--text); line-height:1.4; }
-    .extreme-meta { font-size:11px; color:var(--text-muted); margin-top:4px; }
+    .extreme-title { font-size:11px; font-weight:600; color:var(--text); line-height:1.3; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+    .extreme-meta { font-size:9.5px; color:var(--text-muted); margin-top:2px; }
+
+    /* Ranking Sumber Media Grid */
+    .source-rank-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .source-name-text { font-weight:700; font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
     /* ── Mobile scale-down (≤ 640 px) ── */
     @media (max-width:640px) {
+        .source-rank-grid { grid-template-columns: 1fr 1fr !important; gap: 6px !important; }
+        .source-rank-item {
+            padding: 5px 6px !important;
+            gap: 5px !important;
+            margin-bottom: 4px !important;
+            min-height: 48px !important;
+            align-items: center !important;
+            box-sizing: border-box !important;
+        }
+        .source-rank-badge {
+            width: 16px !important;
+            height: 16px !important;
+            font-size: 8.5px !important;
+            flex-shrink: 0 !important;
+        }
+        .source-name-text {
+            font-size: 9px !important;
+            line-height: 1.2 !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            min-height: 2.2em !important;
+            display: flex !important;
+            align-items: center !important;
+            overflow: hidden !important;
+        }
+        .source-pct-text { font-size: 9.5px !important; }
+        .source-total-text { font-size: 8.5px !important; }
         /* Form card: judul & deskripsi */
         .card h2 { font-size:15px !important; margin-bottom:6px !important; }
         .card .card-sub { font-size:10.5px !important; line-height:1.45 !important; margin-bottom:10px !important; }
@@ -104,6 +141,18 @@
 
         /* Card padding umum */
         .card { padding:12px 14px !important; }
+
+        /* Kata Kunci Positif & Negatif 2 kolom kanan-kiri mobile */
+        .summary-keyword-row > .card:not(:first-child) { padding: 10px 10px !important; }
+        .summary-keyword-row > .card:not(:first-child) h2 {
+            font-size: clamp(9.5px, 2.6vw, 11px) !important;
+            white-space: nowrap !important;
+            margin-bottom: 3px !important;
+            letter-spacing: -0.2px !important;
+        }
+        .summary-keyword-row > .card:not(:first-child) .card-sub { font-size: 9px !important; line-height: 1.3 !important; margin-bottom: 6px !important; }
+        .keyword-cloud { gap: 4px 5px !important; }
+        .keyword-chip { padding: 2px 7px !important; font-size: 9px !important; font-weight: 600 !important; }
     }
 </style>
 {% endblock %}
@@ -166,9 +215,19 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 let summaryChart = null;
-let lengthSentimentChart = null;
 
 const SENTIMENT_COLORS = { Positif: '#27AE60', Negatif: '#E74C3C', Netral: '#95A5A6' };
+
+const RANK_PALETTES = {
+    positive: {
+        top:  { bg: '#27AE60', border: '#1E8449', text: '#1E8449', bar: '#27AE60' },
+        rest: { bg: '#82E0AA', border: '#58D68D', text: '#1E8449', bar: '#58D68D' },
+    },
+    negative: {
+        top:  { bg: '#E74C3C', border: '#A93226', text: '#A93226', bar: '#E74C3C' },
+        rest: { bg: '#F1948A', border: '#EC7063', text: '#A93226', bar: '#EC7063' },
+    },
+};
 
 function currentMonthStart() {
     return '2026-01-01';
@@ -244,11 +303,11 @@ function resetAnalysis() {
     document.getElementById('results-section').style.display = 'block';
 })();
 
-function buildRow(items) {
+function buildRow(items, extraClass = '') {
     const present = items.filter(it => it.html);
     if (!present.length) return '';
     const cols = present.map(it => it.fr + 'fr').join(' ');
-    return `<div class="stat-row" style="grid-template-columns:${cols};">${present.map(it => it.html).join('')}</div>`;
+    return `<div class="stat-row ${extraClass}" style="grid-template-columns:${cols};">${present.map(it => it.html).join('')}</div>`;
 }
 
 function displayResults(data) {
@@ -258,7 +317,6 @@ function displayResults(data) {
     const sourceRanking = data.source_ranking || {};
     const pairwise = data.pairwise_agreement || [];
     const uncertain = data.uncertain_articles || [];
-    const lengthStats = data.length_vs_sentiment || [];
 
     const summaryHtml = `
         <div class="card">
@@ -268,14 +326,14 @@ function displayResults(data) {
 
     const keywordPosHtml = kw.positive.length ? `
         <div class="card" style="background:rgba(39,174,96,.05); border-color:rgba(39,174,96,.25);">
-            <h2 style="color:#1e8449;">&#9679; Kata Kunci — Berita Positif</h2>
+            <h2 style="color:#1e8449; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Kata Kunci (Berita Positif)</h2>
             <p class="card-sub">Kata paling sering muncul di berita bermayoritas Positif.</p>
             <div class="keyword-cloud">${renderKeywordCloud(kw.positive, '#27AE60')}</div>
         </div>` : '';
 
     const keywordNegHtml = kw.negative.length ? `
         <div class="card" style="background:rgba(231,76,60,.05); border-color:rgba(231,76,60,.25);">
-            <h2 style="color:#c0392b;">&#9679; Kata Kunci — Berita Negatif</h2>
+            <h2 style="color:#c0392b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Kata Kunci (Berita Negatif)</h2>
             <p class="card-sub">Kata paling sering muncul di berita bermayoritas Negatif.</p>
             <div class="keyword-cloud">${renderKeywordCloud(kw.negative, '#E74C3C')}</div>
         </div>` : '';
@@ -292,37 +350,36 @@ function displayResults(data) {
         </div>` : '';
 
     const extreme = data.extreme_articles || {};
-    const extremeHtml = (extreme.positive || extreme.negative) ? `
+    const extremePos = extreme.positive || [];
+    const extremeNeg = extreme.negative || [];
+    const extremeHtml = (extremePos.length || extremeNeg.length) ? `
         <div class="card">
             <h2>Artikel Paling Ekstrem</h2>
-            <p class="card-sub">Berita yang paling meyakinkan menurut suara mayoritas metode.</p>
-            <div class="extreme-showcase">
-                ${extreme.positive ? renderExtremeCard(extreme.positive, 'Positif', '#27AE60') :
-                    '<span class="keyword-empty">Belum ada berita positif yang cukup meyakinkan.</span>'}
-                ${extreme.negative ? renderExtremeCard(extreme.negative, 'Negatif', '#E74C3C') :
-                    '<span class="keyword-empty">Belum ada berita negatif yang cukup meyakinkan.</span>'}
+            <p class="card-sub">Berita paling meyakinkan menurut suara mayoritas metode (top 3 tiap sisi).</p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="extreme-showcase">
+                    ${extremePos.length ? extremePos.map((a, i) => renderExtremeCard(a, 'Positif', '#27AE60', i + 1)).join('') :
+                        '<span class="keyword-empty">Belum ada berita positif yang cukup meyakinkan.</span>'}
+                </div>
+                <div class="extreme-showcase">
+                    ${extremeNeg.length ? extremeNeg.map((a, i) => renderExtremeCard(a, 'Negatif', '#E74C3C', i + 1)).join('') :
+                        '<span class="keyword-empty">Belum ada berita negatif yang cukup meyakinkan.</span>'}
+                </div>
             </div>
-        </div>` : '';
-
-    const lengthHtml = lengthStats.length ? `
-        <div class="card">
-            <h2>Panjang Artikel vs Sentimen</h2>
-            <p class="card-sub">Apakah artikel yang lebih panjang cenderung lebih netral/kurang ekstrem dibanding yang pendek.</p>
-            <div class="chart-wrap" style="height:220px; flex:1;"><canvas id="length-sentiment-chart"></canvas></div>
         </div>` : '';
 
     const sourceRankingHtml = ((sourceRanking.most_positive || []).length || (sourceRanking.most_negative || []).length) ? `
         <div class="card">
             <h2>Ranking Sumber Media</h2>
             <p class="card-sub">Sumber dengan berita &ge; 3 pada periode ini, diurutkan dari persentase sentimen tertinggi.</p>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <div class="source-rank-grid">
                 <div>
                     <div style="font-size:11px; font-weight:700; color:#1e8449; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px;">Paling Positif</div>
-                    ${renderSourceRankList(sourceRanking.most_positive, 'positive_pct', '#27AE60')}
+                    ${renderSourceRankList(sourceRanking.most_positive, 'positive_pct', 'positive')}
                 </div>
                 <div>
                     <div style="font-size:11px; font-weight:700; color:#c0392b; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px;">Paling Negatif</div>
-                    ${renderSourceRankList(sourceRanking.most_negative, 'negative_pct', '#E74C3C')}
+                    ${renderSourceRankList(sourceRanking.most_negative, 'negative_pct', 'negative')}
                 </div>
             </div>
         </div>` : '';
@@ -331,7 +388,7 @@ function displayResults(data) {
         <div class="card">
             <h2>Kesepakatan Antar Pasangan Metode</h2>
             <p class="card-sub">Persentase kedua metode memberi label sama pada artikel yang sama — beda dari Agreement Rate yang membandingkan tiap metode dengan suara mayoritas gabungan.</p>
-            <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="display:flex; flex-direction:column; gap:7px;">
                 ${pairwise.map(renderPairwiseRow).join('')}
             </div>
         </div>` : '';
@@ -346,23 +403,20 @@ function displayResults(data) {
             </div>
         </div>` : '';
 
-    // Baris divariasikan lebarnya (bukan satu kolom lurus ke bawah) — tiap baris beda.
+    // Baris 1: Ringkasan (2/4 = 6fr), Kata Kunci Positif (1/4 = 3fr), Kata Kunci Negatif (1/4 = 3fr)
     section.innerHTML =
         buildRow([
             { html: summaryHtml, fr: 6 },
-            { html: lengthHtml, fr: 6 },
+            { html: keywordPosHtml, fr: 3 },
+            { html: keywordNegHtml, fr: 3 },
+        ], 'summary-keyword-row') +
+        buildRow([
+            { html: pairwiseHtml, fr: 3 },
+            { html: sourceRankingHtml, fr: 5 },
+            { html: extremeHtml, fr: 4 },
         ]) +
         buildRow([
-            { html: keywordPosHtml, fr: 6 },
-            { html: keywordNegHtml, fr: 6 },
-        ]) +
-        buildRow([
-            { html: controversialHtml, fr: 7 },
-            { html: extremeHtml, fr: 5 },
-        ]) +
-        buildRow([
-            { html: sourceRankingHtml, fr: 6 },
-            { html: pairwiseHtml, fr: 6 },
+            { html: controversialHtml, fr: 12 },
         ]) +
         buildRow([
             { html: uncertainHtml, fr: 12 },
@@ -389,32 +443,41 @@ function displayResults(data) {
         }
     });
 
-    if (lengthStats.length) renderLengthSentimentChart(lengthStats);
 }
 
-function renderSourceRankList(list, pctKey, color) {
+function renderSourceRankList(list, pctKey, kind) {
     if (!list || !list.length) return '<span class="keyword-empty">Belum ada sumber dengan data yang cukup.</span>';
-    return list.map(s => `
-        <div style="margin-bottom:12px;">
-            <div style="display:flex; justify-content:space-between; gap:8px; font-size:12px; margin-bottom:3px;">
-                <span style="font-weight:600; color:var(--text);">${escapeHtml(s.source)}</span>
-                <span style="font-weight:700; color:${color}; white-space:nowrap;">${s[pctKey]}%</span>
+    const palette = RANK_PALETTES[kind];
+    return list.map((s, i) => {
+        const c = i === 0 ? palette.top : palette.rest;
+        return `
+        <div class="source-rank-item" style="display:flex; align-items:center; gap:8px; padding:5px 8px; margin-bottom:5px;
+                    border-radius:9px; background:${c.bg}1A; border:1.5px solid ${c.border};">
+            <div class="source-rank-badge" style="width:20px; height:20px; border-radius:50%; background:${c.bg}; color:#fff;
+                        display:flex; align-items:center; justify-content:center; font-weight:800;
+                        font-size:10px; flex-shrink:0;">${i + 1}</div>
+            <div style="flex:1; min-width:0;">
+                <div style="display:flex; justify-content:space-between; align-items:baseline; gap:4px; margin-bottom:2px;">
+                    <span class="source-name-text" style="color:var(--text);">${escapeHtml(s.source)}</span>
+                    <span class="source-pct-text" style="font-weight:700; font-size:11px; color:${c.text}; white-space:nowrap; flex-shrink:0;">${s[pctKey]}%</span>
+                </div>
+                <div style="height:3px; border-radius:99px; background:var(--bg); overflow:hidden;">
+                    <div style="height:100%; width:${s[pctKey]}%; background:${c.bar};"></div>
+                </div>
+                <div class="source-total-text" style="font-size:9px; color:var(--text-muted); margin-top:1px;">${s.total} berita</div>
             </div>
-            <div style="height:6px; border-radius:99px; background:var(--bg); overflow:hidden;">
-                <div style="height:100%; width:${s[pctKey]}%; background:${color};"></div>
-            </div>
-            <div style="font-size:10.5px; color:var(--text-muted); margin-top:2px;">${s.total} berita</div>
-        </div>`).join('');
+        </div>`;
+    }).join('');
 }
 
 function renderPairwiseRow(p) {
     return `
         <div>
-            <div style="display:flex; justify-content:space-between; gap:8px; font-size:12.5px; margin-bottom:4px;">
+            <div style="display:flex; justify-content:space-between; gap:8px; font-size:11.5px; margin-bottom:2px;">
                 <span style="font-weight:600; color:var(--text);">${p.method_a} &harr; ${p.method_b}</span>
                 <span style="font-weight:700; color:var(--primary); white-space:nowrap;">${p.agreement}%</span>
             </div>
-            <div style="height:7px; border-radius:99px; background:var(--bg); overflow:hidden;">
+            <div style="height:5px; border-radius:99px; background:var(--bg); overflow:hidden;">
                 <div style="height:100%; width:${p.agreement}%; background:var(--primary);"></div>
             </div>
         </div>`;
@@ -427,32 +490,6 @@ function renderUncertainItem(a) {
             <div class="controversial-meta">${escapeHtml(a.source)} &middot; ${escapeHtml(a.published_date)}</div>
             <div class="controversial-badge" style="color:var(--text-muted);">${a.label} &middot; confidence rata-rata ${a.confidence}%</div>
         </a>`;
-}
-
-function renderLengthSentimentChart(lengthStats) {
-    const ctx = document.getElementById('length-sentiment-chart').getContext('2d');
-    if (lengthSentimentChart) lengthSentimentChart.destroy();
-    const labels = lengthStats.map(b => `${b.label} (~${b.avg_words} kata)`);
-    lengthSentimentChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [
-                { label: 'Positif', data: lengthStats.map(b => b.positive_pct), backgroundColor: '#27AE60', stack: 's' },
-                { label: 'Negatif', data: lengthStats.map(b => b.negative_pct), backgroundColor: '#E74C3C', stack: 's' },
-                { label: 'Netral', data: lengthStats.map(b => b.neutral_pct), backgroundColor: '#95A5A6', stack: 's' },
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { position: 'top' } },
-            scales: {
-                x: { stacked: true },
-                y: { stacked: true, beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } },
-            }
-        }
-    });
 }
 
 function renderKeywordCloud(words, color) {
@@ -492,12 +529,12 @@ function renderControversialItem(a) {
         </a>`;
 }
 
-function renderExtremeCard(a, label, color) {
+function renderExtremeCard(a, label, color, rank) {
     return `
         <a href="${a.url || '#'}" target="_blank" rel="noopener" class="extreme-card" style="border-color:${color}55; background:${color}0D;">
-            <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:6px;">
-                <div style="font-size:26px; font-weight:800; color:${color};">${a.confidence}%</div>
-                <div style="font-size:11px; font-weight:700; color:${color}; text-transform:uppercase; letter-spacing:.5px;">Paling ${label}</div>
+            <div style="display:flex; align-items:baseline; gap:6px; margin-bottom:3px;">
+                <div style="font-size:16px; font-weight:800; color:${color};">${a.confidence}%</div>
+                <div style="font-size:9.5px; font-weight:700; color:${color}; text-transform:uppercase; letter-spacing:.4px;">#${rank} ${label}</div>
             </div>
             <div class="extreme-title">${escapeHtml(a.title) || '(Tanpa judul)'}</div>
             <div class="extreme-meta">${escapeHtml(a.source)} &middot; ${a.agree_count}/${a.total_methods} metode sepakat</div>

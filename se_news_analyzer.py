@@ -31,6 +31,45 @@ _SENTIMENT_KEY = {
     'netral': 'neutral',
 }
 
+# Daftar kata terkurasi manual (bukan dari lexicon sentiment_analyzer.py)
+# khusus untuk tag cloud "Kata Kunci" di halaman Analisis Sentimen. Lexicon
+# formal di kamus/ ternyata cukup berantakan untuk kebutuhan ini — dicoba
+# dulu filter pakai lexicon_weights (bobot numerik), tapi hasilnya kata
+# netral seperti "kelompok"/"sistem" malah dapat bobot lebih "kuat" (-15,
+# -12) daripada kata yang jelas negatif seperti "korupsi" (-15, sama), dan
+# bahkan "bagus" — kata positif paling dasar — tercatat NEGATIF (-3) karena
+# konflik antar file sumber lexicon. Jadi dipakai daftar kata yang memang
+# konotasinya jelas (dicek satu-satu), bukan turunan otomatis dari lexicon
+# itu. TIDAK memengaruhi skor/klasifikasi ML di fitur lain (Statistik
+# Harian, dsb — itu tetap pakai lexicon penuh dari sentiment_analyzer.py).
+_KEYWORD_POSITIVE_WORDS = {
+    'bagus', 'baik', 'keren', 'memuaskan', 'hebat', 'unggul', 'sukses',
+    'berhasil', 'prestasi', 'apresiasi', 'membanggakan', 'bangga',
+    'terbaik', 'sempurna', 'positif', 'optimis', 'optimistis', 'meningkat',
+    'meningkatkan', 'membaik', 'pulih', 'maju', 'kemajuan', 'berkualitas',
+    'bermanfaat', 'manfaat', 'mendukung', 'dukungan', 'mendorong',
+    'apresiatif', 'gemilang', 'cemerlang', 'solid', 'tangguh', 'aman',
+    'nyaman', 'efektif', 'efisien', 'transparan', 'akuntabel', 'jujur',
+    'adil', 'terpercaya', 'dipercaya', 'kepercayaan', 'antusias',
+    'semangat', 'bersemangat', 'kolaboratif', 'sinergis', 'harmonis',
+    'kondusif', 'stabil', 'lancar', 'akurat', 'ramah', 'inovatif',
+    'inovasi', 'berdaya', 'memuaskan', 'menginspirasi', 'inspiratif',
+}
+_KEYWORD_NEGATIVE_WORDS = {
+    'buruk', 'korupsi', 'koruptor', 'rugi', 'kerugian', 'merugikan',
+    'gagal', 'kegagalan', 'kecewa', 'mengecewakan', 'kekecewaan',
+    'khawatir', 'kekhawatiran', 'cemas', 'resah', 'keresahan', 'masalah',
+    'bermasalah', 'kendala', 'hambatan', 'terhambat', 'lambat',
+    'terlambat', 'keterlambatan', 'mangkrak', 'terbengkalai', 'penipuan',
+    'menipu', 'tertipu', 'penyimpangan', 'penyelewengan', 'pelanggaran',
+    'melanggar', 'sanksi', 'ancaman', 'mengancam', 'bahaya', 'berbahaya',
+    'krisis', 'memburuk', 'menurun', 'penurunan', 'anjlok', 'merosot',
+    'kacau', 'kekacauan', 'salah', 'kesalahan', 'keliru', 'protes',
+    'menolak', 'penolakan', 'kontroversi', 'kontroversial', 'konflik',
+    'sengketa', 'kritik', 'mengkritik', 'dikritik', 'curang', 'kecurangan',
+    'culas', 'licik', 'lemah', 'kelemahan', 'defisit', 'darurat',
+}
+
 # Split on '.', '!', '?' followed by whitespace + an uppercase letter/digit/
 # opening quote — a reasonable approximation of "next sentence starts here"
 # without a full NLP sentence tokenizer.
@@ -257,12 +296,22 @@ class SeNewsAnalyzer:
         """Kata paling sering muncul di berita yang mayoritas metode labeli
         Positif/Negatif — dipakai buat tag cloud di halaman Analisis
         Sentimen. Reuse `preprocessed` (teks sudah bersih dari stopword)
-        yang sudah dihitung sekali di awal analyze_batch, bukan proses ulang."""
+        yang sudah dihitung sekali di awal analyze_batch, bukan proses ulang.
+
+        Kata kandidatnya disaring pakai daftar kata terkurasi manual
+        (_KEYWORD_POSITIVE_WORDS/_KEYWORD_NEGATIVE_WORDS di atas) — supaya
+        "kata kunci positif" beneran kata yang konotasinya positif (mis.
+        "bagus", "berkualitas"), bukan sekadar kata yang sering muncul di
+        berita berlabel Positif (mis. "ekonomi", "bps", yang netral tapi
+        kebetulan sering disebut)."""
         counters = {'Positif': Counter(), 'Negatif': Counter()}
+        lexicons = {'Positif': _KEYWORD_POSITIVE_WORDS, 'Negatif': _KEYWORD_NEGATIVE_WORDS}
+
         for article, text in zip(articles, preprocessed):
             label = self._majority_vote(article, methods)
             if label in counters:
-                counters[label].update(text.split())
+                lexicon = lexicons[label]
+                counters[label].update(w for w in text.split() if w in lexicon)
 
         def top_list(counter):
             return [{'word': w, 'count': c} for w, c in counter.most_common(top_n) if c >= 2]
@@ -316,23 +365,24 @@ class SeNewsAnalyzer:
             result[_METHOD_NAMES.get(method, method)] = round(sum(scores) / len(scores) * 100, 1) if scores else 0.0
         return result
 
-    def _analyze_disagreement(self, articles, methods, top_n=8):
+    def _analyze_disagreement(self, articles, methods, top_n=8, extreme_top_n=3):
         """Tiga sudut pandang yang gampang dipahami tanpa perlu ngerti detail
         4 metode ML-nya:
         - Kontroversial: artikel yang labelnya paling banyak beda-beda antar
           metode (suara mayoritas paling "tipis") — kandidat bagus buat
           ditinjau manual.
-        - Ekstrem: artikel Positif/Negatif dengan confidence rata-rata
-          tertinggi di antara metode yang sepakat dengan suara mayoritas —
-          "yang paling meyakinkan" dari masing-masing sisi.
+        - Ekstrem: top `extreme_top_n` artikel Positif/Negatif dengan
+          confidence rata-rata tertinggi di antara metode yang sepakat
+          dengan suara mayoritas — "yang paling meyakinkan" dari masing-
+          masing sisi.
         - Ragu-ragu: kebalikan dari Kontroversial — SEMUA metode sepakat
           pada label yang sama, tapi confidence rata-ratanya rendah di
           semua metode ("kompak tapi tidak yakin"), butuh minimal 2 metode
           biar "kompak" ada artinya."""
         controversial = []
         uncertain = []
-        extreme_positive = None
-        extreme_negative = None
+        extreme_positive_candidates = []
+        extreme_negative_candidates = []
 
         for article in articles:
             preds = [(m, article[f'{m}_sentiment'], article[f'{m}_score'])
@@ -365,11 +415,9 @@ class SeNewsAnalyzer:
                     'total_methods': total,
                 }
                 if majority_label == 'Positif':
-                    if extreme_positive is None or candidate['confidence'] > extreme_positive['confidence']:
-                        extreme_positive = candidate
+                    extreme_positive_candidates.append(candidate)
                 else:
-                    if extreme_negative is None or candidate['confidence'] > extreme_negative['confidence']:
-                        extreme_negative = candidate
+                    extreme_negative_candidates.append(candidate)
 
             if majority_count == total and total >= 2:
                 all_scores = [min(abs(p[2]), 1.0) for p in preds]
@@ -383,7 +431,13 @@ class SeNewsAnalyzer:
 
         controversial.sort(key=lambda r: r['controversy'], reverse=True)
         uncertain.sort(key=lambda r: r['confidence'])
-        return controversial[:top_n], {'positive': extreme_positive, 'negative': extreme_negative}, uncertain[:top_n]
+        extreme_positive_candidates.sort(key=lambda r: r['confidence'], reverse=True)
+        extreme_negative_candidates.sort(key=lambda r: r['confidence'], reverse=True)
+        extreme = {
+            'positive': extreme_positive_candidates[:extreme_top_n],
+            'negative': extreme_negative_candidates[:extreme_top_n],
+        }
+        return controversial[:top_n], extreme, uncertain[:top_n]
 
     def _calculate_overall_summary(self, articles, methods):
         """Suara mayoritas gabungan semua metode untuk seluruh periode —
