@@ -152,11 +152,11 @@
 <!-- Analysis Form (Hidden until month selected) -->
 <div id="analysis-section" style="display: none;">
     <div class="card reveal">
-        <h2 style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+        <h2 class="analysis-title" style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--primary)">
                 <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
             </svg>
-            Analisis Sentimen - <span id="selected-month-text">-</span>
+            <span class="analysis-title-text">Analisis Sentimen - <span id="selected-month-text">-</span></span>
         </h2>
         
         <form id="analysis-form" onsubmit="analyzeMonth(event)">
@@ -277,7 +277,7 @@
 
         /* Card Pilih Bulan Data Berita Mobile */
         .month-selection-card { padding: 14px !important; margin-bottom: 12px !important; }
-        .month-selection-card h2 { font-size: 15px !important; }
+        .month-selection-card h2 { font-size: 13px !important; }
         .month-selection-card h2 svg { width: 18px !important; height: 18px !important; }
         .month-selection-card .card-sub { font-size: 11px !important; line-height: 1.4 !important; margin-bottom: 12px !important; }
         #refresh-month-btn { font-size: 10.5px !important; padding: 6px 10px !important; }
@@ -288,6 +288,24 @@
         .month-btn div:nth-child(1) { font-size: 11px !important; margin-bottom: 2px !important; }
         .month-btn div:nth-child(2) { font-size: 16px !important; }
         .month-btn div:nth-child(3) { font-size: 9.5px !important; }
+
+        /* Judul "Analisis Sentimen - <Bulan Tahun>" biar muat 1 baris di HP */
+        .analysis-title { gap: 6px !important; }
+        .analysis-title svg { width: 18px !important; height: 18px !important; flex-shrink: 0; }
+        .analysis-title-text { font-size: 13.5px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+
+        /* Form "Pilih Metode Analisis" + tombol + Hasil Analisis */
+        #analysis-section .form-group > label { font-size: 12px !important; gap: 6px !important; }
+        #analysis-section .form-group > label svg { width: 14px !important; height: 14px !important; }
+        #analysis-section .checkbox-row { padding: 9px !important; }
+        #analysis-section .checkbox-row span { font-size: 12px !important; }
+        #analysis-section button[type="submit"] { padding: 12px !important; font-size: 12.5px !important; }
+        #analysis-section button[type="submit"] svg { width: 15px !important; height: 15px !important; }
+        #analysis-section button.btn-ghost { padding: 10px !important; font-size: 12.5px !important; }
+
+        #results-section .card { padding: 14px !important; margin-bottom: 12px !important; }
+        #results-section h2 { font-size: 13px !important; }
+        #results-section p { font-size: 11px !important; line-height: 1.4 !important; }
     }
 </style>
 

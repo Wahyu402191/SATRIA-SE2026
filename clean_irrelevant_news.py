@@ -5,59 +5,19 @@ Script untuk membersihkan berita yang tidak relevan dengan Sensus Ekonomi 2026
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from db_config import get_connection
+from se_news_scraper import is_relevant_entry
 
 WIB = ZoneInfo('Asia/Jakarta')
 
-# Blacklist keywords - berita yang mengandung ini akan dihapus
-BLACKLIST_KEYWORDS = [
-    'kripto',
-    'bitcoin',
-    'ethereum',
-    'saham',
-    'bursa efek',
-    'forex',
-    'trading',
-    'investasi saham',
-    'restrukturisasi utang',
-    'whoosh',
-    'kereta cepat',
-    'konflik',
-    'perang',
-    'israel',
-    'iran',
-    'musik festival',
-    'bromo sunset music',
-    'film',
-    'artis',
-    'selebriti',
-    'wabup dompu',
-    'tinggalkan sidang',
-]
 
-# Required keywords - setidaknya satu harus ada
-REQUIRED_KEYWORDS = [
-    'sensus ekonomi',
-    'se2026',
-    'se 2026',
-]
-
-def is_relevant_article(title, content):
-    """Cek apakah artikel relevan dengan Sensus Ekonomi 2026"""
-    text = (title + ' ' + (content or '')).lower()
-    
-    # Cek blacklist dulu
-    for blackword in BLACKLIST_KEYWORDS:
-        if blackword in text:
-            return False
-    
-    # Cek apakah ada keyword yang required
-    has_required = False
-    for keyword in REQUIRED_KEYWORDS:
-        if keyword in text:
-            has_required = True
-            break
-    
-    return has_required
+def is_relevant_article(title, snippet):
+    """Cek apakah artikel relevan dengan Sensus Ekonomi 2026.
+    Sengaja hanya memeriksa title + rss_snippet (bukan content hasil
+    scraping), karena content bisa tercemar tautan "Baca juga: <judul
+    lain>" yang membuat artikel tak relevan lolos filter (lihat
+    is_relevant_entry di se_news_scraper.py — logic yang sama dipakai
+    saat pengambilan berita baru, supaya konsisten)."""
+    return is_relevant_entry(title, snippet)
 
 
 def main():
@@ -72,22 +32,21 @@ def main():
     # Get all articles
     print("\n[1] Mengambil semua artikel dari database...")
     cursor.execute("""
-        SELECT id, title, content, rss_snippet 
-        FROM se_news_articles 
+        SELECT id, title, rss_snippet
+        FROM se_news_articles
         ORDER BY published_date DESC
     """)
-    
+
     all_articles = cursor.fetchall()
     print(f"  Total artikel di database: {len(all_articles)}")
-    
+
     # Check relevance
     print("\n[2] Memeriksa relevansi artikel...")
     irrelevant_ids = []
     relevant_count = 0
-    
-    for article_id, title, content, snippet in all_articles:
-        text_content = content or snippet or ''
-        if not is_relevant_article(title, text_content):
+
+    for article_id, title, snippet in all_articles:
+        if not is_relevant_article(title, snippet):
             irrelevant_ids.append(article_id)
             print(f"  ✗ ID {article_id}: {title[:60]}...")
         else:

@@ -56,11 +56,11 @@
     .controversial-badge { font-size:10px; font-weight:700; color:var(--accent); }
 
     /* Artikel Paling Ekstrem */
-    .extreme-showcase { display:flex; flex-direction:column; gap:6px; flex:1; }
+    .extreme-showcase { display:flex; flex-direction:column; gap:6px; flex:1; min-width:0; }
     .extreme-card { display:block; padding:7px 10px; border:1.5px solid var(--border); border-radius:var(--radius); text-decoration:none; transition:transform .15s; }
     .extreme-card:hover { transform:translateY(-2px); }
-    .extreme-title { font-size:11px; font-weight:600; color:var(--text); line-height:1.3; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
-    .extreme-meta { font-size:9.5px; color:var(--text-muted); margin-top:2px; }
+    .extreme-title { font-size:11px; font-weight:600; color:var(--text); line-height:1.3; min-height:28.6px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+    .extreme-meta { font-size:9.5px; color:var(--text-muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
     /* Ranking Sumber Media Grid */
     .source-rank-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
@@ -141,6 +141,19 @@
 
         /* Card padding umum */
         .card { padding:12px 14px !important; }
+
+        /* Artikel Paling Ragu-ragu & Kontroversial item mobile ramping */
+        .controversial-item { padding: 9px 11px !important; }
+        .controversial-title { font-size: 11px !important; line-height: 1.35 !important; margin-bottom: 2px !important; }
+        .controversial-meta { font-size: 9.5px !important; margin-bottom: 5px !important; }
+        .controversial-badge { font-size: 9px !important; }
+
+        /* Artikel Paling Ekstrem mobile ramping */
+        .extreme-card { padding: 6px 8px !important; }
+        .extreme-title { font-size: 11px !important; line-height: 1.35 !important; }
+        .extreme-meta { font-size: 9.5px !important; margin-top: 2px !important; }
+        .extreme-card div[style*="font-size:16px"] { font-size: 13px !important; }
+        .extreme-card div[style*="font-size:9.5px"] { font-size: 8.5px !important; }
 
         /* Kata Kunci Positif & Negatif 2 kolom kanan-kiri mobile */
         .summary-keyword-row > .card:not(:first-child) { padding: 10px 10px !important; }
@@ -342,10 +355,10 @@ function displayResults(data) {
     const controversialHtml = hasAccuracy ? `
         <div class="card">
             <h2>Artikel Paling Kontroversial</h2>
-            <p class="card-sub">Berita yang labelnya paling banyak beda-beda antar metode — cocok ditinjau manual.</p>
+            <p class="card-sub">Berita yang labelnya paling banyak berbeda antar metode, cocok ditinjau secara manual.</p>
             <div class="controversial-list">
                 ${controversial.length ? controversial.map(renderControversialItem).join('') :
-                    '<span class="keyword-empty">Semua metode kompak sepakat untuk periode ini — tidak ada yang kontroversial.</span>'}
+                    '<span class="keyword-empty">Semua metode sepakat untuk periode ini (tidak ada artikel kontroversial).</span>'}
             </div>
         </div>` : '';
 
@@ -387,7 +400,7 @@ function displayResults(data) {
     const pairwiseHtml = pairwise.length ? `
         <div class="card">
             <h2>Kesepakatan Antar Pasangan Metode</h2>
-            <p class="card-sub">Persentase kedua metode memberi label sama pada artikel yang sama — beda dari Agreement Rate yang membandingkan tiap metode dengan suara mayoritas gabungan.</p>
+            <p class="card-sub">Persentase kedua metode memberi label sama pada artikel yang sama (berbeda dari Agreement Rate yang membandingkan metode dengan suara mayoritas gabungan).</p>
             <div style="display:flex; flex-direction:column; gap:7px;">
                 ${pairwise.map(renderPairwiseRow).join('')}
             </div>
@@ -396,7 +409,7 @@ function displayResults(data) {
     const uncertainHtml = hasAccuracy ? `
         <div class="card">
             <h2>Artikel Paling Ragu-ragu</h2>
-            <p class="card-sub">Semua metode sepakat pada label yang sama, tapi confidence-nya rendah di semua metode — beda dari Artikel Kontroversial (labelnya beda-beda antar metode).</p>
+            <p class="card-sub">Semua metode sepakat pada label yang sama, tetapi tingkat keyakinan (confidence) rendah pada semua metode.</p>
             <div class="controversial-list">
                 ${uncertain.length ? uncertain.map(renderUncertainItem).join('') :
                     '<span class="keyword-empty">Tidak ada artikel yang confidence-nya rendah secara kompak untuk periode ini.</span>'}
@@ -416,10 +429,8 @@ function displayResults(data) {
             { html: extremeHtml, fr: 4 },
         ]) +
         buildRow([
-            { html: controversialHtml, fr: 12 },
-        ]) +
-        buildRow([
-            { html: uncertainHtml, fr: 12 },
+            { html: controversialHtml, fr: 6 },
+            { html: uncertainHtml, fr: 6 },
         ]);
 
     const methods = Object.keys(data.summary);
@@ -474,7 +485,7 @@ function renderPairwiseRow(p) {
     return `
         <div>
             <div style="display:flex; justify-content:space-between; gap:8px; font-size:11.5px; margin-bottom:2px;">
-                <span style="font-weight:600; color:var(--text);">${p.method_a} &harr; ${p.method_b}</span>
+                <span style="font-weight:600; color:var(--text);">${p.method_a} &bull; ${p.method_b}</span>
                 <span style="font-weight:700; color:var(--primary); white-space:nowrap;">${p.agreement}%</span>
             </div>
             <div style="height:5px; border-radius:99px; background:var(--bg); overflow:hidden;">
@@ -483,12 +494,18 @@ function renderPairwiseRow(p) {
         </div>`;
 }
 
+function cleanTitle(title) {
+    if (!title) return '(Tanpa judul)';
+    const clean = title.replace(/\s*[\-—]\s*[a-zA-Z0-9\.\-\s]+$/, '').trim();
+    return escapeHtml(clean || title);
+}
+
 function renderUncertainItem(a) {
     return `
         <a href="${a.url || '#'}" target="_blank" rel="noopener" class="controversial-item">
-            <div class="controversial-title">${escapeHtml(a.title) || '(Tanpa judul)'}</div>
+            <div class="controversial-title">${cleanTitle(a.title)}</div>
             <div class="controversial-meta">${escapeHtml(a.source)} &middot; ${escapeHtml(a.published_date)}</div>
-            <div class="controversial-badge" style="color:var(--text-muted);">${a.label} &middot; confidence rata-rata ${a.confidence}%</div>
+            <div class="controversial-badge" style="color:var(--text-muted);">${escapeHtml(a.label)} &middot; confidence rata-rata ${a.confidence}%</div>
         </a>`;
 }
 
@@ -519,11 +536,11 @@ function renderControversialItem(a) {
     const segments = Object.entries(a.breakdown).map(([label, count]) =>
         `<span style="flex:${count}; background:${SENTIMENT_COLORS[label] || '#95A5A6'};" title="${label}: ${count}"></span>`
     ).join('');
-    const breakdownText = Object.entries(a.breakdown).map(([label, count]) => `${count} ${label}`).join(' · ');
+    const breakdownText = Object.entries(a.breakdown).map(([label, count]) => `${count} ${label}`).join(' &middot; ');
     return `
         <a href="${a.url || '#'}" target="_blank" rel="noopener" class="controversial-item">
-            <div class="controversial-title">${escapeHtml(a.title) || '(Tanpa judul)'}</div>
-            <div class="controversial-meta">${escapeHtml(a.source)} · ${escapeHtml(a.published_date)}</div>
+            <div class="controversial-title">${cleanTitle(a.title)}</div>
+            <div class="controversial-meta">${escapeHtml(a.source)} &middot; ${escapeHtml(a.published_date)}</div>
             <div class="controversial-split">${segments}</div>
             <div class="controversial-badge">${a.controversy}% beda pendapat &middot; ${breakdownText}</div>
         </a>`;
@@ -536,7 +553,7 @@ function renderExtremeCard(a, label, color, rank) {
                 <div style="font-size:16px; font-weight:800; color:${color};">${a.confidence}%</div>
                 <div style="font-size:9.5px; font-weight:700; color:${color}; text-transform:uppercase; letter-spacing:.4px;">#${rank} ${label}</div>
             </div>
-            <div class="extreme-title">${escapeHtml(a.title) || '(Tanpa judul)'}</div>
+            <div class="extreme-title">${cleanTitle(a.title)}</div>
             <div class="extreme-meta">${escapeHtml(a.source)} &middot; ${a.agree_count}/${a.total_methods} metode sepakat</div>
         </a>`;
 }

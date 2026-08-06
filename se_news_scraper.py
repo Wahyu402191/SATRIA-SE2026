@@ -42,6 +42,38 @@ def get_query_terms():
     return [q.strip() for q in raw.split(',') if q.strip()]
 
 
+# Google News RSS's quoted-phrase search isn't actually literal — it still
+# returns loosely related BPS/economy coverage (e.g. GDP growth reports)
+# that never mentions "Sensus Ekonomi" anywhere. This second relevance gate
+# checks the article's own title + Google's snippet (never the scraped
+# article body, which can contain unrelated "Baca juga: <other headline>"
+# teaser links that would otherwise create false positives).
+REQUIRED_RELEVANCE_KEYWORDS = ['sensus ekonomi', 'se2026', 'se 2026', 'se-2026', 'se26']
+BLACKLIST_KEYWORDS = [
+    'kripto', 'bitcoin', 'ethereum', 'saham', 'bursa efek', 'forex', 'trading',
+    'investasi saham', 'restrukturisasi utang', 'whoosh', 'kereta cepat',
+    'konflik', 'perang', 'israel', 'iran', 'musik festival', 'film', 'artis',
+    'selebriti',
+]
+
+
+def _contains_word(text, phrase):
+    """Word-boundary substring check — plain `in` matching lets short
+    blacklist entries like 'artis' false-positive inside unrelated words
+    (e.g. 'berpartisipasi')."""
+    return re.search(r'\b' + re.escape(phrase) + r'\b', text) is not None
+
+
+def is_relevant_entry(title, snippet):
+    """Relevance gate applied at fetch time, before an article is ever
+    stored — checks only title + RSS snippet (both scoped to this specific
+    article by Google, unlike the scraped body)."""
+    text = f"{title or ''} {snippet or ''}".lower()
+    if any(_contains_word(text, word) for word in BLACKLIST_KEYWORDS):
+        return False
+    return any(_contains_word(text, kw) for kw in REQUIRED_RELEVANCE_KEYWORDS)
+
+
 def _url_hash(url):
     return hashlib.sha1(url.encode('utf-8')).hexdigest()
 
@@ -128,6 +160,8 @@ def fetch_new_articles():
         entries = fetch_rss_entries(query)
         total_found += len(entries)
         for e in entries:
+            if not is_relevant_entry(e['title'], e['snippet']):
+                continue
             h = _url_hash(e['link'])
             if h in seen_hashes:
                 continue

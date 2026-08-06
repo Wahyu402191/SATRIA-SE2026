@@ -1,5 +1,5 @@
 {% extends "base_news.html" %}
-{% block title %}Statistik Harian — Berita SE2026{% endblock %}
+{% block title %}Statistik Harian | Berita SE2026{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -396,6 +396,120 @@
         }
     }
 
+    .btn-text-full { display: inline; }
+    .btn-text-mob { display: none; }
+
+    @media (max-width: 640px) {
+        .btn-text-full { display: none !important; }
+        .btn-text-mob { display: inline !important; }
+
+        /* Tabel Rincian Fit 100% Mobile (Anti Terpotong & Rata Tengah) */
+        table.rt {
+            min-width: 100% !important;
+            width: 100% !important;
+            table-layout: fixed !important;
+        }
+
+        /* Alokasi Lebar Kolom Eksplisit Pas Selebar Kontainer HP */
+        table.rt th:nth-child(1), table.rt td:nth-child(1) { width: 68px !important; } /* Tanggal (dikurangi) */
+        table.rt th:nth-child(2), table.rt td:nth-child(2) { width: 32px !important; } /* Hari */
+        table.rt th:nth-child(3), table.rt td:nth-child(3) { width: 58px !important; } /* Jumlah Berita (ditambah) */
+        table.rt th:nth-child(4), table.rt td:nth-child(4) { width: 40px !important; } /* Proporsi */
+        table.rt th:nth-child(5), table.rt td:nth-child(5) { width: 32px !important; } /* Trend */
+        table.rt th:nth-child(6), table.rt td:nth-child(6) { width: 48px !important; } /* Aksi */
+
+        /* SELURUH HEADER & ISI RATA TENGAH MURNI */
+        table.rt thead th {
+            padding: 5px 1px !important;
+            font-size: 8.5px !important;
+            text-align: center !important;
+            white-space: nowrap !important;
+        }
+        table.rt thead th:first-child,
+        table.rt thead th:nth-child(1) {
+            text-align: center !important;
+            justify-content: center !important;
+        }
+        table.rt tbody td {
+            padding: 4px 1px !important;
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+
+        /* Kolom 1: Header TANGGAL & Isi Murni Rata Tengah & Lega */
+        .td-tanggal {
+            display: flex !important;
+            gap: 0 !important;
+            justify-content: center !important;
+            align-items: center !important;
+            text-align: center !important;
+            width: 100% !important;
+            margin: 0 auto !important;
+        }
+        .td-tanggal svg { display: none !important; }
+        .td-tanggal span {
+            font-size: 8.5px !important;
+            font-weight: 600 !important;
+            white-space: nowrap !important;
+            display: block !important;
+            width: 100% !important;
+            text-align: center !important;
+        }
+
+        /* Kolom 2: Hari Ramping & Rata Tengah */
+        .day-badge {
+            width: 30px !important;
+            padding: 1px 0 !important;
+            font-size: 8px !important;
+            border-radius: 4px !important;
+            margin: 0 auto !important;
+        }
+
+        /* Kolom 3: Jumlah Berita Rata Tengah */
+        .td-count {
+            font-size: 8.5px !important;
+            white-space: nowrap !important;
+            text-align: center !important;
+        }
+
+        /* Kolom 4: Proporsi Rata Tengah */
+        .proporsi-wrap {
+            min-width: 38px !important;
+            gap: 2px !important;
+            justify-content: center !important;
+            margin: 0 auto !important;
+        }
+        .proporsi-bar-bg { height: 4px !important; }
+        .proporsi-pct {
+            font-size: 8px !important;
+            min-width: 18px !important;
+        }
+
+        /* Kolom 5: Trend Ramping & Rata Tengah */
+        .trend-badge {
+            padding: 1px 3px !important;
+            font-size: 8px !important;
+            border-radius: 4px !important;
+            margin: 0 auto !important;
+        }
+
+        /* Kolom 6: Aksi Tombol Rata Tengah & Tidak Terpotong */
+        .btn-lihat {
+            padding: 2px 3px !important;
+            font-size: 8.5px !important;
+            border-radius: 4px !important;
+            gap: 1px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 auto !important;
+            white-space: nowrap !important;
+        }
+        .btn-lihat svg { width: 8.5px !important; height: 8.5px !important; flex-shrink: 0 !important; }
+
+        .rincian-scroll { padding: 0 1px !important; }
+    }
+
     @media (max-width: 640px) {
         .page-header {
             gap: 12px !important;
@@ -700,6 +814,30 @@
             flex-direction: column !important;
             align-self: stretch !important;
             height: 100% !important;
+        }
+
+        #media-teraktif-card > div:first-child {
+            margin-bottom: 6px !important;
+            gap: 5px !important;
+        }
+
+        #media-teraktif-card > div:first-child > div:first-child {
+            width: 22px !important;
+            height: 22px !important;
+            border-radius: 6px !important;
+        }
+
+        #media-teraktif-card > div:first-child > div:first-child svg {
+            width: 11px !important;
+            height: 11px !important;
+        }
+
+        #media-teraktif-card > div:first-child > div:last-child > div:first-child {
+            font-size: 10.5px !important;
+        }
+
+        #media-teraktif-card > div:first-child > div:last-child > div:last-child {
+            display: none !important;
         }
 
         .mom-sub {
@@ -1565,16 +1703,11 @@
         animation: crownShine 4s ease-in-out infinite 2s;
     }
 
-    .rank-float {
-        animation: rankFloat 3s ease-in-out infinite;
-    }
-
-    .rank-float-2 {
-        animation: rankFloat 3.5s ease-in-out infinite .5s;
-    }
-
+    .rank-float,
+    .rank-float-2,
     .rank-float-3 {
-        animation: rankFloat 4s ease-in-out infinite 1s;
+        animation: none !important;
+        transform: none !important;
     }
 
     .bar-shimmer {
@@ -2203,7 +2336,8 @@
             </td>
             <td>${trendHTML}</td>
             <td><a class="btn-lihat" href="/news/articles?date=${dateStr}">
-                Lihat berita
+                <span class="btn-text-full">Lihat berita</span>
+                <span class="btn-text-mob">Lihat</span>
                 <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
             </a></td>
         </tr>`;

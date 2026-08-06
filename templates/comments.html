@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Komentar — SATRIA SE2026{% endblock %}
+{% block title %}Komentar | SATRIA SE2026{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -412,7 +412,7 @@ function esc(s) {
 function showPP(index) {
     const c = allComments[index];
     const analysis = analysisMap[keyFor(c, index)] || {};
-    document.getElementById('pp-author').textContent = `Komentar #${index+1} — @${c.author}`;
+    document.getElementById('pp-author').textContent = `Komentar #${index+1} (@${c.author})`;
     document.getElementById('pp-body').innerHTML = `<div style="text-align:center;padding:40px;"><div class="spinner"></div><p style="margin-top:14px;color:var(--text-muted);">Memproses...</p></div>`;
     document.getElementById('pp-modal').style.display = 'block';
 
@@ -484,7 +484,7 @@ function renderPP(s) {
     html += step(5,'Remove Punctuation','clean symbols', s.remove_punctuation||s.remove_numbers);
     html += step(6,'Spelling Correction','normalisasi', s.spelling_correction||s.remove_punctuation);
     html += step(7,'Tokenization', s.token_count+' token', s.tokenization);
-    html += step(8,'Normalization','slang → formal', s.normalization);
+    html += step(8,'Normalization','slang -> formal', s.normalization);
     html += step(9,'Stopword Removal', s.tokens_after_stopword+' token', s.stopword_removal);
     html += step(10,'Stemming','root words', s.stemming);
     html += step(11,'Negation Handling','NOT_ prefix', s.negation_handling);
@@ -494,7 +494,7 @@ function renderPP(s) {
         <div class="pp-step final">
             <div class="pp-step-head">
                 <span class="pp-step-title">12. Final Result</span>
-                <span class="pp-step-badge" style="background:var(--success);">${s.final_words} kata — Reduksi ${s.reduction_rate}%</span>
+                <span class="pp-step-badge" style="background:var(--success);">${s.final_words} kata (${s.reduction_rate}% reduksi)</span>
             </div>
             <div class="pp-step-content" style="border-left-color:var(--success);font-weight:600;">${esc(s.final)}</div>
         </div>`;

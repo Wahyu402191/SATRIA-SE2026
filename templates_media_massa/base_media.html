@@ -2755,12 +2755,14 @@
         }
 
         // ── 4. Grid ikon navigasi mobile: auto-hide scroll ke bawah ────────────
+        let isMnavManuallyOpened = false;
         function toggleMobileNavGrid() {
             const grid = document.getElementById('mobileNavGrid');
             const toggle = document.getElementById('mnavToggle');
             if (!grid) return;
             const nowHidden = grid.classList.toggle('mnav-hidden');
             toggle?.classList.toggle('mnav-toggle-open', !nowHidden);
+            isMnavManuallyOpened = !nowHidden;
         }
         (function () {
             const grid = document.getElementById('mobileNavGrid');
@@ -2772,7 +2774,7 @@
             function onScroll() {
                 const y = Math.max(0, window.scrollY);
                 const delta = y - lastY;
-                if (delta > DELTA_THRESHOLD && y > 80) {
+                if (!isMnavManuallyOpened && delta > DELTA_THRESHOLD && y > 80) {
                     grid.classList.add('mnav-hidden');
                     toggle?.classList.remove('mnav-toggle-open');
                     lastY = y;
