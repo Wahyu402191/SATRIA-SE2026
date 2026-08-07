@@ -64,6 +64,22 @@
             line-height: 1.6;
             font-size: 14px;
             overflow-x: hidden;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+            flex: 1;
+            width: 100%;
+        }
+
+        footer {
+            margin-top: auto;
         }
 
         /* ─── INSTITUTIONAL HEADER ─── */
@@ -479,6 +495,76 @@
 
         .app-sidebar.open {
             transform: translateX(0);
+        }
+
+        /* ── Mobile Sidebar scale-down (separuh layar) ── */
+        @media (max-width: 768px) {
+            .app-sidebar {
+                width: 60vw !important;
+                min-width: 210px !important;
+                max-width: 240px !important;
+                padding: 18px 14px !important;
+            }
+            .sidebar-brand {
+                gap: 8px !important;
+                margin-bottom: 14px !important;
+                padding-bottom: 12px !important;
+                padding-right: 24px !important;
+            }
+            .sidebar-brand-logo {
+                width: 32px !important;
+                height: 32px !important;
+            }
+            .sidebar-brand-text-main {
+                font-size: 13px !important;
+            }
+            .sidebar-brand-text-sub {
+                font-size: 9px !important;
+            }
+            .sidebar-avatar {
+                width: 60px !important;
+                height: 60px !important;
+                margin-bottom: 6px !important;
+                border-width: 2px !important;
+            }
+            .sidebar-avatar-initial {
+                font-size: 20px !important;
+            }
+            .sidebar-name {
+                font-size: 13px !important;
+            }
+            .sidebar-email {
+                font-size: 9.5px !important;
+            }
+            .sidebar-app-card, .sidebar-app-link {
+                padding: 8px 10px !important;
+                gap: 8px !important;
+                margin-bottom: 6px !important;
+                border-radius: 10px !important;
+            }
+            .sidebar-app-title {
+                font-size: 10.5px !important;
+                line-height: 1.2 !important;
+            }
+            .sidebar-app-sub {
+                font-size: 8.5px !important;
+            }
+            .sidebar-app-icon {
+                width: 30px !important;
+                height: 30px !important;
+                border-radius: 8px !important;
+            }
+            .sidebar-app-icon svg {
+                width: 15px !important;
+                height: 15px !important;
+            }
+            .sidebar-nav-item, .sidebar-link {
+                padding: 7px 10px !important;
+                font-size: 11px !important;
+            }
+            .sidebar-divider {
+                margin: 10px 0 !important;
+            }
         }
 
         .sidebar-close-btn {

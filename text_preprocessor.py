@@ -34,9 +34,13 @@ class TextPreprocessor:
             self.stop_words_en = set()
         self.stop_words = self.stop_words_id.union(self.stop_words_en)
         
-        # Negation words
+        # Negation words. NOTE: 'kurang' is deliberately excluded even though
+        # it can act as a soft negator ("kurang bagus") — negation handling
+        # runs AFTER stemming, and 'kurang' is also the common stemmed root
+        # of unrelated verbs like 'mengurangi'/'berkurang' ("to reduce"),
+        # which was causing false NOT_ prefixes on the following word.
         self.negation_words = {
-            'tidak', 'bukan', 'jangan', 'belum', 'tanpa', 'kurang',
+            'tidak', 'bukan', 'jangan', 'belum', 'tanpa',
             'no', 'not', 'never', 'none', 'neither', 'nobody', 'nothing'
         }
         

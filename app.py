@@ -158,6 +158,16 @@ def require_login():
     if request.endpoint is None or request.endpoint in _PUBLIC_ENDPOINTS:
         return
     if 'user_id' not in session:
+        if (request.path.startswith('/media/') or request.path.startswith('/youtube/')) and (
+            request.is_json or 
+            'application/json' in request.headers.get('Accept', '') or 
+            request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
+            '/get_' in request.path or 
+            '/word_trend' in request.path or
+            '/analyze' in request.path or
+            '/preprocess' in request.path
+        ):
+            return jsonify({'success': False, 'error': 'Sesi telah berakhir. Silakan login kembali.', 'login_required': True}), 401
         return redirect(url_for('login', next=request.path))
 
 
@@ -1330,10 +1340,23 @@ def media_analyze():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+def ensure_media_analysis_data():
+    """Ensure media_data has active analysis results, auto-restoring from DB if available."""
+    if not media_data.get('analysis_results'):
+        try:
+            saved_results = media_storage.get_saved_analysis_results()
+            if saved_results:
+                media_data['analysis_results'] = saved_results
+                media_data['selected_month'] = saved_results['selected_month']
+                print(f"[✓] Auto-restored saved analysis results from DB for month {saved_results['selected_month']} ({len(saved_results['articles'])} articles)")
+        except Exception as e:
+            print(f"[!] Error auto-restoring media analysis data: {e}")
+
 @app.route('/media/get_analysis_results', methods=['GET'])
 def media_get_analysis_results():
     """Get stored analysis results"""
-    if media_data['analysis_results']:
+    ensure_media_analysis_data()
+    if media_data.get('analysis_results'):
         return jsonify({
             'success': True,
             'results': media_data['analysis_results'],
@@ -1346,6 +1369,7 @@ def media_get_analysis_results():
 def media_word_trend():
     """API endpoint: top words per week from analyzed articles"""
     try:
+        ensure_media_analysis_data()
         if not media_data.get('analysis_results'):
             return jsonify({'error': 'Belum ada data analisis'}), 400
         

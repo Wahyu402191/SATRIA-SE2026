@@ -5,8 +5,8 @@
 <style>
     /* Enhanced Page Header */
     .page-header {
-        display:flex; align-items:center; gap:18px; margin-bottom:28px;
-        padding:24px 28px; border-radius:var(--radius-lg);
+        display:flex; align-items:center; gap:14px; margin-bottom:20px;
+        padding:16px 20px; border-radius:var(--radius-lg);
         background: var(--gradient-wave-cool);
         border:1px solid var(--border);
         position:relative; overflow:hidden;
@@ -21,26 +21,26 @@
         50% { opacity: .7; }
     }
     .page-header-icon {
-        width:56px; height:56px;
+        width:42px; height:42px;
         background:linear-gradient(135deg, var(--accent), var(--accent-light));
         background-size:200% 200%;
         animation:waveMove 7s ease infinite;
-        border-radius:var(--radius-lg);
+        border-radius:12px;
         display:flex; align-items:center; justify-content:center;
         box-shadow:0 4px 16px rgba(230,126,34,.3);
-        position:relative; z-index:1;
+        position:relative; z-index:1; flex-shrink:0;
     }
-    .page-header-icon svg { width:28px; height:28px; stroke:#fff; stroke-width:2; fill:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,.2)); }
+    .page-header-icon svg { width:22px; height:22px; stroke:#fff; stroke-width:2; fill:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,.2)); }
     .page-header-content { flex:1; position:relative; z-index:1; }
     .page-header h1 {
-        font-size:22px; font-weight:800; margin-bottom:6px;
+        font-size:18px; font-weight:800; margin-bottom:3px;
         background:linear-gradient(135deg, var(--accent), var(--primary));
         -webkit-background-clip:text;
         -webkit-text-fill-color:transparent;
         background-clip:text;
         letter-spacing:-.5px;
     }
-    .page-header p { font-size:13px; color:var(--text-muted); line-height:1.6; }
+    .page-header p { font-size:12px; color:var(--text-muted); line-height:1.5; }
 
     /* Enhanced Section Heading */
     .section-heading {
@@ -74,30 +74,169 @@
     .legend-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; margin-top:16px; }
     .legend-item { display:flex; align-items:center; gap:8px; font-size:12px; }
     .legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
-    .top-words-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin-top:4px; }
-    /* Word Chips - Enhanced */
-    .word-chip {
-        background:var(--bg); border:2px solid var(--border); border-radius:var(--radius-lg);
-        padding:16px 18px; text-align:center;
-        transition:all .3s cubic-bezier(.22,1,.36,1);
-        position:relative; overflow:hidden;
+    /* Leaderboard Ranking Component - Compact & Elegant */
+    .ranking-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 4px;
     }
-    .word-chip::before {
-        content:''; position:absolute; top:0; left:0; right:0; height:2px;
-        background:var(--gradient-blue-green);
-        opacity:0; transition:opacity .3s;
+    .rank-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 12px;
+        background: var(--bg);
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        transition: all .2s cubic-bezier(.22,1,.36,1);
+        position: relative;
+        overflow: hidden;
     }
-    .word-chip:hover {
-        border-color:var(--primary);
-        background:linear-gradient(135deg, #E3F2FD, #E8F8F5);
-        transform:translateY(-4px);
-        box-shadow:0 6px 20px rgba(40,116,166,.15);
+    .rank-item:hover {
+        transform: translateX(3px);
+        border-color: var(--primary-light);
+        box-shadow: 0 3px 12px rgba(40,116,166,0.12);
+        background: var(--bg-card);
     }
-    .word-chip:hover::before { opacity:1; }
-    .word-chip-word { font-size:15px; font-weight:800; color:var(--primary); letter-spacing:-.3px; }
-    .word-chip-count { font-size:11px; color:var(--text-muted); margin-top:4px; font-weight:600; }
+    .rank-badge {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 800;
+        flex-shrink: 0;
+        letter-spacing: -.2px;
+        position: relative;
+    }
+    .rank-badge.rank-1 {
+        background: linear-gradient(135deg, #ffd700 0%, #ff9800 100%);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(255, 152, 0, 0.4);
+        border: 1px solid #ffe082;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .rank-badge.rank-2 {
+        background: linear-gradient(135deg, #94a3b8 0%, #475569 100%);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(100, 116, 139, 0.35);
+        border: 1px solid #cbd5e1;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .rank-badge.rank-3 {
+        background: linear-gradient(135deg, #fb8c00 0%, #d84315 100%);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(216, 67, 21, 0.3);
+        border: 1px solid #ffcc80;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .rank-badge.rank-other {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border);
+        color: var(--text-muted);
+        font-size: 10.5px;
+    }
+    .rank-badge-icon {
+        width: 10px;
+        height: 10px;
+        margin-bottom: -1px;
+    }
+    .rank-content {
+        flex: 1;
+        min-width: 0;
+    }
+    .rank-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2px;
+        gap: 6px;
+    }
+    .rank-word {
+        font-size: 12.5px;
+        font-weight: 800;
+        color: var(--primary);
+        letter-spacing: -.2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .rank-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 10px;
+        background: linear-gradient(135deg, rgba(40,116,166,0.08), rgba(65,158,130,0.08));
+        border: 1px solid rgba(40,116,166,0.18);
+        padding: 2px 7px;
+        border-radius: 6px;
+        flex-shrink: 0;
+    }
+    .rank-count-num {
+        font-size: 11.5px;
+        font-weight: 900;
+        color: var(--primary);
+        letter-spacing: -.2px;
+    }
+    .rank-count-unit {
+        font-size: 9.5px;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+    .rank-bar-bg {
+        width: 100%;
+        height: 5px;
+        background: var(--border);
+        border-radius: 99px;
+        overflow: hidden;
+    }
+    .rank-bar-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 0.6s cubic-bezier(.22,1,.36,1);
+    }
     .empty-state { text-align:center; padding:60px 24px; color:var(--text-muted); }
     .empty-state a { color:var(--primary); font-weight:600; text-decoration:none; }
+
+    /* 2-Column Side-by-Side Layout */
+    .trend-row-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 24px;
+        align-items: stretch;
+    }
+    .trend-col {
+        margin-bottom: 0 !important;
+        display: flex;
+        flex-direction: column;
+    }
+    .top-words-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 4px;
+        flex: 1;
+    }
+
+    @media (max-width: 992px) {
+        .trend-row-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-header { padding: 12px 14px !important; gap: 10px !important; margin-bottom: 14px !important; }
+        .page-header-icon { width: 36px !important; height: 36px !important; min-width: 36px !important; min-height: 36px !important; border-radius: 10px !important; flex-shrink: 0 !important; }
+        .page-header-icon svg { width: 18px !important; height: 18px !important; }
+        .page-header h1 { font-size: 15px !important; margin-bottom: 2px !important; }
+        .page-header p { font-size: 11px !important; line-height: 1.35 !important; }
+    }
 
     /* Mobile: rapatkan grid-grid kecil biar konsisten sama halaman lain */
     @media (max-width: 640px) {
@@ -119,9 +258,17 @@
     </div>
 </div>
 
+<div class="card" id="loading-state" style="text-align:center;padding:45px 20px;">
+    <div class="spinner" style="margin:0 auto 12px;width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;"></div>
+    <p style="font-size:13px;color:var(--text-muted);font-weight:500;">Memuat data trend kata...</p>
+</div>
+
 <div class="card" id="no-data" style="display:none;">
-    <div class="empty-state">
-        <p>Belum ada data analisis. <a href="/media/">Lakukan analisis berita terlebih dahulu</a>, lalu kembali ke halaman ini.</p>
+    <div class="empty-state" style="padding:40px 20px;">
+        <svg viewBox="0 0 24 24" style="width:44px;height:44px;fill:none;stroke:var(--text-muted);stroke-width:1.5;margin-bottom:12px;"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        <p style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">Belum Ada Hasil Analisis</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Silakan lakukan analisis sentimen berita media massa terlebih dahulu.</p>
+        <a href="/media/" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:var(--primary);color:#fff;border-radius:99px;font-size:12px;font-weight:600;text-decoration:none;">Lakukan Analisis &rarr;</a>
     </div>
 </div>
 
@@ -130,19 +277,22 @@
     <!-- Month info -->
     <div id="month-info"></div>
 
-    <!-- Top Words -->
-    <div class="card">
-        <div class="section-heading">Kata Paling Sering Muncul</div>
-        <div class="top-words-grid" id="top-words-grid"></div>
-    </div>
-
-    <!-- Line Chart -->
-    <div class="card">
-        <div class="section-heading">Trend Frekuensi Kata per Minggu</div>
-        <div class="chart-wrap" style="height:320px;">
-            <canvas id="trend-chart"></canvas>
+    <!-- 2 Column Side-by-Side Row -->
+    <div class="trend-row-grid">
+        <!-- Kiri: Kata Paling Sering Muncul -->
+        <div class="card trend-col">
+            <div class="section-heading">Kata Paling Sering Muncul</div>
+            <div class="top-words-grid" id="top-words-grid"></div>
         </div>
-        <div class="legend-grid" id="chart-legend"></div>
+
+        <!-- Kanan: Trend Frekuensi Kata per Minggu -->
+        <div class="card trend-col">
+            <div class="section-heading">Trend Frekuensi Kata per Minggu</div>
+            <div class="chart-wrap" style="height:360px;">
+                <canvas id="trend-chart"></canvas>
+            </div>
+            <div class="legend-grid" id="chart-legend"></div>
+        </div>
     </div>
 
     <!-- Bar Chart per Word -->
@@ -167,15 +317,43 @@ const PALETTE = [
 let trendChart = null, barChart = null;
 
 async function loadTrend() {
+    const loader = document.getElementById('loading-state');
     try {
-        const res = await fetch('/media/word_trend');
-        const data = await res.json();
+        const res = await fetch('/media/word_trend', {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        });
 
-        if (data.error || !data.weeks || !data.weeks.length) {
-            document.getElementById('no-data').style.display = 'block';
+        if (res.status === 401) {
+            window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
             return;
         }
-        document.getElementById('main-content').style.display = 'block';
+
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error('Response is not JSON');
+        }
+
+        const data = await res.json();
+        if (loader) loader.style.display = 'none';
+
+        if (data.login_required) {
+            window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
+            return;
+        }
+
+        if (data.error || !data.weeks || !data.weeks.length) {
+            const noData = document.getElementById('no-data');
+            if (noData) {
+                noData.style.display = 'block';
+                noData.classList.add('visible');
+            }
+            return;
+        }
+        const mainContent = document.getElementById('main-content');
+        if (mainContent) {
+            mainContent.style.display = 'block';
+            mainContent.classList.add('visible');
+        }
 
         const { weeks, words, data: series, selected_month } = data;
 
@@ -196,17 +374,52 @@ async function loadTrend() {
             `;
         }
 
-        // Top words chips — calculate totals
+        // Top words leaderboard ranking — calculate totals
         const totals = {};
         words.forEach(w => { totals[w] = (series[w]||[]).reduce((a,b)=>a+b,0); });
         const sorted = [...words].sort((a,b)=>totals[b]-totals[a]);
+        const maxTotal = totals[sorted[0]] || 1;
 
         const topGrid = document.getElementById('top-words-grid');
-        topGrid.innerHTML = sorted.map((w,i) => `
-            <div class="word-chip" style="border-top:3px solid ${PALETTE[i%PALETTE.length]};">
-                <div class="word-chip-word">${w}</div>
-                <div class="word-chip-count">${totals[w]} kemunculan</div>
-            </div>`).join('');
+        topGrid.className = 'ranking-list';
+        topGrid.innerHTML = sorted.map((w, i) => {
+            const rank = i + 1;
+            const pct = Math.round((totals[w] / maxTotal) * 100);
+            
+            // Custom vector SVG icons instead of emojis
+            let iconHtml = '';
+            if (rank === 1) {
+                // Gold Crown SVG
+                iconHtml = `<svg class="rank-badge-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>`;
+            } else if (rank === 2 || rank === 3) {
+                // Star SVG
+                iconHtml = `<svg class="rank-badge-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
+            }
+
+            const badgeClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
+            const color = PALETTE[i % PALETTE.length];
+            const formattedNum = totals[w].toLocaleString('id-ID');
+            
+            return `
+            <div class="rank-item">
+                <div class="rank-badge ${badgeClass}">
+                    ${iconHtml}
+                    <span>#${rank}</span>
+                </div>
+                <div class="rank-content">
+                    <div class="rank-header">
+                        <span class="rank-word">${w}</span>
+                        <div class="rank-count">
+                            <span class="rank-count-num">${formattedNum}</span>
+                            <span class="rank-count-unit">kemunculan</span>
+                        </div>
+                    </div>
+                    <div class="rank-bar-bg">
+                        <div class="rank-bar-fill" style="width:${pct}%; background:${color};"></div>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
 
         // Week labels (e.g., "Minggu 1", "Minggu 2", ...)
         const labels = weeks.map(w => `Minggu ${w}`);
@@ -302,7 +515,12 @@ async function loadTrend() {
 
     } catch(e) {
         console.error(e);
-        document.getElementById('no-data').style.display = 'block';
+        if (loader) loader.style.display = 'none';
+        const noData = document.getElementById('no-data');
+        if (noData) {
+            noData.style.display = 'block';
+            noData.classList.add('visible');
+        }
     }
 }
 

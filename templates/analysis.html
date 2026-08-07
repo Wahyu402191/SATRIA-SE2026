@@ -369,9 +369,103 @@
     /* Mobile only: Mulai Analisis & Reset jadi kiri-kanan sama lebar (bukan
        lebar tetap 180px yang di layar sempit malah numpuk ke bawah).
        Desktop tidak kena sama sekali karena di dalam media query. */
+    /* Mobile responsive: 2 items per row side-by-side on mobile */
     @media (max-width: 768px) {
         .analysis-action-row #analyze-btn,
         .analysis-action-row #reset-btn { width: auto; flex: 1 1 0; }
+
+        /* Distribusi Sentimen per Metode: 2 kolom */
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+        }
+        .stat-card {
+            padding: 10px 12px !important;
+            border-radius: 12px !important;
+        }
+        .stat-card-title {
+            font-size: 10.5px !important;
+            margin-bottom: 8px !important;
+            padding-bottom: 6px !important;
+            letter-spacing: .2px !important;
+        }
+        .method-title-row {
+            padding-right: 26px !important;
+            margin-bottom: 8px !important;
+        }
+        .method-info-btn {
+            width: 22px !important;
+            height: 22px !important;
+            font-size: 11px !important;
+            top: 8px !important;
+            right: 8px !important;
+        }
+        .bar-row {
+            margin-bottom: 5px !important;
+        }
+        .bar-meta {
+            font-size: 9.5px !important;
+            margin-bottom: 2px !important;
+        }
+        .bar-label {
+            font-size: 9.5px !important;
+        }
+        .bar-count {
+            font-size: 9px !important;
+        }
+        .bar-track {
+            height: 5px !important;
+        }
+
+        /* Confusion Matrix: 2 kolom */
+        .cm-scroll {
+            overflow-x: visible !important;
+        }
+        .cm-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            min-width: 0 !important;
+            gap: 8px !important;
+        }
+        .cm-card {
+            border-radius: 10px !important;
+        }
+        .cm-card-title {
+            padding: 6px 8px !important;
+            font-size: 10.5px !important;
+        }
+        .cm-card img {
+            width: 100% !important;
+            height: auto !important;
+        }
+
+        /* Wordcloud: 2 kolom */
+        .wc-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+        }
+        .wc-header {
+            padding: 6px 8px !important;
+            font-size: 10.5px !important;
+        }
+        .wc-body {
+            padding: 6px !important;
+            min-height: 80px !important;
+        }
+
+        /* Accuracy Grid: 2 kolom */
+        .accuracy-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+        }
+        .acc-card {
+            padding: 10px 8px !important;
+        }
+        .acc-pct {
+            font-size: 20px !important;
+        }
+        .acc-name {
+            font-size: 9.5px !important;
+        }
     }
     .btn:hover {
         background: linear-gradient(135deg, var(--primary-dark), var(--primary));

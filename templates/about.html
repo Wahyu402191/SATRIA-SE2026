@@ -198,17 +198,150 @@
     .api-guide a { color:var(--primary-light); font-weight:600; text-decoration:none; }
     code { background:var(--bg); border:1px solid var(--border); padding:2px 7px; border-radius:4px; font-size:12px; font-family:monospace; color:var(--primary); }
 
-    /* Mobile: grid auto-fit di halaman ini gak punya override sama sekali,
-       jadi collapse ke 1 kolom sempit memanjang ke bawah. Dipaksa 2 kolom
-       biar lebih mirip pola desktop, gak panjang banget. */
-    @media (max-width: 640px) {
-        .methods-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .method-tile { padding: 16px; }
-        .feature-list { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .lex-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .lex-item { padding: 12px; }
-        .lex-num { font-size: 20px; }
-        .lex-label { font-size: 9.5px; }
+    /* Mobile responsive optimization: Compact all elements on mobile to match design system */
+    @media (max-width: 768px) {
+        .about-hero {
+            padding: 18px 16px !important;
+            margin-bottom: 14px !important;
+            border-radius: 14px !important;
+        }
+        .about-hero h1 {
+            font-size: 16px !important;
+            margin-bottom: 6px !important;
+            line-height: 1.35 !important;
+            letter-spacing: -.3px !important;
+        }
+        .about-hero p {
+            font-size: 11.5px !important;
+            line-height: 1.5 !important;
+        }
+        .about-hero .version-badge {
+            margin-top: 10px !important;
+            padding: 4px 12px !important;
+            font-size: 10px !important;
+            gap: 6px !important;
+        }
+        .about-hero .version-badge span {
+            width: 6px !important;
+            height: 6px !important;
+        }
+
+        .section-heading {
+            font-size: 13.5px !important;
+            margin-bottom: 12px !important;
+            gap: 8px !important;
+        }
+        .section-heading::before {
+            height: 16px !important;
+            width: 3.5px !important;
+        }
+
+        /* Compact cards on mobile */
+        .card {
+            padding: 14px 16px !important;
+            margin-bottom: 12px !important;
+            border-radius: 14px !important;
+        }
+
+        /* Methods Grid */
+        .methods-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+        }
+        .method-tile {
+            padding: 12px 10px !important;
+            border-radius: 10px !important;
+        }
+        .method-tile-num {
+            width: 30px !important;
+            height: 30px !important;
+            font-size: 12px !important;
+            margin-bottom: 6px !important;
+            border-radius: 8px !important;
+        }
+        .method-tile h3 {
+            font-size: 12px !important;
+            margin-bottom: 3px !important;
+        }
+        .method-tile p {
+            font-size: 10px !important;
+            line-height: 1.45 !important;
+        }
+
+        /* Pipeline Steps */
+        .pipeline::before {
+            left: 11px !important;
+            top: 18px !important;
+            bottom: 18px !important;
+        }
+        .pipe-step {
+            padding: 8px 0 !important;
+            gap: 10px !important;
+        }
+        .pipe-num {
+            width: 24px !important;
+            height: 24px !important;
+            font-size: 10.5px !important;
+            margin-top: 1px !important;
+        }
+        .pipe-label {
+            font-size: 12px !important;
+        }
+        .pipe-desc {
+            font-size: 10.5px !important;
+            line-height: 1.4 !important;
+        }
+
+        /* Lexicon Grid */
+        .lex-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+        }
+        .lex-item {
+            padding: 10px 8px !important;
+            border-radius: 10px !important;
+        }
+        .lex-num {
+            font-size: 18px !important;
+        }
+        .lex-label {
+            font-size: 9.5px !important;
+        }
+
+        /* Feature List */
+        .feature-list {
+            grid-template-columns: 1fr !important;
+            gap: 6px !important;
+        }
+        .feature-item {
+            padding: 9px 12px !important;
+            gap: 8px !important;
+            border-radius: 9px !important;
+        }
+        .feature-dot {
+            width: 6px !important;
+            height: 6px !important;
+            margin-top: 4px !important;
+        }
+        .feature-text {
+            font-size: 11px !important;
+            line-height: 1.45 !important;
+        }
+
+        /* Paragraphs & Notes inside cards */
+        .card > p {
+            font-size: 11px !important;
+            line-height: 1.5 !important;
+            margin-bottom: 10px !important;
+        }
+        .api-guide {
+            padding: 12px 14px !important;
+            border-radius: 10px !important;
+        }
+        .api-guide ol li {
+            font-size: 11px !important;
+            margin-bottom: 6px !important;
+        }
     }
 </style>
 {% endblock %}
@@ -217,7 +350,7 @@
 
 <div class="about-hero">
     <h1>SATRIA SE2026</h1>
-    <p>Sistem Automatis Terpadu Riset Informasi dan Analisis: Sistem analisis sentimen komentar media sosial YouTube untuk mendukung program Sensus Ekonomi BPS Kabupaten Bangkalan.</p>
+    <p>Sistem Automatis Terpadu Riset Informasi dan Analisis: Platform analisis sentimen komentar media sosial YouTube untuk mendukung program Sensus Ekonomi Badan Pusat Statistik Kabupaten Bangkalan.</p>
     <div class="version-badge"><span style="width:7px;height:7px;background:var(--accent-light);border-radius:50%;display:inline-block;"></span> Versi 1.0 &nbsp;|&nbsp; BPS Kabupaten Bangkalan &nbsp;|&nbsp; 2026</div>
 </div>
 
@@ -228,22 +361,22 @@
         <div class="method-tile">
             <div class="method-tile-num">1</div>
             <h3>Naive Bayes</h3>
-            <p>Probabilistic classifier berbasis TF-IDF dengan trigram features. Training menggunakan 1.200 sampel dari lexicon Indonesia dengan alpha 0.5 (Laplace smoothing).</p>
+            <p>Algoritma klasifikasi probabilistik berbasis TF-IDF dan ekstraksi fitur trigram. Model ini dilatih menggunakan 1.200 sampel leksikon Bahasa Indonesia dengan smoothing Laplace alpha 0,5.</p>
         </div>
         <div class="method-tile">
             <div class="method-tile-num">2</div>
             <h3>Support Vector Machine</h3>
-            <p>Linear SVM dengan parameter C=1.5 dan class weight balanced. Efektif untuk klasifikasi teks dengan dimensi fitur tinggi.</p>
+            <p>Klasifikasi Linear SVM dengan parameter C=1,5 dan bobot kelas seimbang. Sangat efektif untuk memetakan teks komentar berdimensi fitur tinggi secara presisi.</p>
         </div>
         <div class="method-tile">
             <div class="method-tile-num">3</div>
             <h3>LSTM</h3>
-            <p>Long Short-Term Memory dengan context window dan weighted sequence scoring. Mempertimbangkan urutan kata dan konteks kalimat.</p>
+            <p>Long Short-Term Memory dengan context window dan pembobotan sekuensial. Mampu memahami urutan kata dan konteks kalimat komentar secara mendalam.</p>
         </div>
         <div class="method-tile">
             <div class="method-tile-num">4</div>
             <h3>IndoBERT</h3>
-            <p>Simulasi bidirectional transformer untuk Bahasa Indonesia. Menggunakan attention mechanism dan negation handling kontekstual.</p>
+            <p>Model transformer dua arah kontekstual khusus Bahasa Indonesia. Menggunakan mekanisme perhatian (attention mechanism) dan penanganan kalimat negasi secara akurat.</p>
         </div>
     </div>
 </div>
@@ -252,18 +385,18 @@
 <div class="card">
     <div class="section-heading">Pipeline Preprocessing Teks (12 Langkah)</div>
     <div class="pipeline">
-        <div class="pipe-step"><div class="pipe-num">1</div><div><div class="pipe-label">Original Text</div><div class="pipe-desc">Teks komentar mentah dari YouTube</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">2</div><div><div class="pipe-label">Case Folding</div><div class="pipe-desc">Konversi semua karakter menjadi huruf kecil</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">3</div><div><div class="pipe-label">Noise Removal</div><div class="pipe-desc">Menghapus URL, @mention, #hashtag</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">4</div><div><div class="pipe-label">Remove Numbers</div><div class="pipe-desc">Menghapus karakter angka</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">5</div><div><div class="pipe-label">Remove Punctuation</div><div class="pipe-desc">Menghapus tanda baca dan simbol</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">6</div><div><div class="pipe-label">Spelling Correction</div><div class="pipe-desc">Normalisasi typo dan singkatan umum</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">7</div><div><div class="pipe-label">Tokenization</div><div class="pipe-desc">Pemecahan teks menjadi token kata</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">8</div><div><div class="pipe-label">Normalization</div><div class="pipe-desc">Konversi kata gaul ke kata formal (bgt → banget → dst.)</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">9</div><div><div class="pipe-label">Stopword Removal</div><div class="pipe-desc">Menghapus kata-kata umum tidak bermakna (758 stopword)</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">10</div><div><div class="pipe-label">Stemming</div><div class="pipe-desc">Pengurangan kata ke bentuk dasar menggunakan Sastrawi</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">11</div><div><div class="pipe-label">Negation Handling</div><div class="pipe-desc">Penambahan prefix NOT_ pada kata setelah negasi</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">12</div><div><div class="pipe-label">Final Result</div><div class="pipe-desc">Teks terproses siap dianalisis, rata-rata reduksi ~85%</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">1</div><div><div class="pipe-label">Original Text</div><div class="pipe-desc">Teks komentar mentah yang diperoleh dari YouTube</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">2</div><div><div class="pipe-label">Case Folding</div><div class="pipe-desc">Mengubah seluruh karakter huruf menjadi huruf kecil</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">3</div><div><div class="pipe-label">Noise Removal</div><div class="pipe-desc">Membersihkan tautan URL, sebutan akun, dan tagar</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">4</div><div><div class="pipe-label">Remove Numbers</div><div class="pipe-desc">Menghapus karakter angka dari komentar</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">5</div><div><div class="pipe-label">Remove Punctuation</div><div class="pipe-desc">Menghapus seluruh tanda baca dan simbol tidak relevan</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">6</div><div><div class="pipe-label">Spelling Correction</div><div class="pipe-desc">Perbaikan ejaan kata dan normalisasi singkatan umum</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">7</div><div><div class="pipe-label">Tokenization</div><div class="pipe-desc">Memotong teks komentar menjadi deretan token kata</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">8</div><div><div class="pipe-label">Normalization</div><div class="pipe-desc">Mengubah kata tidak baku menjadi bentuk kata formal</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">9</div><div><div class="pipe-label">Stopword Removal</div><div class="pipe-desc">Menghapus 758 kata umum yang tidak memiliki bobot sentimen</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">10</div><div><div class="pipe-label">Stemming</div><div class="pipe-desc">Mengembalikan kata berimbuhan ke kata dasar menggunakan Sastrawi</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">11</div><div><div class="pipe-label">Negation Handling</div><div class="pipe-desc">Menambahkan awalan penanda negasi pada kata setelah kalimat sanggahan</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">12</div><div><div class="pipe-label">Final Result</div><div class="pipe-desc">Teks hasil pemrosesan yang siap dianalisis dengan rata-rata reduksi 85%</div></div></div>
     </div>
 </div>
 
@@ -284,16 +417,16 @@
 <div class="card">
     <div class="section-heading">Fitur Sistem</div>
     <div class="feature-list">
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Scraping komentar YouTube via API v3 (maks. 100.000 komentar)</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Analisis sentimen 4 metode ML secara paralel</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Penyimpanan data scraping dan hasil analisis ke MySQL</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Dashboard statistik real-time dari database</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Filter dan sort komentar berdasarkan sentimen</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Word cloud, confusion matrix, dan agreement rate antar metode</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Detail preprocessing teks per komentar</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Export hasil ke format Excel (.xlsx)</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Export laporan analisis ke PDF</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Analisis cepat komentar tunggal</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Pengambilan komentar YouTube otomatis melalui API v3 hingga 100.000 komentar</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Komputasi 4 metode Machine Learning secara paralel (Naive Bayes, SVM, LSTM, IndoBERT)</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Penyimpanan terstruktur data scraping dan hasil analisis ke database MySQL</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Dashboard statistik interaktif secara real-time dari database</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Penyaringan dan pengurutan komentar berdasarkan kategori sentimen</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Grafik Word Cloud, matriks kebingungan, dan tingkat kesepakatan antar metode</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Rincian transparan 12 langkah preprocessing teks untuk setiap komentar</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Fitur ekspor hasil analisis ke format spreadsheet Excel (.xlsx)</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Fitur ekspor dokumen laporan analisis ke format PDF</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Fitur analisis cepat untuk menguji kalimat komentar tunggal secara instan</div></div>
     </div>
 </div>
 
@@ -301,12 +434,12 @@
 <div class="card">
     <div class="section-heading">Teknologi yang Digunakan</div>
     <div class="feature-list">
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Backend:</strong> Python 3, Flask</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>ML:</strong> Naive Bayes, SVM, LSTM, IndoBERT</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>NLP:</strong> Sastrawi, NLTK</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Visualisasi:</strong> matplotlib, seaborn, WordCloud, Chart.js</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Data:</strong> pandas, numpy, openpyxl, MySQL</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>API:</strong> YouTube Data API v3</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Backend:</strong> Python 3 dan Flask Framework</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Machine Learning:</strong> Naive Bayes, SVM, LSTM, IndoBERT</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>NLP:</strong> Sastrawi Stemmer dan Pemrosesan Teks NLTK</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Visualisasi:</strong> Matplotlib, Seaborn, WordCloud, dan Chart.js</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Data Processing:</strong> Pandas, NumPy, OpenPyXL, dan MySQL</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>API Integration:</strong> YouTube Data API v3 Resmi</div></div>
     </div>
 </div>
 

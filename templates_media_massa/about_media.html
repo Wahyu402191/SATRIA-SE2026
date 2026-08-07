@@ -199,17 +199,161 @@
     .db-name { font-size:13px; font-weight:700; color:var(--primary); margin-bottom:4px; }
     .db-desc { font-size:11px; color:var(--text-muted); line-height:1.5; }
 
-    /* Mobile: grid auto-fit gak punya override, collapse ke 1 kolom
-       memanjang. Dipaksa 2 kolom biar gak sepanjang itu di HP. */
-    @media (max-width: 640px) {
-        .methods-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .method-tile { padding: 16px; }
-        .feature-list { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .db-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .db-item { padding: 12px; }
-        .db-icon { width: 32px; height: 32px; margin-bottom: 8px; }
-        .db-name { font-size: 11.5px; }
-        .db-desc { font-size: 10px; }
+    /* Mobile responsive optimization: Compact all elements on mobile to match design system */
+    @media (max-width: 768px) {
+        .about-hero {
+            padding: 18px 16px !important;
+            margin-bottom: 14px !important;
+            border-radius: 14px !important;
+        }
+        .about-hero h1 {
+            font-size: 16px !important;
+            margin-bottom: 6px !important;
+            line-height: 1.35 !important;
+            letter-spacing: -.3px !important;
+        }
+        .about-hero p {
+            font-size: 11.5px !important;
+            line-height: 1.5 !important;
+        }
+        .about-hero .version-badge {
+            margin-top: 10px !important;
+            padding: 4px 12px !important;
+            font-size: 10px !important;
+            gap: 6px !important;
+        }
+        .about-hero .version-badge span {
+            width: 6px !important;
+            height: 6px !important;
+        }
+
+        .section-heading {
+            font-size: 13.5px !important;
+            margin-bottom: 12px !important;
+            gap: 8px !important;
+        }
+        .section-heading::before {
+            height: 16px !important;
+            width: 3.5px !important;
+        }
+
+        /* Compact cards on mobile */
+        .card {
+            padding: 14px 16px !important;
+            margin-bottom: 12px !important;
+            border-radius: 14px !important;
+        }
+
+        /* Methods Grid */
+        .methods-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+        }
+        .method-tile {
+            padding: 12px 10px !important;
+            border-radius: 10px !important;
+        }
+        .method-tile-num {
+            width: 30px !important;
+            height: 30px !important;
+            font-size: 12px !important;
+            margin-bottom: 6px !important;
+            border-radius: 8px !important;
+        }
+        .method-tile h3 {
+            font-size: 12px !important;
+            margin-bottom: 3px !important;
+        }
+        .method-tile p {
+            font-size: 10px !important;
+            line-height: 1.45 !important;
+        }
+
+        /* Pipeline Steps */
+        .pipeline::before {
+            left: 11px !important;
+            top: 18px !important;
+            bottom: 18px !important;
+        }
+        .pipe-step {
+            padding: 8px 0 !important;
+            gap: 10px !important;
+        }
+        .pipe-num {
+            width: 24px !important;
+            height: 24px !important;
+            font-size: 10.5px !important;
+            margin-top: 1px !important;
+        }
+        .pipe-label {
+            font-size: 12px !important;
+        }
+        .pipe-desc {
+            font-size: 10.5px !important;
+            line-height: 1.4 !important;
+        }
+
+        /* Database Tables */
+        .db-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+        }
+        .db-item {
+            padding: 10px 8px !important;
+            border-radius: 10px !important;
+        }
+        .db-icon {
+            width: 30px !important;
+            height: 30px !important;
+            margin-bottom: 6px !important;
+            border-radius: 8px !important;
+        }
+        .db-icon svg {
+            width: 15px !important;
+            height: 15px !important;
+        }
+        .db-name {
+            font-size: 11px !important;
+            margin-bottom: 2px !important;
+        }
+        .db-desc {
+            font-size: 9.5px !important;
+            line-height: 1.35 !important;
+        }
+
+        /* Feature & Source Lists */
+        .feature-list {
+            grid-template-columns: 1fr !important;
+            gap: 6px !important;
+        }
+        .feature-item {
+            padding: 9px 12px !important;
+            gap: 8px !important;
+            border-radius: 9px !important;
+        }
+        .feature-dot {
+            width: 6px !important;
+            height: 6px !important;
+            margin-top: 4px !important;
+        }
+        .feature-text {
+            font-size: 11px !important;
+            line-height: 1.45 !important;
+        }
+
+        /* Paragraphs & Notes inside cards */
+        .card > p {
+            font-size: 11px !important;
+            line-height: 1.5 !important;
+            margin-bottom: 10px !important;
+        }
+        [style*="margin-top:16px"], [style*="margin-top:14px"] {
+            margin-top: 10px !important;
+            padding: 10px 12px !important;
+            font-size: 10.5px !important;
+            line-height: 1.5 !important;
+            border-radius: 10px !important;
+        }
     }
 </style>
 {% endblock %}
@@ -218,7 +362,7 @@
 
 <div class="about-hero">
     <h1>Analisis Sentimen Media Massa</h1>
-    <p>Modul analisis sentimen berita dari perusahaan media massa dan jaringan berita online untuk mendukung program Sensus Ekonomi 2026 BPS Kabupaten Bangkalan — Analisis sentimen berita per bulan dengan 4 metode Machine Learning.</p>
+    <p>Modul analisis sentimen berita media massa dan portal berita daring untuk mendukung riset Sensus Ekonomi 2026 Badan Pusat Statistik Kabupaten Bangkalan. Menyediakan analisis sentimen berita bulanan menggunakan 4 metode Machine Learning unggulan.</p>
     <div class="version-badge"><span></span> Dashboard Media Massa &nbsp;|&nbsp; SATRIA SE2026 &nbsp;|&nbsp; 2026</div>
 </div>
 
@@ -229,22 +373,22 @@
         <div class="method-tile">
             <div class="method-tile-num">1</div>
             <h3>Naive Bayes</h3>
-            <p>Probabilistic classifier berbasis TF-IDF dengan trigram features. Training menggunakan 1.200 sampel dari lexicon Indonesia dengan alpha 0.5 (Laplace smoothing).</p>
+            <p>Algoritma klasifikasi probabilistik berbasis TF-IDF dan ekstraksi fitur trigram. Model ini dilatih menggunakan 1.200 sampel leksikon Bahasa Indonesia dengan smoothing Laplace alpha 0,5.</p>
         </div>
         <div class="method-tile">
             <div class="method-tile-num">2</div>
             <h3>Support Vector Machine</h3>
-            <p>Linear SVM dengan parameter C=1.5 dan class weight balanced. Efektif untuk klasifikasi teks berita dengan dimensi fitur tinggi.</p>
+            <p>Klasifikasi Linear SVM dengan parameter C=1,5 dan bobot kelas seimbang. Sangat efektif untuk memetakan teks berita berdimensi fitur tinggi secara presisi.</p>
         </div>
         <div class="method-tile">
             <div class="method-tile-num">3</div>
             <h3>LSTM</h3>
-            <p>Long Short-Term Memory dengan context window dan weighted sequence scoring. Mempertimbangkan urutan kata dan konteks berita.</p>
+            <p>Long Short-Term Memory dengan context window dan pembobotan sekuensial. Mampu memahami urutan kata dan konteks kalimat berita secara mendalam.</p>
         </div>
         <div class="method-tile">
             <div class="method-tile-num">4</div>
             <h3>IndoBERT</h3>
-            <p>Simulasi bidirectional transformer untuk Bahasa Indonesia. Menggunakan attention mechanism dan negation handling kontekstual.</p>
+            <p>Model transformer dua arah kontekstual khusus Bahasa Indonesia. Menggunakan mekanisme perhatian (attention mechanism) dan penanganan kalimat negasi secara akurat.</p>
         </div>
     </div>
 </div>
@@ -253,18 +397,18 @@
 <div class="card">
     <div class="section-heading">Pipeline Preprocessing Teks (12 Langkah)</div>
     <div class="pipeline">
-        <div class="pipe-step"><div class="pipe-num">1</div><div><div class="pipe-label">Original Text</div><div class="pipe-desc">Teks berita mentah dari media massa</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">2</div><div><div class="pipe-label">Case Folding</div><div class="pipe-desc">Konversi semua karakter menjadi huruf kecil</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">3</div><div><div class="pipe-label">Noise Removal</div><div class="pipe-desc">Menghapus URL, @mention, #hashtag</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">4</div><div><div class="pipe-label">Remove Numbers</div><div class="pipe-desc">Menghapus karakter angka</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">5</div><div><div class="pipe-label">Remove Punctuation</div><div class="pipe-desc">Menghapus tanda baca dan simbol</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">6</div><div><div class="pipe-label">Spelling Correction</div><div class="pipe-desc">Normalisasi typo dan singkatan umum</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">7</div><div><div class="pipe-label">Tokenization</div><div class="pipe-desc">Pemecahan teks menjadi token kata</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">8</div><div><div class="pipe-label">Normalization</div><div class="pipe-desc">Konversi kata gaul ke kata formal</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">9</div><div><div class="pipe-label">Stopword Removal</div><div class="pipe-desc">Menghapus kata-kata umum tidak bermakna (758 stopword)</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">10</div><div><div class="pipe-label">Stemming</div><div class="pipe-desc">Pengurangan kata ke bentuk dasar menggunakan Sastrawi</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">11</div><div><div class="pipe-label">Negation Handling</div><div class="pipe-desc">Penambahan prefix NOT_ pada kata setelah negasi</div></div></div>
-        <div class="pipe-step"><div class="pipe-num">12</div><div><div class="pipe-label">Final Result</div><div class="pipe-desc">Teks terproses siap dianalisis, rata-rata reduksi ~85%</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">1</div><div><div class="pipe-label">Original Text</div><div class="pipe-desc">Teks berita mentah yang diperoleh dari sumber media massa</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">2</div><div><div class="pipe-label">Case Folding</div><div class="pipe-desc">Mengubah seluruh karakter huruf menjadi huruf kecil</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">3</div><div><div class="pipe-label">Noise Removal</div><div class="pipe-desc">Membersihkan tautan URL, sebutan akun, dan tagar</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">4</div><div><div class="pipe-label">Remove Numbers</div><div class="pipe-desc">Menghapus karakter angka dari dokumen berita</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">5</div><div><div class="pipe-label">Remove Punctuation</div><div class="pipe-desc">Menghapus seluruh tanda baca dan simbol tidak relevan</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">6</div><div><div class="pipe-label">Spelling Correction</div><div class="pipe-desc">Perbaikan ejaan kata dan normalisasi singkatan umum</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">7</div><div><div class="pipe-label">Tokenization</div><div class="pipe-desc">Memotong teks berita menjadi deretan token kata</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">8</div><div><div class="pipe-label">Normalization</div><div class="pipe-desc">Mengubah kata tidak baku menjadi bentuk kata formal</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">9</div><div><div class="pipe-label">Stopword Removal</div><div class="pipe-desc">Menghapus 758 kata umum yang tidak memiliki bobot sentimen</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">10</div><div><div class="pipe-label">Stemming</div><div class="pipe-desc">Mengembalikan kata berimbuhan ke kata dasar menggunakan Sastrawi</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">11</div><div><div class="pipe-label">Negation Handling</div><div class="pipe-desc">Menambahkan awalan penanda negasi pada kata setelah kalimat sanggahan</div></div></div>
+        <div class="pipe-step"><div class="pipe-num">12</div><div><div class="pipe-label">Final Result</div><div class="pipe-desc">Teks hasil pemrosesan yang siap dianalisis dengan rata-rata reduksi 85%</div></div></div>
     </div>
 </div>
 
@@ -275,22 +419,22 @@
         <div class="db-item">
             <div class="db-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg></div>
             <div class="db-name">articles</div>
-            <div class="db-desc">Menyimpan data berita dari berbagai sumber media massa</div>
+            <div class="db-desc">Tabel utama penyimpan dokumen berita dari berbagai portal media massa</div>
         </div>
         <div class="db-item">
             <div class="db-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
             <div class="db-name">article_sources</div>
-            <div class="db-desc">Informasi sumber berita (CNN, Kompas, CNBC, Detik, dll)</div>
+            <div class="db-desc">Informasi penerbit dan sumber media berita resmi</div>
         </div>
         <div class="db-item">
             <div class="db-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg></div>
             <div class="db-name">analysis_sessions_media</div>
-            <div class="db-desc">Sesi analisis berita per bulan dengan metode yang digunakan</div>
+            <div class="db-desc">Riwayat sesi analisis berita per bulan beserta konfigurasi metode</div>
         </div>
         <div class="db-item">
             <div class="db-icon"><svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg></div>
             <div class="db-name">analysis_results_media</div>
-            <div class="db-desc">Hasil analisis sentimen per artikel dari 4 metode ML</div>
+            <div class="db-desc">Hasil klasifikasi sentimen per artikel dari 4 metode Machine Learning</div>
         </div>
     </div>
 </div>
@@ -299,18 +443,18 @@
 <div class="card">
     <div class="section-heading">Fitur Dashboard Media Massa</div>
     <div class="feature-list">
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Analisis sentimen berita per bulan (Januari - Desember 2026)</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Analisis 4 metode ML paralel (Naive Bayes, SVM, LSTM, IndoBERT)</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Penyimpanan data berita dan hasil analisis ke database MySQL</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Dashboard statistik dengan info jumlah artikel, bulan, dan sumber berita</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Filter berita berdasarkan sentimen (positif/negatif/netral)</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Perbandingan metode dengan visualisasi dan agreement rate</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Trend kata terbanyak per minggu dalam 1 bulan (4 minggu)</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Word cloud untuk visualisasi kata dominan</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Detail preprocessing teks 12 langkah per berita</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Export hasil analisis ke format Excel (.xlsx)</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Statistik distribusi sentimen per metode dan per bulan</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Search dan sort berita berdasarkan judul, sumber, dan tanggal</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Analisis sentimen berita per bulan mulai Januari hingga Desember 2026</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Komputasi 4 metode Machine Learning secara paralel (Naive Bayes, SVM, LSTM, IndoBERT)</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Penyimpanan terstruktur data berita dan hasil analisis ke database MySQL</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Dashboard statistik interaktif dengan info total artikel, bulan, dan sumber media</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Penyaringan berita berdasarkan kategori sentimen positif, negatif, dan netral</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Perbandingan performa metode dengan visualisasi dan tingkat kesepakatan</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Tren pergerakan kata kunci terbanyak per minggu dalam 1 bulan</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Visualisasi kata dominan menggunakan grafik Word Cloud</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Rincian transparan 12 langkah preprocessing teks untuk setiap berita</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Fitur ekspor laporan hasil analisis ke format spreadsheet Excel (.xlsx)</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Statistik sebaran sentimen per metode dan periode bulanan</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Pencarian dan pengurutan berita berdasarkan judul, sumber, serta tanggal</div></div>
     </div>
 </div>
 
@@ -318,15 +462,15 @@
 <div class="card">
     <div class="section-heading">Sumber Data Berita</div>
     <div class="feature-list">
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>CNN Indonesia</strong> — Portal berita online terkemuka</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Kompas</strong> — Media massa terpercaya Indonesia</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>CNBC Indonesia</strong> — Berita ekonomi dan bisnis</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Detik</strong> — Portal berita populer Indonesia</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Tempo</strong> — Majalah dan portal berita terkemuka</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Republika</strong> — Media massa nasional</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>CNN Indonesia</strong> : Portal berita daring nasional terkemuka</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Kompas</strong> : Media massa terpercaya di Indonesia</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>CNBC Indonesia</strong> : Portal berita ekonomi, bisnis, dan investasi</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Detikcom</strong> : Portal berita daring terpopuler Indonesia</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Tempo</strong> : Majalah dan portal berita independen</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Republika</strong> : Portal berita nasional terpercaya</div></div>
     </div>
     <p style="margin-top:16px; padding:14px; background:var(--bg); border-radius:var(--radius); font-size:12px; color:var(--text-muted); line-height:1.7;">
-        <strong>Catatan:</strong> Data berita dikumpulkan secara manual oleh programmer per bulan (Januari - Desember 2026) melalui scraping website media massa. Data disimpan dalam format CSV/Excel dan diimport ke database untuk analisis sentimen.
+        <strong>Catatan:</strong> Data berita dikumpulkan secara terstruktur per bulan (Januari hingga Desember 2026) melalui pengumpulan situs web media massa resmi. Seluruh data tersimpan terorganisir di dalam database untuk analisis sentimen.
     </p>
 </div>
 
@@ -334,14 +478,14 @@
 <div class="card">
     <div class="section-heading">Teknologi yang Digunakan</div>
     <div class="feature-list">
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Backend:</strong> Python 3, Flask Framework</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Backend:</strong> Python 3 dan Flask Framework</div></div>
         <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Machine Learning:</strong> Naive Bayes, SVM, LSTM, IndoBERT</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>NLP:</strong> Sastrawi (Stemming), NLTK, Text Preprocessing</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Database:</strong> MySQL dengan MySQL Connector</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Visualisasi:</strong> Chart.js (Line & Bar Chart), matplotlib, seaborn, WordCloud</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Data Processing:</strong> pandas, numpy, openpyxl</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Frontend:</strong> HTML5, CSS3, JavaScript (ES6+)</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Lexicon:</strong> 22.278 kata (7.213 positif, 13.214 negatif)</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>NLP:</strong> Sastrawi Stemmer, NLTK, Pemrosesan Teks</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Database:</strong> MySQL Server dan PyMySQL Connector</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Visualisasi:</strong> Chart.js, Matplotlib, Seaborn, WordCloud</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Data Processing:</strong> Pandas, NumPy, OpenPyXL</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Frontend:</strong> HTML5, CSS3 Modern, JavaScript ES6+</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text"><strong>Leksikon Sentimen:</strong> 22.278 kata (7.213 kata positif, 13.214 kata negatif)</div></div>
     </div>
 </div>
 
@@ -349,16 +493,16 @@
 <div class="card">
     <div class="section-heading">Integrasi dengan Dashboard YouTube</div>
     <p style="font-size:13px; color:var(--text); line-height:1.8; margin-bottom:14px;">
-        Dashboard Media Massa terintegrasi dalam ekosistem <strong>SATRIA SE2026</strong> bersama dashboard YouTube. Kedua dashboard menggunakan:
+        Dashboard Media Massa terintegrasi penuh dalam ekosistem <strong>SATRIA SE2026</strong> bersama modul analisis YouTube. Kedua dashboard didukung oleh:
     </p>
     <div class="feature-list">
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Engine analisis sentimen yang sama (4 metode ML)</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Pipeline preprocessing teks yang identik (12 langkah)</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Database leksikon dan stopword yang sama</div></div>
-        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Design system dan UI/UX yang konsisten</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Mesin pemrosesan sentimen yang sama menggunakan 4 metode Machine Learning</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Pipeline pembersihan teks yang seragam melalui 12 langkah preprocessing</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Kamus leksikon dan daftar kata henti (stopword) terstandarisasi</div></div>
+        <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Sistem desain antarmuka dan pengalaman pengguna yang konsisten</div></div>
     </div>
     <p style="margin-top:14px; padding:14px; background:linear-gradient(135deg, #E3F2FD, #E8F8F5); border-radius:var(--radius); font-size:12px; color:var(--text); line-height:1.7; border-left:3px solid var(--primary);">
-        <strong>💡 Tip:</strong> Gunakan menu navigasi di atas untuk berpindah antar dashboard. Data dan hasil analisis masing-masing dashboard tersimpan secara terpisah di database.
+        <strong>💡 Petunjuk:</strong> Gunakan menu navigasi utama di bagian atas untuk berpindah antar dashboard secara instan.
     </p>
 </div>
 

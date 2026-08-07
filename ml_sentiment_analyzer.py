@@ -36,8 +36,11 @@ class MLSentimentAnalyzer:
         self.training_samples = []
         self.training_labels  = []
         self._prepare_training_data()
+        
+        # Train models immediately on initialization to avoid "not fitted" errors
+        self._train_models()
 
-        print("[INFO] ML Sentiment Analyzer initialized")
+        print("[INFO] ML Sentiment Analyzer initialized and trained")
 
     # ── Training data ──────────────────────────────────────────────────────
 
