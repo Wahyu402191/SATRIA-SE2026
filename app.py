@@ -335,7 +335,9 @@ def remove_profile_photo():
 @app.route('/youtube/')
 def youtube_index():
     """YouTube dashboard - Beranda"""
-    return render_template('index.html')
+    # Check if API key is configured
+    api_key_configured = bool(API_KEY and API_KEY != 'your_api_key_here' and len(API_KEY) > 10)
+    return render_template('index.html', api_key_configured=api_key_configured)
 
 @app.route('/youtube/analysis')
 def youtube_analysis():
@@ -1192,6 +1194,95 @@ def preprocess_text():
             'steps': steps
         })
 
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/youtube/processing_detail', methods=['POST'])
+def youtube_processing_detail():
+    """Endpoint untuk mendapatkan detail preprocessing dan analisis sentimen"""
+    try:
+        data = request.json
+        text = data.get('text', '')
+        
+        if not text:
+            return jsonify({'success': False, 'error': 'Text is required'}), 400
+        
+        # Get preprocessing steps
+        steps = _compute_preprocessing_steps(text)
+        
+        # Get sentiment analysis details per method
+        methods = {}
+        
+        # Naive Bayes
+        nb_sent = data.get('naive_bayes_sentiment')
+        nb_score = data.get('naive_bayes_score')
+        if nb_sent:
+            methods['naive_bayes'] = {
+                'display_name': 'Naive Bayes',
+                'label': nb_sent,
+                'confidence': nb_score,
+                'contributing_terms': [],
+                'notes': 'Model probabilistik berbasis teorema Bayes'
+            }
+        
+        # SVM
+        svm_sent = data.get('svm_sentiment')
+        svm_score = data.get('svm_score')
+        if svm_sent:
+            methods['svm'] = {
+                'display_name': 'SVM (Support Vector Machine)',
+                'label': svm_sent,
+                'confidence': svm_score,
+                'contributing_terms': [],
+                'notes': 'Model klasifikasi dengan hyperplane optimal'
+            }
+        
+        # LSTM
+        lstm_sent = data.get('lstm_sentiment')
+        lstm_score = data.get('lstm_score')
+        if lstm_sent:
+            methods['lstm'] = {
+                'display_name': 'LSTM (Long Short-Term Memory)',
+                'label': lstm_sent,
+                'confidence': lstm_score,
+                'contributing_terms': [],
+                'notes': 'Deep learning model untuk sequence data'
+            }
+        
+        # IndoBERT
+        bert_sent = data.get('indobert_sentiment')
+        bert_score = data.get('indobert_score')
+        if bert_sent:
+            methods['indobert'] = {
+                'display_name': 'IndoBERT',
+                'label': bert_sent,
+                'confidence': bert_score,
+                'contributing_terms': [],
+                'notes': 'Transformer model pre-trained untuk Bahasa Indonesia'
+            }
+        
+        # Aggregation
+        sentiments = [v['label'] for v in methods.values() if v.get('label')]
+        if sentiments:
+            from collections import Counter
+            most_common = Counter(sentiments).most_common(1)[0]
+            aggregation = {
+                'label': most_common[0],
+                'count': most_common[1],
+                'total': len(sentiments)
+            }
+        else:
+            aggregation = None
+        
+        return jsonify({
+            'success': True,
+            'preprocessing_steps': steps,
+            'methods': methods,
+            'aggregation': aggregation
+        })
+        
     except Exception as e:
         import traceback
         traceback.print_exc()

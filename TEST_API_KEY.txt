@@ -1,0 +1,48 @@
+================================================================================
+CARA TEST API KEY SUDAH BENAR
+================================================================================
+
+1. HARD REFRESH BROWSER
+   Tekan: Ctrl + Shift + R
+   (Atau Ctrl + F5)
+   
+   Ini akan reload halaman dari server, bukan dari cache browser
+
+2. ATAU CLEAR CACHE BROWSER
+   - Tekan F12 (buka Developer Tools)
+   - Klik kanan tombol Refresh di browser
+   - Pilih "Empty Cache and Hard Reload"
+
+3. ATAU BUKA INCOGNITO/PRIVATE MODE
+   - Tekan Ctrl + Shift + N (Chrome)
+   - Buka: http://127.0.0.1:5000/youtube/
+   
+4. TEST SCRAPING
+   - Masukkan URL YouTube:
+     https://youtu.be/vo2rSYsO90s?si=a7uwvZX3z-npy_
+   
+   - Jumlah komentar: 100
+   - Klik "Mulai Scraping"
+   
+   - Jika API Key benar: Scraping akan berjalan
+   - Jika API Key salah: Muncul error "API Key tidak valid"
+
+================================================================================
+JIKA MASIH ERROR:
+================================================================================
+
+Kemungkinan API Key butuh aktivasi lebih lanjut di Google Cloud Console:
+
+1. Buka: https://console.cloud.google.com
+2. Pilih project "SE2026"
+3. Klik menu (☰) -> "APIs & Services" -> "Credentials"
+4. Klik API Key yang sudah dibuat
+5. Di bagian "API restrictions":
+   - Pilih "Restrict key"
+   - Centang: "YouTube Data API v3"
+   - Klik SAVE
+
+6. Tunggu 1-2 menit untuk propagasi
+7. Coba lagi scraping
+
+================================================================================

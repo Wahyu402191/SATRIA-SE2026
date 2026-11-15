@@ -559,12 +559,14 @@
 </div>
 
 <!-- API Key Check Banner -->
-<div class="api-banner" id="api-banner">
+{% if not api_key_configured %}
+<div class="api-banner" id="api-banner" style="display: block;">
     <p><strong>Perhatian:</strong> YouTube API Key belum dikonfigurasi atau tidak valid.
     Scraping komentar memerlukan API Key YouTube Data v3 yang aktif.
     Buka file <code>.env</code> dan isi <code>YOUTUBE_API_KEY=...</code>.
     Panduan: <a href="https://console.cloud.google.com" target="_blank">Google Cloud Console</a></p>
 </div>
+{% endif %}
 
 <!-- Hero Banner -->
 <div class="hero">
