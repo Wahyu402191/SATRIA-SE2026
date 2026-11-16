@@ -1,11 +1,13 @@
 """
-ML-based Sentiment Analysis — Optimized for speed (batch processing).
+ML-based Sentiment Analysis — Optimized for speed (batch processing + parallel).
 """
 
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.svm import LinearSVC
+from concurrent.futures import ThreadPoolExecutor
+import threading
 
 
 class MLSentimentAnalyzer:
@@ -143,192 +145,207 @@ class MLSentimentAnalyzer:
     def predict_batch(self, texts: list, methods: list) -> list:
         """
         Predict sentiment for a list of texts in one batch.
+        Uses parallel processing for multiple methods.
         Returns list of dicts with keys for each selected method.
         """
         n = len(texts)
         results = [{} for _ in range(n)]
         sentiment_map = {0: 'Negatif', 1: 'Netral', 2: 'Positif'}
-
-        # ── NB and SVM batch ──────────────────────────────────────────────
-        if 'naive_bayes' in methods or 'svm' in methods:
-            self._train_models()
-            X = self.tfidf_vectorizer.transform(texts)
-            # A text with zero vocabulary overlap (e.g. a bare headline with
-            # no lexicon words) has an all-zero TF-IDF row. NB/SVM then have
-            # no real signal to go on and effectively guess from class
-            # priors — MultinomialNB in particular ties Positif/Negatif
-            # exactly and always resolves the tie to class 0 (Negatif),
-            # silently mislabeling neutral text as negative. Detect that
-            # case up front and force Netral instead of trusting the guess.
-            no_signal = np.asarray(X.getnnz(axis=1)) == 0
-
+        
+        # Use ThreadPoolExecutor to run methods in parallel
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = {}
+            
+            # Submit each method as separate thread
             if 'naive_bayes' in methods:
-                preds  = self.nb_model.predict(X)
-                probas = self.nb_model.predict_proba(X)
-                for i in range(n):
-                    if no_signal[i]:
-                        results[i]['naive_bayes_sentiment'] = 'Netral'
-                        results[i]['naive_bayes_score']     = 0.0
-                        continue
-                    pred  = preds[i]
-                    score = float(probas[i][pred])
-                    label = sentiment_map[pred]
-                    # Low-confidence Netral → fallback to lexicon. Threshold
-                    # lowered (0.15 -> 0.08): short comments rarely carry
-                    # more than one or two matched lexicon words even before
-                    # counting the model's own signal, so requiring a strong
-                    # lexicon score on top of an already-uncertain NB
-                    # prediction left too many genuinely-toned comments
-                    # stuck at Netral.
-                    if pred == 1 and score < 0.6:
-                        ls = self._lexicon_score(texts[i])
-                        if   ls > 0.08: label = 'Positif'
-                        elif ls < -0.08: label = 'Negatif'
-                    results[i]['naive_bayes_sentiment'] = label
-                    results[i]['naive_bayes_score']     = round(score, 3)
-
+                futures['naive_bayes'] = executor.submit(
+                    self._predict_naive_bayes, texts, sentiment_map, n
+                )
+            
             if 'svm' in methods:
-                preds    = self.svm_model.predict(X)
-                decisions = self.svm_model.decision_function(X)
+                futures['svm'] = executor.submit(
+                    self._predict_svm, texts, sentiment_map, n
+                )
+            
+            if 'lstm' in methods:
+                futures['lstm'] = executor.submit(
+                    self._predict_lstm, texts, n
+                )
+            
+            if 'indobert' in methods:
+                futures['indobert'] = executor.submit(
+                    self._predict_indobert, texts, n
+                )
+            
+            # Collect results from all threads
+            for method, future in futures.items():
+                method_results = future.result()
                 for i in range(n):
-                    if no_signal[i]:
-                        results[i]['svm_sentiment'] = 'Netral'
-                        results[i]['svm_score']     = 0.0
-                        continue
-                    pred  = preds[i]
-                    dec   = decisions[i]
-                    raw   = float(np.max(np.abs(dec))) if dec.ndim > 0 else float(abs(dec))
-                    score = min(1.0, raw / 3.0)
-                    label = sentiment_map[pred]
-                    if pred == 1 and score < 0.5:
-                        ls = self._lexicon_score(texts[i])
-                        if   ls > 0.08: label = 'Positif'
-                        elif ls < -0.08: label = 'Negatif'
-                    results[i]['svm_sentiment'] = label
-                    results[i]['svm_score']     = round(score, 3)
-
-        # ── LSTM batch (vectorised with numpy) ────────────────────────────
-        if 'lstm' in methods:
-            senti   = self.sentiwords
-            pos_set = self.positive_words
-            neg_set = self.negative_words
-            for i, text in enumerate(texts):
-                words = text.split()
-                if not words:
-                    results[i]['lstm_sentiment'] = 'Netral'
-                    results[i]['lstm_score']     = 0.0
+                    results[i].update(method_results[i])
+        
+        return results
+    
+    def _predict_naive_bayes(self, texts, sentiment_map, n):
+        """NB prediction in separate thread"""
+        results = [{} for _ in range(n)]
+        self._train_models()
+        X = self.tfidf_vectorizer.transform(texts)
+        no_signal = np.asarray(X.getnnz(axis=1)) == 0
+        
+        preds  = self.nb_model.predict(X)
+        probas = self.nb_model.predict_proba(X)
+        
+        for i in range(n):
+            if no_signal[i]:
+                results[i]['naive_bayes_sentiment'] = 'Netral'
+                results[i]['naive_bayes_score']     = 0.0
+                continue
+            pred  = preds[i]
+            score = float(probas[i][pred])
+            label = sentiment_map[pred]
+            if pred == 1 and score < 0.6:
+                ls = self._lexicon_score(texts[i])
+                if   ls > 0.08: label = 'Positif'
+                elif ls < -0.08: label = 'Negatif'
+            results[i]['naive_bayes_sentiment'] = label
+            results[i]['naive_bayes_score']     = round(score, 3)
+        
+        return results
+    
+    def _predict_svm(self, texts, sentiment_map, n):
+        """SVM prediction in separate thread"""
+        results = [{} for _ in range(n)]
+        self._train_models()
+        X = self.tfidf_vectorizer.transform(texts)
+        no_signal = np.asarray(X.getnnz(axis=1)) == 0
+        
+        preds    = self.svm_model.predict(X)
+        decisions = self.svm_model.decision_function(X)
+        
+        for i in range(n):
+            if no_signal[i]:
+                results[i]['svm_sentiment'] = 'Netral'
+                results[i]['svm_score']     = 0.0
+                continue
+            pred  = preds[i]
+            dec   = decisions[i]
+            raw   = float(np.max(np.abs(dec))) if dec.ndim > 0 else float(abs(dec))
+            score = min(1.0, raw / 3.0)
+            label = sentiment_map[pred]
+            if pred == 1 and score < 0.5:
+                ls = self._lexicon_score(texts[i])
+                if   ls > 0.08: label = 'Positif'
+                elif ls < -0.08: label = 'Negatif'
+            results[i]['svm_sentiment'] = label
+            results[i]['svm_score']     = round(score, 3)
+        
+        return results
+    
+    def _predict_lstm(self, texts, n):
+        """LSTM prediction in separate thread"""
+        results = [{} for _ in range(n)]
+        senti   = self.sentiwords
+        pos_set = self.positive_words
+        neg_set = self.negative_words
+        
+        for i, text in enumerate(texts):
+            words = text.split()
+            if not words:
+                results[i]['lstm_sentiment'] = 'Netral'
+                results[i]['lstm_score']     = 0.0
+                continue
+            wlen = len(words)
+            seq  = np.zeros(wlen, dtype=np.float32)
+            matched = 0
+            for j, w in enumerate(words):
+                if w in senti:      
+                    seq[j] = senti[w]
+                    matched += 1
+                elif w in pos_set:  
+                    seq[j] = 3
+                    matched += 1
+                elif w in neg_set:  
+                    seq[j] = -3
+                    matched += 1
+            
+            if matched == 0:
+                results[i]['lstm_sentiment'] = 'Netral'
+                results[i]['lstm_score']     = 0.0
+                continue
+            
+            weights = np.linspace(0.5, 1.0, wlen, dtype=np.float32)
+            total = float(np.sum(seq * weights))
+            weight_sum = float(np.sum(weights[seq != 0]))
+            avg = total / weight_sum if weight_sum > 0 else 0.0
+            
+            if wlen <= 30:
+                pos_thr = 0.015 if matched > 1 else 0.025
+                neg_thr = -0.015 if matched > 1 else -0.025
+            else:
+                pos_thr = 0.05 if matched > 5 else 0.08
+                neg_thr = -0.05 if matched > 5 else -0.08
+            
+            label, score = self._score_to_label(avg, pos_thr, neg_thr)
+            results[i]['lstm_sentiment'] = label
+            results[i]['lstm_score'] = score
+        
+        return results
+    
+    def _predict_indobert(self, texts, n):
+        """IndoBERT prediction in separate thread"""
+        results = [{} for _ in range(n)]
+        intensifiers = {'sangat':1.5,'amat':1.5,'sekali':1.3,'banget':1.3,'bgt':1.3}
+        neg_words_ib = {'tidak','bukan','jangan','gak','ga','nggak','ngga'}
+        senti        = self.sentiwords
+        pos_set      = self.positive_words
+        neg_set_ib   = self.negative_words
+        
+        for i, text in enumerate(texts):
+            words = text.split()
+            if not words:
+                results[i]['indobert_sentiment'] = 'Netral'
+                results[i]['indobert_score']     = 0.0
+                continue
+            wlen = len(words)
+            total = 0.0
+            matched = 0
+            for j, word in enumerate(words):
+                mult  = intensifiers.get(words[j-1], 1.0) if j > 0 else 1.0
+                negated = (j > 0 and words[j-1] in neg_words_ib) or \
+                          (j > 1 and words[j-2] in neg_words_ib) or \
+                          (j > 2 and words[j-3] in neg_words_ib)
+                if word in senti:       
+                    ws = senti[word]
+                    matched += 1
+                elif word in pos_set:   
+                    ws = 3
+                    matched += 1
+                elif word in neg_set_ib:
+                    ws = -3
+                    matched += 1
+                else:                   
                     continue
-                wlen = len(words)
-                seq  = np.zeros(wlen, dtype=np.float32)
-                matched = 0
-                for j, w in enumerate(words):
-                    if w in senti:      
-                        seq[j] = senti[w]
-                        matched += 1
-                    elif w in pos_set:  
-                        seq[j] = 3
-                        matched += 1
-                    elif w in neg_set:  
-                        seq[j] = -3
-                        matched += 1
-                
-                # Skip if no sentiment words found
-                if matched == 0:
-                    results[i]['lstm_sentiment'] = 'Netral'
-                    results[i]['lstm_score']     = 0.0
-                    continue
-                
-                # Use sum divided by MATCHED words, not all words
-                # This prevents dilution from non-sentiment words
-                weights = np.linspace(0.5, 1.0, wlen, dtype=np.float32)
-                total = float(np.sum(seq * weights))
-                weight_sum = float(np.sum(weights[seq != 0]))
-                avg = total / weight_sum if weight_sum > 0 else 0.0
-                
-                # Dynamic thresholds based on text length and matched words.
-                # Lowered again (comments: 0.03/0.05 -> 0.015/0.025; bar for
-                # the lenient tier: matched>3 -> matched>1): after cleaning
-                # the lexicon of filler words, most short comments now match
-                # only 1-3 real sentiment words, so the old "matched>3" tier
-                # rarely triggered and most comments landed on the stricter
-                # threshold right when they had the least signal to spare.
-                if wlen <= 30:  # Short text (YouTube comments)
-                    pos_thr = 0.015 if matched > 1 else 0.025
-                    neg_thr = -0.015 if matched > 1 else -0.025
-                else:  # Long text (articles)
-                    pos_thr = 0.05 if matched > 5 else 0.08
-                    neg_thr = -0.05 if matched > 5 else -0.08
-                
-                label, score = self._score_to_label(avg, pos_thr, neg_thr)
-                results[i]['lstm_sentiment'] = label
-                results[i]['lstm_score'] = score
-
-        # ── IndoBERT batch (vectorised with numpy) ────────────────────────
-        if 'indobert' in methods:
-            intensifiers = {'sangat':1.5,'amat':1.5,'sekali':1.3,'banget':1.3,'bgt':1.3}
-            neg_words_ib = {'tidak','bukan','jangan','gak','ga','nggak','ngga'}
-            senti        = self.sentiwords
-            pos_set      = self.positive_words
-            neg_set_ib   = self.negative_words
-            for i, text in enumerate(texts):
-                words = text.split()
-                if not words:
-                    results[i]['indobert_sentiment'] = 'Netral'
-                    results[i]['indobert_score']     = 0.0
-                    continue
-                wlen = len(words)
-                total = 0.0
-                matched = 0
-                for j, word in enumerate(words):
-                    mult  = intensifiers.get(words[j-1], 1.0) if j > 0 else 1.0
-                    # Window widened 1 -> 3 tokens back, same reasoning as
-                    # the shared _lexicon_score() fix: negation + target are
-                    # rarely adjacent in natural comments ("nggak akan
-                    # pernah jujur").
-                    negated = (j > 0 and words[j-1] in neg_words_ib) or \
-                              (j > 1 and words[j-2] in neg_words_ib) or \
-                              (j > 2 and words[j-3] in neg_words_ib)
-                    if word in senti:       
-                        ws = senti[word]
-                        matched += 1
-                    elif word in pos_set:   
-                        ws = 3
-                        matched += 1
-                    elif word in neg_set_ib:
-                        ws = -3
-                        matched += 1
-                    else:                   
-                        continue
-                    if negated: ws = -ws
-                    total += ws * mult
-                
-                # Skip if no sentiment words found
-                if matched == 0:
-                    results[i]['indobert_sentiment'] = 'Netral'
-                    results[i]['indobert_score']     = 0.0
-                    continue
-                
-                # Divide by matched words only, not all words
-                avg = total / matched
-                
-                # Dynamic thresholds based on text length. Lowered
-                # (0.2/0.35 -> 0.08/0.15): IndoBERT's raw scores here run on
-                # the same -3..+5-ish per-word scale as LSTM's, so a 0.2+
-                # threshold was far stricter in practice than it looked —
-                # it demanded a much stronger average signal than LSTM ever
-                # required for the same comment, which is why IndoBERT's
-                # Netral share was consistently the highest of the four.
-                if wlen <= 30:  # Short text (YouTube comments)
-                    pos_thr = 0.08 if matched > 1 else 0.15
-                    neg_thr = -0.08 if matched > 1 else -0.15
-                else:  # Long text (articles)
-                    pos_thr = 0.3 if matched > 5 else 0.5
-                    neg_thr = -0.3 if matched > 5 else -0.5
-                
-                label, score = self._score_to_label(avg, pos_thr, neg_thr)
-                results[i]['indobert_sentiment'] = label
-                results[i]['indobert_score'] = score
-
+                if negated: ws = -ws
+                total += ws * mult
+            
+            if matched == 0:
+                results[i]['indobert_sentiment'] = 'Netral'
+                results[i]['indobert_score']     = 0.0
+                continue
+            
+            avg = total / matched
+            
+            if wlen <= 30:
+                pos_thr = 0.08 if matched > 1 else 0.15
+                neg_thr = -0.08 if matched > 1 else -0.15
+            else:
+                pos_thr = 0.3 if matched > 5 else 0.5
+                neg_thr = -0.3 if matched > 5 else -0.5
+            
+            label, score = self._score_to_label(avg, pos_thr, neg_thr)
+            results[i]['indobert_sentiment'] = label
+            results[i]['indobert_score'] = score
+        
         return results
 
     # ── Single-text wrappers (used by analyze_single endpoint) ────────────
